@@ -1,25 +1,46 @@
 {
   "name": "@crypto/classic",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0",
   "description": "Classic cipher, mode, padding, KDF, and format components for @crypto.",
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./browser": "./dist/crypto-classic.iife.min.js",
+    "./umd": "./dist/crypto-classic.umd.min.js"
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "dependencies": {
-    "@crypto/core": "0.1.0-alpha.0",
+    "@crypto/core": "0.1.0",
     "crypto-js": "^4.2.0"
   },
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc -b --pretty false"
   },
+  "keywords": [
+    "crypto",
+    "cryptography",
+    "cipher",
+    "aes",
+    "des",
+    "rc4",
+    "crypto-js"
+  ],
+  "author": "Chen, Yi-Cyuan <emn178@gmail.com>",
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
   "license": "MIT"
 }

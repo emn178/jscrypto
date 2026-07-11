@@ -9,13 +9,17 @@
     "packages/classic"
   ],
   "scripts": {
-    "build": "tsc -b",
-    "clean": "tsc -b --clean",
+    "build": "node scripts/build.mjs",
+    "clean": "tsc -b --clean && node scripts/clean.mjs",
     "typecheck": "tsc -b --pretty false",
-    "test": "npm run build && node --test tests/*.test.mjs"
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "coverage": "npm run build && c8 --check-coverage --statements 100 --branches 100 --functions 100 --lines 100 --reporter=text --reporter=html --include=packages/core/dist/index.mjs --include=packages/classic/dist/index.mjs node --test tests/*.test.mjs",
+    "prepack": "npm run build"
   },
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
+    "c8": "^11.0.0",
+    "esbuild": "^0.25.6",
     "typescript": "^5.5.0"
   },
   "license": "MIT"

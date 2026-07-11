@@ -2,32 +2,43 @@
 
 Composable cryptography components for JavaScript and TypeScript.
 
-This repository is a monorepo for the `@crypto/*` npm packages. The goal is a small, Uint8Array-first framework where ciphers, modes, paddings, KDFs, formats, and presets can be implemented and published independently.
+`@crypto` is a small Uint8Array-first framework for wiring ciphers, modes, paddings, KDFs, formats, and presets through one registry. The first release focuses on the classic CryptoJS-compatible features currently needed by online-tools.
 
 This project is not affiliated with Node.js `crypto`, the Web Crypto API, or npm.
 
 ## Packages
 
-- `@crypto/core`: shared types, registry, byte helpers, and errors.
-- `@crypto/classic`: online-tools-compatible classic components, including AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, OFB, ECB, current classic paddings, PBKDF2, EvpKDF, and OpenSSL `Salted__` formatting.
+- `@crypto/core`: registry, component contracts, transform helpers, byte helpers, and shared errors.
+- `@crypto/classic`: AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, OFB, ECB, classic paddings, PBKDF2, EvpKDF, and OpenSSL `Salted__` formatting.
 
-The public package count is intentionally small. `@crypto/classic` still keeps separate internal modules for ciphers, modes, paddings, KDFs, formats, adapters, and presets so those boundaries stay testable and can be split later if a real need appears.
+The public package count is intentionally small. `@crypto/classic` still keeps internal modules split by cipher, mode, padding, KDF, format, adapter, and preset so those boundaries stay testable and can be split later if the need becomes real.
 
-The first working slices are AES/DES/Triple DES + CBC/ECB/CFB/CTR/OFB + all current online-tools paddings, RC4/RC4Drop stream ciphers, PBKDF2/EvpKDF, and OpenSSL `Salted__` formatting. GCM is still next-step work.
+## Install
 
-## First Target
+```sh
+npm install @crypto/core @crypto/classic
+```
 
-The first implementation target is parity with the CryptoJS-backed features already used by online-tools:
+## Quick Start
 
-- Ciphers: AES, DES, Triple DES, RC4, RC4Drop.
-- Modes: CBC, CFB, CTR, OFB, ECB.
-- Paddings: Pkcs7, Iso97971, AnsiX923, Iso10126, ZeroPadding, NoPadding.
-- KDFs: PBKDF2, EvpKDF.
-- Formats: OpenSSL `Salted__` and raw bytes.
+```ts
+import { registry } from '@crypto/classic';
 
-AES-GCM is still planned, but it should come after the current online-tools surface is represented cleanly.
+const cipher = registry.createCipher({
+  cipher: 'AES',
+  mode: 'CBC',
+  padding: 'Pkcs7',
+  key,
+  iv,
+});
 
-## Shape
+const ciphertext = cipher.encrypt(plaintext);
+const decrypted = cipher.decrypt(ciphertext);
+```
+
+`createCipher` returns a reusable facade. Each `encrypt` or `decrypt` call creates a fresh transform internally, so the facade can be reused safely for multiple one-shot calls.
+
+## Streaming
 
 ```ts
 import { concatBytes } from '@crypto/core';
@@ -36,12 +47,10 @@ import { registry } from '@crypto/classic';
 const cipher = registry.createCipher({
   cipher: 'AES',
   mode: 'CBC',
-  padding: 'NoPadding',
+  padding: 'Pkcs7',
   key,
   iv,
 });
-
-const oneShotCiphertext = cipher.encrypt(plaintext);
 
 const encryptor = cipher.createEncryptor();
 const ciphertext = concatBytes(
@@ -49,24 +58,18 @@ const ciphertext = concatBytes(
   encryptor.process(chunk2),
   encryptor.finalize(),
 );
+
+const decryptor = cipher.createDecryptor();
+const plaintext = concatBytes(
+  decryptor.process(ciphertext.subarray(0, 7)),
+  decryptor.process(ciphertext.subarray(7)),
+  decryptor.finalize(),
+);
 ```
 
-Stream ciphers do not use mode, padding, or IV:
+## Passphrases
 
-```ts
-import { createRegistry } from '@crypto/core';
-import { rc4 } from '@crypto/classic';
-
-const cipher = createRegistry().use(rc4).createCipher({
-  cipher: 'RC4',
-  key,
-  drop: 256,
-});
-
-const ciphertext = cipher.encrypt(plaintext);
-```
-
-Passphrase-based encryption derives key and IV, then optionally wraps the salt and ciphertext using a format component:
+Passphrase ciphers derive key and IV through a KDF, then optionally wrap salt and ciphertext through a format component.
 
 ```ts
 import { registry } from '@crypto/classic';
@@ -88,4 +91,93 @@ const encrypted = cipher.encrypt(plaintext);
 const decrypted = cipher.decrypt(encrypted);
 ```
 
-Compatibility requirements from online-tools, such as CryptoJS/OpenSSL output formats and EvpKDF, should be added as separate components rather than baked into the core.
+The passphrase API also supports streaming:
+
+```ts
+import { concatBytes } from '@crypto/core';
+
+const encryptor = cipher.createEncryptor();
+const encrypted = concatBytes(
+  encryptor.process(chunk1),
+  encryptor.process(chunk2),
+  encryptor.finalize(),
+);
+```
+
+## Stream Ciphers
+
+Stream ciphers do not use mode, padding, or IV.
+
+```ts
+import { registry } from '@crypto/classic';
+
+const cipher = registry.createCipher({
+  cipher: 'RC4Drop',
+  key,
+  drop: 256,
+});
+
+const ciphertext = cipher.encrypt(plaintext);
+```
+
+## Custom Registry
+
+The classic package exports a singleton `registry` for normal use and a factory when isolation is useful.
+
+```ts
+import { createRegistry } from '@crypto/core';
+import { aes, cbc, pkcs7 } from '@crypto/classic';
+
+const registry = createRegistry()
+  .use(aes)
+  .use(cbc)
+  .use(pkcs7);
+```
+
+## Browser Builds
+
+Both packages ship ESM, CommonJS, IIFE, and UMD outputs.
+
+```ts
+import { createRegistry } from '@crypto/core';
+import { registry } from '@crypto/classic';
+```
+
+```html
+<script src="node_modules/@crypto/core/dist/crypto-core.iife.min.js"></script>
+<script src="node_modules/@crypto/classic/dist/crypto-classic.iife.min.js"></script>
+<script>
+  const cipher = cryptoClassic.registry.createCipher({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs7',
+    key,
+    iv,
+  });
+</script>
+```
+
+## Supported Classic Components
+
+- Ciphers: AES, DES, Triple DES, RC4, RC4Drop.
+- Modes: CBC, CFB, CTR, OFB, ECB.
+- Paddings: Pkcs7, Iso97971, AnsiX923, Iso10126, ZeroPadding, NoPadding.
+- KDFs: PBKDF2, EvpKDF.
+- Formats: OpenSSL `Salted__`.
+
+AES-GCM is planned but not part of this first classic slice.
+
+## Development
+
+```sh
+npm install
+npm run build
+npm test
+npm run coverage
+```
+
+`npm run build` creates ESM, CommonJS, IIFE, and UMD bundles for each published package. `npm run coverage` writes text output and an HTML report under `coverage/`.
+
+## Security
+
+This first release focuses on classic online-tools compatibility. Prefer modern authenticated encryption where available, do not use legacy ciphers for new protocols, and avoid reusing keys or IVs.

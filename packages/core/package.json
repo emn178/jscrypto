@@ -1,22 +1,40 @@
 {
   "name": "@crypto/core",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0",
   "description": "Core registry, types, and utilities for @crypto components.",
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./browser": "./dist/crypto-core.iife.min.js",
+    "./umd": "./dist/crypto-core.umd.min.js"
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc -b --pretty false"
   },
+  "keywords": [
+    "crypto",
+    "cryptography",
+    "cipher",
+    "registry",
+    "framework"
+  ],
+  "author": "Chen, Yi-Cyuan <emn178@gmail.com>",
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
   "license": "MIT"
 }
-
