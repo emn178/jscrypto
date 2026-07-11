@@ -1,4 +1,4 @@
-import { assertBlockSize, assertPaddedInput, getBlockPaddingLength, type PaddingComponent } from '@crypto/core';
+import { assertBlockSize, assertPaddedInput, getBlockPaddingLength, type PaddingComponent } from '@jscrypto/core';
 
 export const pkcs7: PaddingComponent<'Pkcs7'> = {
   kind: 'padding',

@@ -1,7 +1,7 @@
 {
-  "name": "@crypto/core",
+  "name": "@jscrypto/core",
   "version": "0.1.0",
-  "description": "Core registry, types, and utilities for @crypto components.",
+  "description": "Core registry, types, and utilities for @jscrypto components.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -12,8 +12,8 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
     },
-    "./browser": "./dist/crypto-core.iife.min.js",
-    "./umd": "./dist/crypto-core.umd.min.js"
+    "./browser": "./dist/jscrypto-core.iife.min.js",
+    "./umd": "./dist/jscrypto-core.umd.min.js"
   },
   "files": [
     "dist",

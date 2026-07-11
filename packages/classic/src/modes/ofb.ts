@@ -1,4 +1,4 @@
-import { assertIv, type BlockCipher, type ModeComponent, type Transform } from '@crypto/core';
+import { assertIv, type BlockCipher, type ModeComponent, type Transform } from '@jscrypto/core';
 
 export const ofb: ModeComponent<'OFB'> = {
   kind: 'mode',

@@ -1,19 +1,19 @@
-# @crypto/classic
+# @jscrypto/classic
 
-Classic cipher, mode, padding, KDF, and format components for `@crypto`.
+Classic cipher, mode, padding, KDF, and format components for `@jscrypto`.
 
 This package is the first compatibility preset for online-tools. It is CryptoJS-compatible where classic behavior depends on CryptoJS formats or KDFs.
 
 ## Install
 
 ```sh
-npm install @crypto/core @crypto/classic
+npm install @jscrypto/core @jscrypto/classic
 ```
 
 ## Quick Start
 
 ```ts
-import { registry } from '@crypto/classic';
+import { registry } from '@jscrypto/classic';
 
 const cipher = registry.createCipher({
   cipher: 'AES',
@@ -30,7 +30,7 @@ const decrypted = cipher.decrypt(ciphertext);
 ## Passphrase Encryption
 
 ```ts
-import { registry } from '@crypto/classic';
+import { registry } from '@jscrypto/classic';
 
 const cipher = registry.createPassphraseCipher({
   cipher: 'AES',
@@ -62,8 +62,8 @@ const decrypted = cipher.decrypt(encrypted);
 ## Custom Registry
 
 ```ts
-import { createRegistry } from '@crypto/core';
-import { aes, cbc, pkcs7 } from '@crypto/classic';
+import { createRegistry } from '@jscrypto/core';
+import { aes, cbc, pkcs7 } from '@jscrypto/classic';
 
 const registry = createRegistry()
   .use(aes)
@@ -74,9 +74,9 @@ const registry = createRegistry()
 ## Browser Global
 
 ```html
-<script src="node_modules/@crypto/classic/dist/crypto-classic.iife.min.js"></script>
+<script src="node_modules/@jscrypto/classic/dist/jscrypto-classic.iife.min.js"></script>
 <script>
-  const cipher = cryptoClassic.registry.createCipher({
+  const cipher = jscryptoClassic.registry.createCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { concatBytes, createRegistry } from '@crypto/core';
-import { aes, ecb, pkcs7 } from '@crypto/classic';
+import { concatBytes, createRegistry } from '@jscrypto/core';
+import { aes, ecb, pkcs7 } from '@jscrypto/classic';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 test('AES-256-ECB streams encryption and decryption with Pkcs7', () => {

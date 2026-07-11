@@ -57,10 +57,10 @@ Compatibility details:
 
 Implemented enough to test AES, DES, Triple DES, and RC4 against online-tools-compatible vectors:
 
-- `@crypto/core`
-- `@crypto/classic`
+- `@jscrypto/core`
+- `@jscrypto/classic`
 
-`@crypto/classic` contains internal modules for the CryptoJS adapter, AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, ECB, OFB, NoPadding, Pkcs7, AnsiX923, Iso10126, Iso97971, ZeroPadding, PBKDF2, EvpKDF, and OpenSSL `Salted__` format.
+`@jscrypto/classic` contains internal modules for the CryptoJS adapter, AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, ECB, OFB, NoPadding, Pkcs7, AnsiX923, Iso10126, Iso97971, ZeroPadding, PBKDF2, EvpKDF, and OpenSSL `Salted__` format.
 
 Current working API:
 
@@ -78,7 +78,7 @@ Current working API:
 
 Metadata/component placeholders:
 
-- GCM mode placeholder inside `@crypto/classic`
+- GCM mode placeholder inside `@jscrypto/classic`
 
 Missing package scaffolds for first parity:
 - None for the current online-tools AES/DES/Triple DES/RC4 surface.

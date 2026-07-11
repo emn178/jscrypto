@@ -19,17 +19,17 @@ test('browser IIFE builds expose globals', async () => {
   vm.createContext(context);
 
   for (const file of [
-    '../packages/core/dist/crypto-core.iife.js',
-    '../packages/core/dist/crypto-core.iife.min.js',
-    '../packages/classic/dist/crypto-classic.iife.js',
-    '../packages/classic/dist/crypto-classic.iife.min.js',
+    '../packages/core/dist/jscrypto-core.iife.js',
+    '../packages/core/dist/jscrypto-core.iife.min.js',
+    '../packages/classic/dist/jscrypto-classic.iife.js',
+    '../packages/classic/dist/jscrypto-classic.iife.min.js',
   ]) {
     const code = await readFile(new URL(file, import.meta.url), 'utf8');
     vm.runInContext(code, context);
   }
 
-  assert.equal(typeof context.cryptoCore.createRegistry, 'function');
-  assert.equal(typeof context.cryptoClassic.registry.createCipher, 'function');
+  assert.equal(typeof context.jscryptoCore.createRegistry, 'function');
+  assert.equal(typeof context.jscryptoClassic.registry.createCipher, 'function');
 });
 
 test('UMD builds support AMD loaders', async () => {
@@ -43,10 +43,10 @@ test('UMD builds support AMD loaders', async () => {
   vm.createContext(context);
 
   for (const file of [
-    '../packages/core/dist/crypto-core.umd.js',
-    '../packages/core/dist/crypto-core.umd.min.js',
-    '../packages/classic/dist/crypto-classic.umd.js',
-    '../packages/classic/dist/crypto-classic.umd.min.js',
+    '../packages/core/dist/jscrypto-core.umd.js',
+    '../packages/core/dist/jscrypto-core.umd.min.js',
+    '../packages/classic/dist/jscrypto-classic.umd.js',
+    '../packages/classic/dist/jscrypto-classic.umd.min.js',
   ]) {
     const code = await readFile(new URL(file, import.meta.url), 'utf8');
     vm.runInContext(code, context);

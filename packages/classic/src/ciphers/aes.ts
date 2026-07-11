@@ -1,5 +1,5 @@
 import { createCryptoJsBlockCipher, CryptoJS } from '../adapter/crypto-js.js';
-import type { BlockCipher, CipherComponent } from '@crypto/core';
+import type { BlockCipher, CipherComponent } from '@jscrypto/core';
 
 export const aes: CipherComponent<'AES'> = {
   kind: 'cipher',

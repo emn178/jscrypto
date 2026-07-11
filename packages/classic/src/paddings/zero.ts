@@ -1,4 +1,4 @@
-import type { PaddingComponent } from '@crypto/core';
+import type { PaddingComponent } from '@jscrypto/core';
 
 export const zeroPadding: PaddingComponent<'ZeroPadding'> = {
   kind: 'padding',

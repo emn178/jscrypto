@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { concatBytes } from '@crypto/core';
-import { createClassicRegistry, registry } from '@crypto/classic';
+import { concatBytes } from '@jscrypto/core';
+import { createClassicRegistry, registry } from '@jscrypto/classic';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 test('cipher facade encrypts and decrypts one-shot calls', () => {

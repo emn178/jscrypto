@@ -14,7 +14,7 @@ import {
   equalBytes,
   getBlockPaddingLength,
   xorBytes,
-} from '@crypto/core';
+} from '@jscrypto/core';
 import {
   ansiX923,
   aes,
@@ -44,7 +44,7 @@ import {
   derivePbkdf2,
   bytesToWordArray,
   wordArrayToBytes,
-} from '@crypto/classic';
+} from '@jscrypto/classic';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 const key = hexToBytes('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');

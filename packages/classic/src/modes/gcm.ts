@@ -1,4 +1,4 @@
-import type { ModeComponent } from '@crypto/core';
+import type { ModeComponent } from '@jscrypto/core';
 
 export const gcm: ModeComponent<'GCM'> = {
   kind: 'mode',

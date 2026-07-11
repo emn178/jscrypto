@@ -8,20 +8,20 @@ const owner = 'Chen, Yi-Cyuan';
 
 const packages = [
   {
-    name: '@crypto/core',
-    displayName: 'crypto-core',
-    globalName: 'cryptoCore',
+    name: '@jscrypto/core',
+    displayName: 'jscrypto-core',
+    globalName: 'jscryptoCore',
     entryPoint: 'packages/core/src/index.ts',
     distDir: 'packages/core/dist',
     externals: [],
   },
   {
-    name: '@crypto/classic',
-    displayName: 'crypto-classic',
-    globalName: 'cryptoClassic',
+    name: '@jscrypto/classic',
+    displayName: 'jscrypto-classic',
+    globalName: 'jscryptoClassic',
     entryPoint: 'packages/classic/src/index.ts',
     distDir: 'packages/classic/dist',
-    externals: ['@crypto/core', 'crypto-js'],
+    externals: ['@jscrypto/core', 'crypto-js'],
   },
 ];
 

@@ -1,28 +1,28 @@
-# @crypto
+# @jscrypto
 
 Composable cryptography components for JavaScript and TypeScript.
 
-`@crypto` is a small Uint8Array-first framework for wiring ciphers, modes, paddings, KDFs, formats, and presets through one registry. The first release focuses on the classic CryptoJS-compatible features currently needed by online-tools.
+`@jscrypto` is a small Uint8Array-first framework for wiring ciphers, modes, paddings, KDFs, formats, and presets through one registry. The first release focuses on the classic CryptoJS-compatible features currently needed by online-tools.
 
 This project is not affiliated with Node.js `crypto`, the Web Crypto API, or npm.
 
 ## Packages
 
-- `@crypto/core`: registry, component contracts, transform helpers, byte helpers, and shared errors.
-- `@crypto/classic`: AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, OFB, ECB, classic paddings, PBKDF2, EvpKDF, and OpenSSL `Salted__` formatting.
+- `@jscrypto/core`: registry, component contracts, transform helpers, byte helpers, and shared errors.
+- `@jscrypto/classic`: AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, OFB, ECB, classic paddings, PBKDF2, EvpKDF, and OpenSSL `Salted__` formatting.
 
-The public package count is intentionally small. `@crypto/classic` still keeps internal modules split by cipher, mode, padding, KDF, format, adapter, and preset so those boundaries stay testable and can be split later if the need becomes real.
+The public package count is intentionally small. `@jscrypto/classic` still keeps internal modules split by cipher, mode, padding, KDF, format, adapter, and preset so those boundaries stay testable and can be split later if the need becomes real.
 
 ## Install
 
 ```sh
-npm install @crypto/core @crypto/classic
+npm install @jscrypto/core @jscrypto/classic
 ```
 
 ## Quick Start
 
 ```ts
-import { registry } from '@crypto/classic';
+import { registry } from '@jscrypto/classic';
 
 const cipher = registry.createCipher({
   cipher: 'AES',
@@ -41,8 +41,8 @@ const decrypted = cipher.decrypt(ciphertext);
 ## Streaming
 
 ```ts
-import { concatBytes } from '@crypto/core';
-import { registry } from '@crypto/classic';
+import { concatBytes } from '@jscrypto/core';
+import { registry } from '@jscrypto/classic';
 
 const cipher = registry.createCipher({
   cipher: 'AES',
@@ -72,7 +72,7 @@ const plaintext = concatBytes(
 Passphrase ciphers derive key and IV through a KDF, then optionally wrap salt and ciphertext through a format component.
 
 ```ts
-import { registry } from '@crypto/classic';
+import { registry } from '@jscrypto/classic';
 
 const cipher = registry.createPassphraseCipher({
   cipher: 'AES',
@@ -94,7 +94,7 @@ const decrypted = cipher.decrypt(encrypted);
 The passphrase API also supports streaming:
 
 ```ts
-import { concatBytes } from '@crypto/core';
+import { concatBytes } from '@jscrypto/core';
 
 const encryptor = cipher.createEncryptor();
 const encrypted = concatBytes(
@@ -109,7 +109,7 @@ const encrypted = concatBytes(
 Stream ciphers do not use mode, padding, or IV.
 
 ```ts
-import { registry } from '@crypto/classic';
+import { registry } from '@jscrypto/classic';
 
 const cipher = registry.createCipher({
   cipher: 'RC4Drop',
@@ -125,8 +125,8 @@ const ciphertext = cipher.encrypt(plaintext);
 The classic package exports a singleton `registry` for normal use and a factory when isolation is useful.
 
 ```ts
-import { createRegistry } from '@crypto/core';
-import { aes, cbc, pkcs7 } from '@crypto/classic';
+import { createRegistry } from '@jscrypto/core';
+import { aes, cbc, pkcs7 } from '@jscrypto/classic';
 
 const registry = createRegistry()
   .use(aes)
@@ -139,15 +139,15 @@ const registry = createRegistry()
 Both packages ship ESM, CommonJS, IIFE, and UMD outputs.
 
 ```ts
-import { createRegistry } from '@crypto/core';
-import { registry } from '@crypto/classic';
+import { createRegistry } from '@jscrypto/core';
+import { registry } from '@jscrypto/classic';
 ```
 
 ```html
-<script src="node_modules/@crypto/core/dist/crypto-core.iife.min.js"></script>
-<script src="node_modules/@crypto/classic/dist/crypto-classic.iife.min.js"></script>
+<script src="node_modules/@jscrypto/core/dist/jscrypto-core.iife.min.js"></script>
+<script src="node_modules/@jscrypto/classic/dist/jscrypto-classic.iife.min.js"></script>
 <script>
-  const cipher = cryptoClassic.registry.createCipher({
+  const cipher = jscryptoClassic.registry.createCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',

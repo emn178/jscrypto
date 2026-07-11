@@ -1,4 +1,4 @@
-import type { BlockCipher } from '@crypto/core';
+import type { BlockCipher } from '@jscrypto/core';
 import CryptoJS from 'crypto-js';
 
 export interface CryptoJsBlockCipherOptions {

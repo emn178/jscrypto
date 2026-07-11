@@ -2,7 +2,7 @@ import {
   assertBlockSize as assertCoreBlockSize,
   assertPaddedInput as assertCorePaddedInput,
   type PaddingComponent,
-} from '@crypto/core';
+} from '@jscrypto/core';
 
 export const iso97971: PaddingComponent<'Iso97971'> = {
   kind: 'padding',

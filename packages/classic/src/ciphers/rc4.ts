@@ -1,4 +1,4 @@
-import type { StreamCipherComponent, Transform } from '@crypto/core';
+import type { StreamCipherComponent, Transform } from '@jscrypto/core';
 
 export interface Rc4Options {
   readonly drop?: number;

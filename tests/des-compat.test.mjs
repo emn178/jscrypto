@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createRegistry } from '@crypto/core';
-import { ansiX923, cbc, cfb, ctr, des, ecb, iso97971, noPadding, ofb, pkcs7, zeroPadding } from '@crypto/classic';
+import { createRegistry } from '@jscrypto/core';
+import { ansiX923, cbc, cfb, ctr, des, ecb, iso97971, noPadding, ofb, pkcs7, zeroPadding } from '@jscrypto/classic';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 const key = hexToBytes('0001020304050607');

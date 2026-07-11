@@ -3,7 +3,7 @@ import {
   assertPaddedInput as assertCorePaddedInput,
   getBlockPaddingLength,
   type PaddingComponent,
-} from '@crypto/core';
+} from '@jscrypto/core';
 
 export const ansiX923: PaddingComponent<'AnsiX923'> = {
   kind: 'padding',

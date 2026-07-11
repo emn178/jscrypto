@@ -1,5 +1,5 @@
 {
-  "name": "@crypto/monorepo",
+  "name": "@jscrypto/monorepo",
   "private": true,
   "version": "0.0.0",
   "description": "Composable cryptography components for JavaScript and TypeScript.",

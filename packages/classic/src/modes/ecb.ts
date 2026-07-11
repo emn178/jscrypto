@@ -1,4 +1,4 @@
-import { assertBlockMultiple as assertCoreBlockMultiple, type BlockCipher, type ModeComponent, type Transform } from '@crypto/core';
+import { assertBlockMultiple as assertCoreBlockMultiple, type BlockCipher, type ModeComponent, type Transform } from '@jscrypto/core';
 
 export const ecb: ModeComponent<'ECB'> = {
   kind: 'mode',

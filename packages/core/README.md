@@ -1,18 +1,18 @@
-# @crypto/core
+# @jscrypto/core
 
-Core registry, component contracts, transform helpers, byte helpers, and shared errors for `@crypto` packages.
+Core registry, component contracts, transform helpers, byte helpers, and shared errors for `@jscrypto` packages.
 
 ## Install
 
 ```sh
-npm install @crypto/core
+npm install @jscrypto/core
 ```
 
 ## Usage
 
 ```ts
-import { createRegistry } from '@crypto/core';
-import { aes, cbc, pkcs7 } from '@crypto/classic';
+import { createRegistry } from '@jscrypto/core';
+import { aes, cbc, pkcs7 } from '@jscrypto/classic';
 
 const registry = createRegistry()
   .use(aes)
@@ -39,4 +39,4 @@ const ciphertext = cipher.encrypt(plaintext);
 - Block helpers: block-size, IV, and padding assertions.
 - Errors: `CryptoError`, `DuplicateComponentError`, and `MissingComponentError`.
 
-`@crypto/core` does not include concrete cryptographic algorithms. Use `@crypto/classic` or custom components for actual ciphers, modes, paddings, KDFs, and formats.
+`@jscrypto/core` does not include concrete cryptographic algorithms. Use `@jscrypto/classic` or custom components for actual ciphers, modes, paddings, KDFs, and formats.

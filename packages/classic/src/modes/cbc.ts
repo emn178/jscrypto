@@ -5,7 +5,7 @@ import {
   type BlockCipher,
   type ModeComponent,
   type Transform,
-} from '@crypto/core';
+} from '@jscrypto/core';
 
 export const cbc: ModeComponent<'CBC'> = {
   kind: 'mode',

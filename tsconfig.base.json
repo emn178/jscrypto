@@ -15,10 +15,10 @@
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
-      "@crypto/core": [
+      "@jscrypto/core": [
         "packages/core/src/index.ts"
       ],
-      "@crypto/classic": [
+      "@jscrypto/classic": [
         "packages/classic/src/index.ts"
       ]
     },

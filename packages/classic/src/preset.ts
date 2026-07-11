@@ -1,4 +1,4 @@
-import { createRegistry, type PresetComponent, type Registry } from '@crypto/core';
+import { createRegistry, type PresetComponent, type Registry } from '@jscrypto/core';
 import { aes } from './ciphers/aes.js';
 import { des } from './ciphers/des.js';
 import { rc4, rc4Drop } from './ciphers/rc4.js';

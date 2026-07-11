@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { concatBytes } from '@crypto/core';
-import { registry } from '@crypto/classic';
+import { concatBytes } from '@jscrypto/core';
+import { registry } from '@jscrypto/classic';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 test('passphrase cipher matches CryptoJS OpenSSL AES-CBC output with fixed salt', () => {

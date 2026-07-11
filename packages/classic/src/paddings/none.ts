@@ -1,4 +1,4 @@
-import { assertBlockMultiple, type PaddingComponent } from '@crypto/core';
+import { assertBlockMultiple, type PaddingComponent } from '@jscrypto/core';
 
 export const noPadding: PaddingComponent<'NoPadding'> = {
   kind: 'padding',

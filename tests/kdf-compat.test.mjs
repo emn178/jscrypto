@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { deriveEvpKdf, derivePbkdf2, evpKdf, pbkdf2 } from '@crypto/classic';
+import { deriveEvpKdf, derivePbkdf2, evpKdf, pbkdf2 } from '@jscrypto/classic';
 import { bytesToHex, hexToBytes } from './helpers/bytes.mjs';
 
 test('PBKDF2 matches CryptoJS upstream vectors', () => {

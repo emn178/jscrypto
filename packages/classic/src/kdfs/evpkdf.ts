@@ -1,5 +1,5 @@
 import { bytesToWordArray, CryptoJS, wordArrayToBytes } from '../adapter/crypto-js.js';
-import type { KdfComponent } from '@crypto/core';
+import type { KdfComponent } from '@jscrypto/core';
 
 export interface EvpKdfParams {
   passphrase: Uint8Array | string;

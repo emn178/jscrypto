@@ -1,6 +1,6 @@
 # Architecture
 
-`@crypto/core` defines the framework contract. It intentionally does not implement AES, CBC, PBKDF2, OpenSSL formatting, or backend selection.
+`@jscrypto/core` defines the framework contract. It intentionally does not implement AES, CBC, PBKDF2, OpenSSL formatting, or backend selection.
 
 First-class component kinds:
 
@@ -11,7 +11,7 @@ First-class component kinds:
 - `format`
 - `preset`
 
-Component modules may expose their own internal extension points. For example, the PBKDF2 implementation in `@crypto/classic` may decide how selectable hash functions work without requiring a global hash registry in core.
+Component modules may expose their own internal extension points. For example, the PBKDF2 implementation in `@jscrypto/classic` may decide how selectable hash functions work without requiring a global hash registry in core.
 
 ## Non-goals for core
 
@@ -29,14 +29,14 @@ Core APIs are `Uint8Array`-first. String encodings, CryptoJS adapters, and OpenS
 
 Compatibility with online-tools should be provided through packages such as:
 
-- `@crypto/classic`
+- `@jscrypto/classic`
 
 The public npm surface is currently two packages:
 
-- `@crypto/core`: framework contracts and shared helpers.
-- `@crypto/classic`: online-tools-compatible classic ciphers, modes, paddings, KDFs, formats, and the CryptoJS adapter used by those implementations.
+- `@jscrypto/core`: framework contracts and shared helpers.
+- `@jscrypto/classic`: online-tools-compatible classic ciphers, modes, paddings, KDFs, formats, and the CryptoJS adapter used by those implementations.
 
-Inside `@crypto/classic`, code remains split by concern under `src/ciphers`, `src/modes`, `src/paddings`, `src/kdfs`, `src/formats`, `src/adapter`, and `src/preset`. That keeps the implementation modular without forcing users to install a separate npm package for every single component.
+Inside `@jscrypto/classic`, code remains split by concern under `src/ciphers`, `src/modes`, `src/paddings`, `src/kdfs`, `src/formats`, `src/adapter`, and `src/preset`. That keeps the implementation modular without forcing users to install a separate npm package for every single component.
 
 Mode components provide stateful transform factories only. One-shot encryption and decryption are registry conveniences built by creating a transform and finalizing it with the complete input.
 
@@ -49,7 +49,7 @@ Cipher components are split by `type`:
 
 The first milestone is parity with the current CryptoJS-backed online-tools behavior, not AES-GCM.
 
-Initial parity modules inside `@crypto/classic`:
+Initial parity modules inside `@jscrypto/classic`:
 
 - CryptoJS adapter
 - AES, DES, Triple DES

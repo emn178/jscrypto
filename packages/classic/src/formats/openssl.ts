@@ -1,5 +1,5 @@
-import type { FormatComponent } from '@crypto/core';
-import { concatBytes, equalBytes } from '@crypto/core';
+import type { FormatComponent } from '@jscrypto/core';
+import { concatBytes, equalBytes } from '@jscrypto/core';
 
 export const OPENSSL_SALTED_MAGIC = new Uint8Array([
   0x53, 0x61, 0x6c, 0x74, 0x65, 0x64, 0x5f, 0x5f,
