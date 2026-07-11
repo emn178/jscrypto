@@ -1,0 +1,25 @@
+{
+  "name": "@crypto/classic",
+  "version": "0.1.0-alpha.0",
+  "description": "Classic cipher, mode, padding, KDF, and format components for @crypto.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "dependencies": {
+    "@crypto/core": "0.1.0-alpha.0",
+    "crypto-js": "^4.2.0"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "license": "MIT"
+}
