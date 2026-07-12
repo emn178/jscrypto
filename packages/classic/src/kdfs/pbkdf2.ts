@@ -57,7 +57,7 @@ function getHasher(hash: string | undefined): typeof CryptoJS.algo.SHA256 | unde
 }
 
 function normalizeHashName(hash: string): string {
-  return hash.replaceAll('-', '').toUpperCase();
+  return hash.replace(/-/g, '').toUpperCase();
 }
 
 function assertPositiveInteger(value: number, label: string): void {

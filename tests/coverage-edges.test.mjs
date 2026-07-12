@@ -194,6 +194,9 @@ test('classic paddings validate edge cases and random fallbacks', () => {
     assert.equal(bytesToHex(iso10126.pad(textToBytes('abc'), 4)), '61626301');
     assert.equal(bytesToHex(iso10126.pad(textToBytes('a'), 4)), '61ffff03');
   });
+  withNoCryptoRandom(() => {
+    assert.equal(bytesToHex(iso10126.pad(textToBytes('a'), 4)), '61ffff03');
+  });
 });
 
 test('mode finalizers and counter carry branches are covered', () => {
@@ -235,11 +238,6 @@ test('mode finalizers and counter carry branches are covered', () => {
   assert.deepEqual(observedCounters, ['0000']);
 });
 
-test('GCM placeholder throws explicit not implemented errors', () => {
-  assert.throws(() => gcm.createEncryptor(), /not implemented/);
-  assert.throws(() => gcm.createDecryptor(), /not implemented/);
-});
-
 test('RC4 option validation and defaults cover stream branches', () => {
   assert.equal(bytesToHex(createRc4Transform(textToBytes('secret')).finalize()), '');
   const direct = createRc4Transform(textToBytes('secret'));
@@ -266,6 +264,17 @@ test('passphrase ciphers cover no-format and random salt branches', () => {
   assert.equal(bytesToText(cipher.decrypt(encrypted)), 'abc');
 
   withDeterministicRandom(() => {
+    const randomSaltCipher = registry.createPassphraseCipher({
+      cipher: 'AES',
+      mode: 'CBC',
+      padding: 'Pkcs7',
+      passphrase: 'secret',
+      kdf: 'EvpKDF',
+      format: 'OpenSSL',
+    });
+    assert.equal(bytesToHex(randomSaltCipher.encrypt(textToBytes('abc')).subarray(0, 16)), '53616c7465645f5fffffffffffffffff');
+  });
+  withNoCryptoRandom(() => {
     const randomSaltCipher = registry.createPassphraseCipher({
       cipher: 'AES',
       mode: 'CBC',
@@ -467,6 +476,21 @@ function withDeterministicRandom(callback) {
       Object.defineProperty(globalThis, 'crypto', descriptor);
     } else {
       delete globalThis.crypto;
+    }
+  }
+}
+
+function withNoCryptoRandom(callback) {
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+  const originalRandom = Math.random;
+  delete globalThis.crypto;
+  Math.random = () => 0.999;
+  try {
+    callback();
+  } finally {
+    Math.random = originalRandom;
+    if (descriptor) {
+      Object.defineProperty(globalThis, 'crypto', descriptor);
     }
   }
 }

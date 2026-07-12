@@ -1,6 +1,6 @@
 {
   "name": "@jscrypto/core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Core registry, types, and utilities for @jscrypto components.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -31,6 +31,15 @@
     "registry",
     "framework"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emn178/jscrypto.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/emn178/jscrypto/issues"
+  },
+  "homepage": "https://github.com/emn178/jscrypto#readme",
   "author": "Chen, Yi-Cyuan <emn178@gmail.com>",
   "publishConfig": {
     "access": "public"

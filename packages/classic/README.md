@@ -49,10 +49,30 @@ const encrypted = cipher.encrypt(plaintext);
 const decrypted = cipher.decrypt(encrypted);
 ```
 
+## AES-GCM
+
+GCM is an AEAD mode. It does not use padding, and encrypted output is `ciphertext || tag` by default. Decryption also supports detached tags by passing `tag`.
+
+```ts
+import { registry } from '@jscrypto/classic';
+
+const cipher = registry.createCipher({
+  cipher: 'AES',
+  mode: 'GCM',
+  key,
+  iv: nonce,
+  aad,
+  tagLength: 16,
+});
+
+const sealed = cipher.encrypt(plaintext);
+const decrypted = cipher.decrypt(sealed);
+```
+
 ## Components
 
 - Ciphers: `aes`, `des`, `tripleDes`, `rc4`, `rc4Drop`.
-- Modes: `cbc`, `cfb`, `ctr`, `ofb`, `ecb`.
+- Modes: `cbc`, `cfb`, `ctr`, `ofb`, `ecb`, `gcm`.
 - Paddings: `pkcs7`, `iso97971`, `ansiX923`, `iso10126`, `zeroPadding`, `noPadding`.
 - KDFs: `pbkdf2`, `evpKdf`.
 - Formats: `opensslFormat`.
@@ -85,5 +105,3 @@ const registry = createRegistry()
   });
 </script>
 ```
-
-AES-GCM is intentionally left out of this first release slice.

@@ -47,20 +47,19 @@ Cipher components are split by `type`:
 
 ## Implementation Order
 
-The first milestone is parity with the current CryptoJS-backed online-tools behavior, not AES-GCM.
+The first milestone is parity with the current CryptoJS-backed online-tools behavior plus AES-GCM.
 
 Initial parity modules inside `@jscrypto/classic`:
 
 - CryptoJS adapter
 - AES, DES, Triple DES
 - RC4, RC4Drop
-- CBC, CFB, CTR, OFB, ECB
+- CBC, CFB, CTR, OFB, ECB, GCM
 - Pkcs7, Iso97971, AnsiX923, Iso10126, ZeroPadding, NoPadding
 - PBKDF2, EvpKDF
 - OpenSSL `Salted__` format
 
 Deferred modules:
 
-- GCM mode
-- AEAD-specific API helpers
-- online-tools AES-GCM UI integration
+- Higher-level passphrase plus nonce flows for AEAD modes
+- Additional AEAD-specific API helpers

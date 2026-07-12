@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { rmSync } from 'node:fs';
 import * as esbuild from 'esbuild';
 
-const version = '0.1.0';
+const version = '0.2.0';
 const year = '2026';
 const owner = 'Chen, Yi-Cyuan';
 
@@ -63,6 +63,7 @@ async function buildPackage(pkg) {
     banner: {
       js: banner,
     },
+    target: 'es2015',
     logLevel: 'info',
   };
 

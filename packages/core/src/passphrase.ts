@@ -77,10 +77,10 @@ function createPassphraseEncryptor(
   let emittedHeader = false;
   const emitHeader = (): Uint8Array => {
     if (emittedHeader) {
-      return new Uint8Array();
+      return new Uint8Array(0);
     }
     emittedHeader = true;
-    return format.stringify({ ciphertext: new Uint8Array(), salt });
+    return format.stringify({ ciphertext: new Uint8Array(0), salt });
   };
 
   return {
@@ -88,7 +88,7 @@ function createPassphraseEncryptor(
       return concatBytes(emitHeader(), encryptor.process(input));
     },
 
-    finalize(input = new Uint8Array()) {
+    finalize(input = new Uint8Array(0)) {
       return concatBytes(emitHeader(), encryptor.finalize(input));
     },
   };
@@ -101,7 +101,7 @@ function createPassphraseDecryptor(
   const format = resolveFormat(registry, options);
 
   if (!format) {
-    const { key, iv } = deriveKeyIv(registry, options, new Uint8Array());
+    const { key, iv } = deriveKeyIv(registry, options, new Uint8Array(0));
     return registry.createCipher(toTransformOptions(options, key, iv)).createDecryptor();
   }
 
@@ -109,7 +109,7 @@ function createPassphraseDecryptor(
     return createBufferedFormatDecryptor(registry, options, format);
   }
 
-  let header = new Uint8Array();
+  let header = new Uint8Array(0);
   let decryptor: Transform | undefined;
 
   const initDecryptor = (input: Uint8Array): Uint8Array => {
@@ -119,32 +119,32 @@ function createPassphraseDecryptor(
 
     header = new Uint8Array(concatBytes(header, input));
     if (header.length < 16) {
-      return new Uint8Array();
+      return new Uint8Array(0);
     }
 
     const parsed = format.parse(header.slice(0, 16));
     const hasSalt = parsed.salt !== undefined;
-    const salt = parsed.salt ?? new Uint8Array();
+    const salt = parsed.salt ?? new Uint8Array(0);
     const ciphertext = hasSalt ? concatBytes(parsed.ciphertext, header.slice(16)) : header;
     const { key, iv } = deriveKeyIv(registry, options, salt);
     decryptor = registry.createCipher(toTransformOptions(options, key, iv)).createDecryptor();
-    header = new Uint8Array();
+    header = new Uint8Array(0);
     return ciphertext;
   };
 
   return {
     process(input) {
       const ciphertext = initDecryptor(input);
-      return decryptor ? decryptor.process(ciphertext) : new Uint8Array();
+      return decryptor ? decryptor.process(ciphertext) : new Uint8Array(0);
     },
 
-    finalize(input = new Uint8Array()) {
+    finalize(input = new Uint8Array(0)) {
       const ciphertext = initDecryptor(input);
       if (!decryptor) {
-        const { key, iv } = deriveKeyIv(registry, options, new Uint8Array());
+        const { key, iv } = deriveKeyIv(registry, options, new Uint8Array(0));
         decryptor = registry.createCipher(toTransformOptions(options, key, iv)).createDecryptor();
         const buffered = header;
-        header = new Uint8Array();
+        header = new Uint8Array(0);
         return decryptor.finalize(buffered);
       }
       return decryptor.finalize(ciphertext);
@@ -165,10 +165,10 @@ function createBufferedFormatEncryptor(
       if (output.length !== 0) {
         chunks.push(output);
       }
-      return new Uint8Array();
+      return new Uint8Array(0);
     },
 
-    finalize(input = new Uint8Array()) {
+    finalize(input = new Uint8Array(0)) {
       const output = encryptor.finalize(input);
       if (output.length !== 0) {
         chunks.push(output);
@@ -190,15 +190,15 @@ function createBufferedFormatDecryptor(
       if (input.length !== 0) {
         chunks.push(input);
       }
-      return new Uint8Array();
+      return new Uint8Array(0);
     },
 
-    finalize(input = new Uint8Array()) {
+    finalize(input = new Uint8Array(0)) {
       if (input.length !== 0) {
         chunks.push(input);
       }
       const parsed = format.parse(concatBytes(...chunks));
-      const { key, iv } = deriveKeyIv(registry, options, parsed.salt ?? new Uint8Array());
+      const { key, iv } = deriveKeyIv(registry, options, parsed.salt ?? new Uint8Array(0));
       return registry.createCipher(toTransformOptions(options, key, iv)).decrypt(parsed.ciphertext);
     },
   };

@@ -43,6 +43,7 @@ export interface ModeComponent<Name extends string = string> extends Component<'
 export interface BlockModeTransformParams {
   cipher: BlockCipher;
   iv?: Uint8Array;
+  options?: unknown;
 }
 
 export interface StreamCipherTransformParams {

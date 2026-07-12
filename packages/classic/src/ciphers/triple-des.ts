@@ -13,7 +13,7 @@ export const tripleDes: CipherComponent<'TripleDES'> = {
 };
 
 export function createTripleDesCipher(key: Uint8Array): BlockCipher {
-  if (![16, 24].includes(key.length)) {
+  if (key.length !== 16 && key.length !== 24) {
     throw new Error('Triple DES key must be 128 or 192 bits.');
   }
 

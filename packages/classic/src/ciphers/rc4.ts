@@ -53,10 +53,10 @@ export function createRc4Transform(key: Uint8Array, drop = 0): Transform {
       return processInput(input);
     },
 
-    finalize(input = new Uint8Array()) {
+    finalize(input = new Uint8Array(0)) {
       assertNotFinalized(finalized);
       finalized = true;
-      return input.length === 0 ? new Uint8Array() : processInput(input);
+      return input.length === 0 ? new Uint8Array(0) : processInput(input);
     },
   };
 }

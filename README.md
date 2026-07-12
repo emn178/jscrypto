@@ -9,7 +9,7 @@ This project is not affiliated with Node.js `crypto`, the Web Crypto API, or npm
 ## Packages
 
 - `@jscrypto/core`: registry, component contracts, transform helpers, byte helpers, and shared errors.
-- `@jscrypto/classic`: AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, OFB, ECB, classic paddings, PBKDF2, EvpKDF, and OpenSSL `Salted__` formatting.
+- `@jscrypto/classic`: AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, OFB, ECB, GCM, classic paddings, PBKDF2, EvpKDF, and OpenSSL `Salted__` formatting.
 
 The public package count is intentionally small. `@jscrypto/classic` still keeps internal modules split by cipher, mode, padding, KDF, format, adapter, and preset so those boundaries stay testable and can be split later if the need becomes real.
 
@@ -120,6 +120,37 @@ const cipher = registry.createCipher({
 const ciphertext = cipher.encrypt(plaintext);
 ```
 
+## AES-GCM
+
+GCM is an AEAD mode. It does not use padding, and encrypted output is `ciphertext || tag` by default. Decryption also supports detached tags by passing `tag`.
+
+```ts
+import { registry } from '@jscrypto/classic';
+
+const cipher = registry.createCipher({
+  cipher: 'AES',
+  mode: 'GCM',
+  key,
+  iv: nonce,
+  aad,
+  tagLength: 16,
+});
+
+const sealed = cipher.encrypt(plaintext);
+const decrypted = cipher.decrypt(sealed);
+
+const ciphertext = sealed.subarray(0, sealed.length - 16);
+const tag = sealed.subarray(sealed.length - 16);
+const detached = registry.createCipher({
+  cipher: 'AES',
+  mode: 'GCM',
+  key,
+  iv: nonce,
+  aad,
+  tag,
+}).decrypt(ciphertext);
+```
+
 ## Custom Registry
 
 The classic package exports a singleton `registry` for normal use and a factory when isolation is useful.
@@ -160,12 +191,10 @@ import { registry } from '@jscrypto/classic';
 ## Supported Classic Components
 
 - Ciphers: AES, DES, Triple DES, RC4, RC4Drop.
-- Modes: CBC, CFB, CTR, OFB, ECB.
+- Modes: CBC, CFB, CTR, OFB, ECB, GCM.
 - Paddings: Pkcs7, Iso97971, AnsiX923, Iso10126, ZeroPadding, NoPadding.
 - KDFs: PBKDF2, EvpKDF.
 - Formats: OpenSSL `Salted__`.
-
-AES-GCM is planned but not part of this first classic slice.
 
 ## Development
 

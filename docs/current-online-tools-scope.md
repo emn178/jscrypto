@@ -19,6 +19,7 @@ Mode components:
 - CTR
 - OFB
 - ECB
+- GCM
 
 Padding components:
 
@@ -47,8 +48,7 @@ Compatibility details:
 
 ## Out of Scope First
 
-- AES-GCM.
-- AAD and authentication tag UI.
+- automatic passphrase/KDF nonce generation for AES-GCM.
 - New backend selection concepts.
 - Global hash/MAC registries.
 - Global encoding or random registries.
@@ -60,7 +60,7 @@ Implemented enough to test AES, DES, Triple DES, and RC4 against online-tools-co
 - `@jscrypto/core`
 - `@jscrypto/classic`
 
-`@jscrypto/classic` contains internal modules for the CryptoJS adapter, AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, ECB, OFB, NoPadding, Pkcs7, AnsiX923, Iso10126, Iso97971, ZeroPadding, PBKDF2, EvpKDF, and OpenSSL `Salted__` format.
+`@jscrypto/classic` contains internal modules for the CryptoJS adapter, AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, ECB, OFB, GCM, NoPadding, Pkcs7, AnsiX923, Iso10126, Iso97971, ZeroPadding, PBKDF2, EvpKDF, and OpenSSL `Salted__` format.
 
 Current working API:
 
@@ -78,7 +78,7 @@ Current working API:
 
 Metadata/component placeholders:
 
-- GCM mode placeholder inside `@jscrypto/classic`
+- None for the current online-tools AES/DES/Triple DES/RC4/AES-GCM surface.
 
 Missing package scaffolds for first parity:
 - None for the current online-tools AES/DES/Triple DES/RC4 surface.

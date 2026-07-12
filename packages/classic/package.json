@@ -1,6 +1,6 @@
 {
   "name": "@jscrypto/classic",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Classic cipher, mode, padding, KDF, and format components for @jscrypto.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -21,7 +21,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@jscrypto/core": "0.1.0",
+    "@jscrypto/core": "0.2.0",
     "crypto-js": "^4.2.0"
   },
   "scripts": {
@@ -37,6 +37,15 @@
     "rc4",
     "crypto-js"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emn178/jscrypto.git",
+    "directory": "packages/classic"
+  },
+  "bugs": {
+    "url": "https://github.com/emn178/jscrypto/issues"
+  },
+  "homepage": "https://github.com/emn178/jscrypto#readme",
   "author": "Chen, Yi-Cyuan <emn178@gmail.com>",
   "publishConfig": {
     "access": "public"

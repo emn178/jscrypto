@@ -39,8 +39,8 @@ function createCbcEncryptor(cipher: BlockCipher, iv: Uint8Array): Transform {
       return output;
     },
 
-    finalize(input = new Uint8Array()) {
-      return input.length === 0 ? new Uint8Array() : this.process(input);
+    finalize(input = new Uint8Array(0)) {
+      return input.length === 0 ? new Uint8Array(0) : this.process(input);
     },
   };
 }
@@ -63,8 +63,8 @@ function createCbcDecryptor(cipher: BlockCipher, iv: Uint8Array): Transform {
       return output;
     },
 
-    finalize(input = new Uint8Array()) {
-      return input.length === 0 ? new Uint8Array() : this.process(input);
+    finalize(input = new Uint8Array(0)) {
+      return input.length === 0 ? new Uint8Array(0) : this.process(input);
     },
   };
 }

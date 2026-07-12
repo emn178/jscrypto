@@ -13,7 +13,7 @@ export const aes: CipherComponent<'AES'> = {
 };
 
 export function createAesCipher(key: Uint8Array): BlockCipher {
-  if (![16, 24, 32].includes(key.length)) {
+  if (key.length !== 16 && key.length !== 24 && key.length !== 32) {
     throw new Error('AES key must be 128, 192, or 256 bits.');
   }
 
