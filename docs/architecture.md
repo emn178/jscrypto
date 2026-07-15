@@ -27,16 +27,12 @@ Hash names are normalized, so `sha-256`, `SHA256`, and `sha256` address the same
 
 Core APIs are `Uint8Array`-first. String encodings, CryptoJS adapters, and OpenSSL-compatible packaging belong in helper or format packages.
 
-## Compatibility
+## Package Surface
 
-Compatibility with online-tools should be provided through packages such as:
-
-- `@jscrypto/classic`
-
-The public npm surface is currently two packages:
+The public npm surface is currently two packages plus one opt-in subpath:
 
 - `@jscrypto/core`: framework contracts and shared helpers.
-- `@jscrypto/classic`: online-tools-compatible classic ciphers, modes, paddings, KDFs, and formats.
+- `@jscrypto/classic`: classic ciphers, modes, paddings, KDFs, and formats with CryptoJS-compatible outputs where compatibility is intentional.
 - `@jscrypto/classic/hashes`: opt-in CryptoJS-compatible hash components for KDF/passphrase use.
 
 Inside `@jscrypto/classic`, code remains split by concern under `src/ciphers`, `src/modes`, `src/paddings`, `src/kdfs`, `src/formats`, `src/hashes`, and `src/preset`. Concrete hashes are deliberately excluded from the main classic entry and browser bundle; consumers opt in through the hashes subpath and call `registerClassicHashes(registry)`.
@@ -50,7 +46,7 @@ Cipher components are split by `type`:
 
 ## Implementation Order
 
-The first milestone is parity with the previous CryptoJS-backed online-tools behavior plus AES-GCM, without a CryptoJS runtime dependency.
+The first milestone is a standalone classic compatibility package with AES-GCM and no CryptoJS runtime dependency.
 
 Initial parity modules inside `@jscrypto/classic`:
 

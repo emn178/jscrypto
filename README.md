@@ -2,7 +2,7 @@
 
 Composable cryptography components for JavaScript and TypeScript.
 
-`@jscrypto` is a small Uint8Array-first framework for wiring ciphers, modes, paddings, KDFs, formats, hashes, and presets through one registry. The first release focuses on classic CryptoJS-compatible cipher/KDF/format behavior currently needed by online-tools. `@jscrypto/classic` no longer depends on CryptoJS.
+`@jscrypto` is a small Uint8Array-first framework for wiring ciphers, modes, paddings, KDFs, formats, hashes, and presets through one registry. The first release focuses on classic cipher/KDF/format behavior with CryptoJS-compatible outputs where compatibility is intentional. `@jscrypto/classic` no longer depends on CryptoJS.
 
 This project is not affiliated with Node.js `crypto`, the Web Crypto API, or npm.
 
@@ -216,4 +216,4 @@ npm run coverage
 
 ## Security
 
-This first release focuses on classic online-tools compatibility. Prefer modern authenticated encryption where available, do not use legacy ciphers for new protocols, and avoid reusing keys or IVs.
+This first release includes classic algorithms for compatibility with existing data and tools. Prefer modern authenticated encryption where available, do not use legacy ciphers for new protocols, and avoid reusing keys or IVs.

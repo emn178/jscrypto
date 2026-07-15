@@ -1,6 +1,6 @@
-# Current online-tools Scope
+# Classic Package Scope
 
-This document tracks the first compatibility target: replacing the current CryptoJS-backed online-tools crypto layer without adding new behavior first.
+This document tracks the current `@jscrypto/classic` package scope. The package is intended to stand on its own as a classic cryptography component set, with CryptoJS-compatible outputs where compatibility is intentional.
 
 ## In Scope First
 
@@ -42,12 +42,12 @@ Format components:
 
 Compatibility details:
 
-- Strict unpad validation matching online-tools behavior.
+- Strict unpad validation.
 - CryptoJS-compatible OpenSSL salt envelope.
 - KDF hashes are registry components. `@jscrypto/classic` does not register or bundle them by
   default; consumers can call `registerClassicHashes(registry)` from
   `@jscrypto/classic/hashes`, or register a custom `HashComponent` with `registry.useHash(...)`.
-- Text and file chunk flows should be considered before replacing online-tools integration.
+- Text and file chunk flows should be supported through the streaming transform APIs.
 
 ## Out of Scope First
 
@@ -55,9 +55,9 @@ Compatibility details:
 - New backend selection concepts.
 - Global encoding or random registries.
 
-## Existing Scaffold Status
+## Current Status
 
-Implemented enough to test AES, DES, Triple DES, and RC4 against online-tools-compatible vectors:
+Implemented as standalone packages:
 
 - `@jscrypto/core`
 - `@jscrypto/classic`
@@ -81,7 +81,7 @@ Current working API:
 
 Metadata/component placeholders:
 
-- None for the current online-tools AES/DES/Triple DES/RC4/AES-GCM surface.
+- None for the current AES/DES/Triple DES/RC4/AES-GCM surface.
 
 Missing package scaffolds for first parity:
-- None for the current online-tools AES/DES/Triple DES/RC4 surface.
+- None for the current AES/DES/Triple DES/RC4 surface.

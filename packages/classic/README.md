@@ -2,7 +2,7 @@
 
 Classic cipher, mode, padding, KDF, and format components for `@jscrypto`.
 
-This package is the first compatibility preset for online-tools. Classic cipher/mode/padding/KDF/format behavior remains CryptoJS-compatible where that compatibility is intentional. `@jscrypto/classic` does not depend on CryptoJS.
+This package provides classic cipher, mode, padding, KDF, and format components. Behavior remains CryptoJS-compatible where that compatibility is intentional. `@jscrypto/classic` does not depend on CryptoJS.
 
 ## Install
 
