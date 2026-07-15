@@ -1,5 +1,12 @@
 # Change Log
 
+## v0.3.1 / 2026-07-15
+
+### Fixed
+
+- fixed package versions for the `@jscrypto/core` and `@jscrypto/classic` npm release.
+- fixed browser bundle banners to derive their version from each package's `package.json` during build.
+
 ## v0.3.0 / 2026-07-15
 
 ### Added

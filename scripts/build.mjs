@@ -1,8 +1,7 @@
 import { execFileSync } from 'node:child_process';
-import { rmSync } from 'node:fs';
+import { readFileSync, rmSync } from 'node:fs';
 import * as esbuild from 'esbuild';
 
-const version = '0.3.0';
 const year = '2026';
 const owner = 'Chen, Yi-Cyuan';
 
@@ -12,6 +11,7 @@ const packages = [
     displayName: 'jscrypto-core',
     globalName: 'jscryptoCore',
     entryPoint: 'packages/core/src/index.ts',
+    packageJson: 'packages/core/package.json',
     distDir: 'packages/core/dist',
     externals: [],
   },
@@ -20,6 +20,7 @@ const packages = [
     displayName: 'jscrypto-classic',
     globalName: 'jscryptoClassic',
     entryPoint: 'packages/classic/src/index.ts',
+    packageJson: 'packages/classic/package.json',
     distDir: 'packages/classic/dist',
     externals: ['@jscrypto/core'],
   },
@@ -42,6 +43,7 @@ for (const pkg of packages) {
 await buildHashesPackage();
 
 async function buildPackage(pkg) {
+  const version = readPackageVersion(pkg.packageJson);
   const banner = `/*!
  * ${pkg.name} v${version}
  * Copyright ${year} ${owner}
@@ -124,6 +126,7 @@ async function buildPackage(pkg) {
 async function buildHashesPackage() {
   const entryPoint = 'packages/classic/src/hashes-entry.ts';
   const distDir = 'packages/classic/dist';
+  const version = readPackageVersion('packages/classic/package.json');
   const banner = `/*!
  * @jscrypto/classic hashes v${version}
  * Copyright ${year} ${owner}
@@ -158,4 +161,9 @@ async function buildHashesPackage() {
     minify: true,
     outfile: `${distDir}/jscrypto-classic-hashes.iife.min.js`,
   });
+}
+
+function readPackageVersion(packageJsonPath) {
+  const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+  return pkg.version;
 }
