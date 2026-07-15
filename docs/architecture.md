@@ -8,15 +8,17 @@ First-class component kinds:
 - `mode`
 - `padding`
 - `kdf`
+- `hash`
 - `format`
 - `preset`
 
-Component modules may expose their own internal extension points. For example, the PBKDF2 implementation in `@jscrypto/classic` may decide how selectable hash functions work without requiring a global hash registry in core.
+KDF components resolve hash implementations through the core registry. Applications register a
+`HashComponent` with `registry.useHash(hash)` and KDFs access it through their derive context.
+Hash names are normalized, so `sha-256`, `SHA256`, and `sha256` address the same component.
 
 ## Non-goals for core
 
 - No global backend registry. A package can choose its own implementation dependency.
-- No global hash/MAC registry in the first version.
 - No encoding registry in the first version.
 - No random source registry in the first version.
 - No CryptoJS `WordArray` in the core data model.
@@ -34,9 +36,10 @@ Compatibility with online-tools should be provided through packages such as:
 The public npm surface is currently two packages:
 
 - `@jscrypto/core`: framework contracts and shared helpers.
-- `@jscrypto/classic`: online-tools-compatible classic ciphers, modes, paddings, KDFs, formats, and the CryptoJS adapter used by those implementations.
+- `@jscrypto/classic`: online-tools-compatible classic ciphers, modes, paddings, KDFs, and formats.
+- `@jscrypto/classic/hashes`: opt-in CryptoJS-compatible hash components for KDF/passphrase use.
 
-Inside `@jscrypto/classic`, code remains split by concern under `src/ciphers`, `src/modes`, `src/paddings`, `src/kdfs`, `src/formats`, `src/adapter`, and `src/preset`. That keeps the implementation modular without forcing users to install a separate npm package for every single component.
+Inside `@jscrypto/classic`, code remains split by concern under `src/ciphers`, `src/modes`, `src/paddings`, `src/kdfs`, `src/formats`, `src/hashes`, and `src/preset`. Concrete hashes are deliberately excluded from the main classic entry and browser bundle; consumers opt in through the hashes subpath and call `registerClassicHashes(registry)`.
 
 Mode components provide stateful transform factories only. One-shot encryption and decryption are registry conveniences built by creating a transform and finalizing it with the complete input.
 
@@ -47,17 +50,17 @@ Cipher components are split by `type`:
 
 ## Implementation Order
 
-The first milestone is parity with the current CryptoJS-backed online-tools behavior plus AES-GCM.
+The first milestone is parity with the previous CryptoJS-backed online-tools behavior plus AES-GCM, without a CryptoJS runtime dependency.
 
 Initial parity modules inside `@jscrypto/classic`:
 
-- CryptoJS adapter
 - AES, DES, Triple DES
 - RC4, RC4Drop
 - CBC, CFB, CTR, OFB, ECB, GCM
 - Pkcs7, Iso97971, AnsiX923, Iso10126, ZeroPadding, NoPadding
-- PBKDF2, EvpKDF
+- PBKDF2, EvpKDF (with hashes registered explicitly)
 - OpenSSL `Salted__` format
+- Opt-in `@jscrypto/classic/hashes`
 
 Deferred modules:
 

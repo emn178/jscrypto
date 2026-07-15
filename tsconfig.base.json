@@ -13,15 +13,6 @@
     "composite": true,
     "rootDir": "src",
     "outDir": "dist",
-    "baseUrl": ".",
-    "paths": {
-      "@jscrypto/core": [
-        "packages/core/src/index.ts"
-      ],
-      "@jscrypto/classic": [
-        "packages/classic/src/index.ts"
-      ]
-    },
     "verbatimModuleSyntax": true,
     "skipLibCheck": true
   }

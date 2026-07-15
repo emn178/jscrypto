@@ -42,9 +42,8 @@ import {
   createRc4Transform,
   deriveEvpKdf,
   derivePbkdf2,
-  bytesToWordArray,
-  wordArrayToBytes,
 } from '@jscrypto/classic';
+import { md5, registerClassicHashes, sha256 } from '@jscrypto/classic/hashes';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 const key = hexToBytes('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
@@ -159,18 +158,28 @@ test('classic cipher constructors validate keys and blocks', () => {
   assert.throws(() => createTripleDesCipher(new Uint8Array(15)), /Triple DES key/);
   assert.throws(() => createAesCipher(new Uint8Array(16)).encryptBlock(new Uint8Array(15)), /AES block/);
   assert.throws(() => createAesCipher(new Uint8Array(16)).decryptBlock(new Uint8Array(15)), /AES block/);
+  assert.throws(() => createDesCipher(new Uint8Array(8)).encryptBlock(new Uint8Array(7)), /DES block/);
+  assert.throws(() => createDesCipher(new Uint8Array(8)).decryptBlock(new Uint8Array(7)), /DES block/);
+  assert.throws(() => createTripleDesCipher(new Uint8Array(16)).encryptBlock(new Uint8Array(7)), /Triple DES block/);
+  assert.throws(() => createTripleDesCipher(new Uint8Array(16)).decryptBlock(new Uint8Array(7)), /Triple DES block/);
 
-  const wordArray = bytesToWordArray(new Uint8Array([1, 2, 3]));
-  assert.deepEqual(wordArrayToBytes(wordArray), new Uint8Array([1, 2, 3]));
 });
 
-test('classic kdfs validate inputs and unsupported hashes', () => {
-  assert.throws(() => derivePbkdf2({ passphrase: 'x', salt: 's', iterations: 0, length: 16 }), /PBKDF2 iterations/);
-  assert.throws(() => derivePbkdf2({ passphrase: 'x', salt: 's', iterations: 1, length: 0 }), /PBKDF2 length/);
-  assert.throws(() => derivePbkdf2({ passphrase: 'x', salt: 's', iterations: 1, length: 16, hash: 'NOPE' }), /Unsupported PBKDF2 hash/);
-  assert.throws(() => deriveEvpKdf({ passphrase: 'x', salt: 's', iterations: 0, length: 16 }), /EvpKDF iterations/);
-  assert.throws(() => deriveEvpKdf({ passphrase: 'x', salt: 's', length: 0 }), /EvpKDF length/);
-  assert.throws(() => deriveEvpKdf({ passphrase: 'x', salt: 's', length: 16, hash: 'NOPE' }), /Unsupported EvpKDF hash/);
+test('classic kdfs validate inputs and missing registered hashes', () => {
+  assert.throws(() => derivePbkdf2({ passphrase: 'x', salt: 's', iterations: 0, length: 16, hash: sha256 }), /PBKDF2 iterations/);
+  assert.throws(() => derivePbkdf2({ passphrase: 'x', salt: 's', iterations: 1, length: 0, hash: sha256 }), /PBKDF2 length/);
+  assert.throws(() => deriveEvpKdf({ passphrase: 'x', salt: 's', iterations: 0, length: 16, hash: md5 }), /EvpKDF iterations/);
+  assert.throws(() => deriveEvpKdf({ passphrase: 'x', salt: 's', length: 0, hash: md5 }), /EvpKDF length/);
+  assert.equal(derivePbkdf2({
+    passphrase: new Uint8Array(65),
+    salt: 's',
+    iterations: 1,
+    length: 16,
+    hash: sha256,
+  }).length, 16);
+  const registry = createRegistry([evpKdf, pbkdf2]);
+  assert.throws(() => evpKdf.derive({ passphrase: 'x', salt: 's', length: 16 }, { getHash: registry.getHash.bind(registry) }), /Hash not registered: MD5/);
+  assert.throws(() => pbkdf2.derive({ passphrase: 'x', salt: 's', iterations: 1, length: 16 }, { getHash: registry.getHash.bind(registry) }), /Hash not registered: SHA256/);
 });
 
 test('classic paddings validate edge cases and random fallbacks', () => {
@@ -251,7 +260,7 @@ test('RC4 option validation and defaults cover stream branches', () => {
 });
 
 test('passphrase ciphers cover no-format and random salt branches', () => {
-  const registry = createRegistry([aes, cbc, pkcs7, evpKdf, opensslFormat]);
+  const registry = registerClassicHashes(createRegistry([aes, cbc, pkcs7, evpKdf, opensslFormat]));
   const cipher = registry.createPassphraseCipher({
     cipher: 'AES',
     mode: 'CBC',
@@ -322,7 +331,7 @@ test('passphrase ciphers cover buffered formats and short OpenSSL decrypt', () =
       return { ciphertext: input };
     },
   };
-  const registry = createRegistry([aes, rc4, cbc, pkcs7, evpKdf, opensslFormat, bufferedFormat, noSaltFormat]);
+  const registry = registerClassicHashes(createRegistry([aes, rc4, cbc, pkcs7, evpKdf, opensslFormat, bufferedFormat, noSaltFormat]));
   const cipher = registry.createPassphraseCipher({
     cipher: 'AES',
     mode: 'CBC',
@@ -404,7 +413,7 @@ test('passphrase ciphers validate sizing and async kdfs', () => {
       return identityTransform();
     },
   };
-  const registry = createRegistry([aes, rc4, cbc, pkcs7, evpKdf, asyncKdf, noKeySizeCipher]);
+  const registry = registerClassicHashes(createRegistry([aes, rc4, cbc, pkcs7, evpKdf, asyncKdf, noKeySizeCipher]));
 
   assert.throws(() => registry.createPassphraseCipher({
     cipher: 'AES',

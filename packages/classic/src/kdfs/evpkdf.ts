@@ -1,5 +1,9 @@
-import { bytesToWordArray, CryptoJS, wordArrayToBytes } from '../adapter/crypto-js.js';
-import type { KdfComponent } from '@jscrypto/core';
+import { concatBytes } from '@jscrypto/core';
+import type { HashComponent, KdfComponent } from '@jscrypto/core';
+
+declare const TextEncoder: {
+  new(): { encode(input: string): Uint8Array };
+};
 
 export interface EvpKdfParams {
   passphrase: Uint8Array | string;
@@ -9,57 +13,49 @@ export interface EvpKdfParams {
   hash?: string;
 }
 
+export interface DeriveEvpKdfParams extends Omit<EvpKdfParams, 'hash'> {
+  hash: HashComponent;
+}
+
 export const evpKdf: KdfComponent<'EvpKDF'> = {
   kind: 'kdf',
   name: 'EvpKDF',
-  derive(params) {
-    return deriveEvpKdf(params as EvpKdfParams);
+  derive(params, context) {
+    const options = params as EvpKdfParams;
+    return deriveEvpKdf({
+      ...options,
+      hash: context.getHash(options.hash ?? 'MD5'),
+    });
   },
 };
 
-export function deriveEvpKdf(params: EvpKdfParams): Uint8Array {
+export function deriveEvpKdf(params: DeriveEvpKdfParams): Uint8Array {
   assertPositiveInteger(params.length, 'EvpKDF length');
   if (params.iterations !== undefined) {
     assertPositiveInteger(params.iterations, 'EvpKDF iterations');
   }
 
-  const options: EvpKdfCryptoJsOptions = {
-    keySize: params.length / 4,
-    iterations: params.iterations ?? 1,
-  };
-  const hasher = getHasher(params.hash);
-  if (hasher) {
-    options.hasher = hasher;
+  const password = toBytes(params.passphrase);
+  const salt = toBytes(params.salt);
+  const blocks: Uint8Array[] = [];
+  let previous = new Uint8Array(0);
+  let length = 0;
+
+  while (length < params.length) {
+    let block = params.hash.hash(concatBytes(previous, password, salt));
+    for (let i = 1; i < (params.iterations ?? 1); i++) {
+      block = params.hash.hash(block);
+    }
+    blocks.push(block);
+    previous = block;
+    length += block.length;
   }
 
-  const derived = CryptoJS.EvpKDF(toCryptoJsInput(params.passphrase), toCryptoJsInput(params.salt), options);
-  return wordArrayToBytes(derived);
+  return concatBytes(...blocks).slice(0, params.length);
 }
 
-interface EvpKdfCryptoJsOptions {
-  keySize: number;
-  iterations: number;
-  hasher?: typeof CryptoJS.algo.MD5;
-}
-
-function toCryptoJsInput(input: Uint8Array | string): CryptoJS.lib.WordArray | string {
-  return typeof input === 'string' ? input : bytesToWordArray(input);
-}
-
-function getHasher(hash: string | undefined): typeof CryptoJS.algo.MD5 | undefined {
-  if (!hash) {
-    return undefined;
-  }
-
-  const hasher = (CryptoJS.algo as Record<string, unknown>)[normalizeHashName(hash)];
-  if (!hasher) {
-    throw new Error(`Unsupported EvpKDF hash: ${hash}`);
-  }
-  return hasher as typeof CryptoJS.algo.MD5;
-}
-
-function normalizeHashName(hash: string): string {
-  return hash.replace(/-/g, '').toUpperCase();
+function toBytes(input: Uint8Array | string): Uint8Array {
+  return typeof input === 'string' ? new TextEncoder().encode(input) : input;
 }
 
 function assertPositiveInteger(value: number, label: string): void {

@@ -9,6 +9,8 @@ export type {
   FormatComponent,
   FormatParseResult,
   FormatStringifyParams,
+  HashComponent,
+  KdfDeriveContext,
   KdfComponent,
   ModeComponent,
   PaddingComponent,

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createRegistry } from '@jscrypto/core';
-import { ansiX923, cbc, cfb, ctr, ecb, iso97971, noPadding, ofb, pkcs7, tripleDes, zeroPadding } from '@jscrypto/classic';
+import { ansiX923, cbc, cfb, createTripleDesCipher, ctr, ecb, iso97971, noPadding, ofb, pkcs7, tripleDes, zeroPadding } from '@jscrypto/classic';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 const key = hexToBytes('000102030405060708090a0b0c0d0e0f1011121314151617');
@@ -21,6 +21,22 @@ function createTripleDesRegistry() {
     .use(zeroPadding)
     .use(noPadding);
 }
+
+test('TripleDES encrypts and decrypts two-key and three-key block vectors', () => {
+  const plaintext = hexToBytes('0000000000000000');
+  const cases = [
+    ['0123456789abcdeffedcba9876543210', '08d7b4fb629d0885'],
+    ['0123456789abcdef23456789abcdef01456789abcdef0123', '4eba739c998bcb60'],
+  ];
+
+  for (const [keyHex, expected] of cases) {
+    const cipher = createTripleDesCipher(hexToBytes(keyHex));
+    const ciphertext = hexToBytes(expected);
+
+    assert.equal(bytesToHex(cipher.encryptBlock(plaintext)), expected);
+    assert.equal(bytesToHex(cipher.decryptBlock(ciphertext)), bytesToHex(plaintext));
+  }
+});
 
 test('TripleDES-CBC encrypts and decrypts with Pkcs7', () => {
   const registry = createTripleDesRegistry();

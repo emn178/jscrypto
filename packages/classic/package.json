@@ -1,6 +1,6 @@
 {
   "name": "@jscrypto/classic",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Classic cipher, mode, padding, KDF, and format components for @jscrypto.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -12,7 +12,13 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
     },
+    "./hashes": {
+      "types": "./dist/hashes-entry.d.ts",
+      "import": "./dist/hashes.mjs",
+      "require": "./dist/hashes.cjs"
+    },
     "./browser": "./dist/jscrypto-classic.iife.min.js",
+    "./hashes/browser": "./dist/jscrypto-classic-hashes.iife.min.js",
     "./umd": "./dist/jscrypto-classic.umd.min.js"
   },
   "files": [
@@ -21,8 +27,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@jscrypto/core": "0.2.0",
-    "crypto-js": "^4.2.0"
+    "@jscrypto/core": "0.3.0"
   },
   "scripts": {
     "build": "tsc -b",
@@ -34,8 +39,7 @@
     "cipher",
     "aes",
     "des",
-    "rc4",
-    "crypto-js"
+    "rc4"
   ],
   "repository": {
     "type": "git",

@@ -1,4 +1,4 @@
-export type ComponentKind = 'cipher' | 'mode' | 'padding' | 'kdf' | 'format' | 'preset';
+export type ComponentKind = 'cipher' | 'mode' | 'padding' | 'kdf' | 'format' | 'preset' | 'hash';
 
 export interface Component<
   Kind extends ComponentKind = ComponentKind,
@@ -61,8 +61,18 @@ export interface PaddingComponent<Name extends string = string> extends Componen
   unpad(input: Uint8Array, blockSize: number): Uint8Array;
 }
 
+export interface HashComponent<Name extends string = string> extends Component<'hash', Name> {
+  readonly blockSize: number;
+  readonly digestSize: number;
+  hash(input: Uint8Array): Uint8Array;
+}
+
+export interface KdfDeriveContext {
+  getHash(name: string): HashComponent;
+}
+
 export interface KdfComponent<Name extends string = string> extends Component<'kdf', Name> {
-  derive(params: unknown): Uint8Array | Promise<Uint8Array>;
+  derive(params: unknown, context: KdfDeriveContext): Uint8Array | Promise<Uint8Array>;
 }
 
 export interface FormatComponent<Name extends string = string> extends Component<'format', Name> {
@@ -90,5 +100,6 @@ export type AnyComponent =
   | ModeComponent
   | PaddingComponent
   | KdfComponent
+  | HashComponent
   | FormatComponent
   | PresetComponent;

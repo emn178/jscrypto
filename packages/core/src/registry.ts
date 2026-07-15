@@ -1,4 +1,4 @@
-import type { AnyComponent, Component, ComponentKind, PresetComponent } from './component.js';
+import type { AnyComponent, Component, ComponentKind, HashComponent, PresetComponent } from './component.js';
 import { DuplicateComponentError, MissingComponentError } from './errors.js';
 import type { CreatePassphraseCipherOptions, PassphraseCipherFacade } from './passphrase.js';
 import { createPassphraseCipher } from './passphrase.js';
@@ -8,6 +8,8 @@ import type { Transform } from './component.js';
 
 export interface Registry {
   use(component: AnyComponent): Registry;
+  useHash(hash: HashComponent): Registry;
+  getHash(name: string): HashComponent;
   has(kind: ComponentKind, name: string): boolean;
   get<Kind extends ComponentKind, T extends Component<Kind>>(kind: Kind, name: string): T;
   list(kind?: ComponentKind): AnyComponent[];
@@ -29,7 +31,10 @@ export interface CipherFacade {
 export function createRegistry(components: Iterable<AnyComponent> = []): Registry {
   const entries = new Map<string, AnyComponent>();
 
-  const key = (kind: ComponentKind, name: string) => `${kind}:${name}`;
+  const normalizeName = (kind: ComponentKind, name: string) => (
+    kind === 'hash' ? name.replace(/-/g, '').toUpperCase() : name
+  );
+  const key = (kind: ComponentKind, name: string) => `${kind}:${normalizeName(kind, name)}`;
 
   const registry: Registry = {
     use(component) {
@@ -46,6 +51,18 @@ export function createRegistry(components: Iterable<AnyComponent> = []): Registr
       }
       entries.set(entryKey, component);
       return registry;
+    },
+
+    useHash(hash) {
+      return registry.use(hash);
+    },
+
+    getHash(name) {
+      const component = entries.get(key('hash', name));
+      if (!component) {
+        throw new Error(`Hash not registered: ${normalizeName('hash', name)}.`);
+      }
+      return component as HashComponent;
     },
 
     has(kind, name) {

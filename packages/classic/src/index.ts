@@ -1,4 +1,3 @@
-export * from './adapter/crypto-js.js';
 export * from './ciphers/aes.js';
 export * from './ciphers/des.js';
 export * from './ciphers/rc4.js';

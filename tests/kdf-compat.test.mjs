@@ -1,6 +1,18 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { deriveEvpKdf, derivePbkdf2, evpKdf, pbkdf2 } from '@jscrypto/classic';
+import {
+  md5,
+  registerClassicHashes,
+  ripemd160,
+  sha1,
+  sha224,
+  sha256,
+  sha3,
+  sha384,
+  sha512,
+} from '@jscrypto/classic/hashes';
+import { createClassicRegistry, registry as defaultRegistry } from '@jscrypto/classic';
 import { bytesToHex, hexToBytes } from './helpers/bytes.mjs';
 
 test('PBKDF2 matches CryptoJS upstream vectors', () => {
@@ -41,17 +53,39 @@ test('PBKDF2 matches CryptoJS upstream vectors', () => {
       salt: item.salt,
       iterations: item.iterations,
       length: item.length,
+      hash: sha256,
     });
     assert.equal(bytesToHex(derived), item.expected);
   }
 });
 
-test('PBKDF2 component delegates to typed derive function', () => {
+test('classic registries require opt-in hash registration', () => {
+  assert.equal(defaultRegistry.list('hash').length, 0);
+  const registry = createClassicRegistry();
+  assert.throws(() => registry.createPassphraseCipher({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs7',
+    passphrase: 'secret',
+    kdf: 'EvpKDF',
+    salt: new Uint8Array(8),
+  }).encrypt(new Uint8Array()), /Hash not registered: MD5/);
+
+  registerClassicHashes(registry);
+  registerClassicHashes(registry);
+  assert.equal(registry.getHash('sha-256').name, 'SHA256');
+  assert.equal(registry.getHash('SHA256').name, 'SHA256');
+});
+
+test('PBKDF2 component resolves its registered default hash', () => {
+  const registry = registerClassicHashes(createClassicRegistry());
   const derived = pbkdf2.derive({
     passphrase: 'password',
     salt: 'ATHENA.MIT.EDUraeburn',
     iterations: 250000,
     length: 16,
+  }, {
+    getHash: registry.getHash.bind(registry),
   });
 
   assert.equal(bytesToHex(derived), '62929ab995a1111c75c37bc562261ea3');
@@ -62,6 +96,7 @@ test('EvpKDF matches CryptoJS upstream vector', () => {
     passphrase: 'password',
     salt: 'saltsalt',
     length: 48,
+      hash: md5,
   });
 
   assert.equal(
@@ -70,15 +105,48 @@ test('EvpKDF matches CryptoJS upstream vector', () => {
   );
 });
 
-test('EvpKDF component delegates to typed derive function', () => {
+test('EvpKDF component resolves its registered default hash', () => {
+  const registry = registerClassicHashes(createClassicRegistry());
   const derived = evpKdf.derive({
     passphrase: 'password',
     salt: 'saltsalt',
     length: 48,
+  }, {
+    getHash: registry.getHash.bind(registry),
   });
 
   assert.equal(
     bytesToHex(derived),
     'fdbdf3419fff98bdb0241390f62a9db35f4aba29d77566377997314ebfc709f20b5ca7b1081f94b1ac12e3c8ba87d05a',
   );
+});
+
+test('KDFs match permanent CryptoJS vectors for every classic hash', () => {
+  const cases = [
+    [md5, '3d4a8d4fb4c6e8686b21d361429029', 'b51daa690c78633427a9fcac3db8a1'],
+    [sha1, 'e3a8dfcf2eea6dc81d2ad154274faa', '59d86eb82797eb0fa6622ca84d2009'],
+    [sha224, '039e5f55e4889f2fa3b00abbc647a0', '361229e591eb3940fd1caca59f3970'],
+    [sha256, '433c26cdaee1e0228707d88152f8cf', '8f45ebd930d419bd84c40a8713d738'],
+    [sha384, '23fee816811e5c5b8894553a432319', '86ad37ab5c5d4370a2da3ee67d2c7c'],
+    [sha512, '5560590d63c40751fbf7c2d1db259d', '2d1059f379348cbabab4ba06d4d4e0'],
+    [sha3, '92a6eb6a8c6f46b7f61e0d19543e9a', '1160862c6cb64adb3515097233c149'],
+    [ripemd160, '387abab580b1b919e8f997a3802914', '9c226abf62735dbdeff154e21d2170'],
+  ];
+
+  for (const [hash, evpExpected, pbkdf2Expected] of cases) {
+    assert.equal(bytesToHex(deriveEvpKdf({
+      passphrase: 'password',
+      salt: 'saltsalt',
+      iterations: 2,
+      length: 15,
+      hash,
+    })), evpExpected);
+    assert.equal(bytesToHex(derivePbkdf2({
+      passphrase: 'password',
+      salt: 'saltsalt',
+      iterations: 2,
+      length: 15,
+      hash,
+    })), pbkdf2Expected);
+  }
 });

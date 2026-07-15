@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { rmSync } from 'node:fs';
 import * as esbuild from 'esbuild';
 
-const version = '0.2.0';
+const version = '0.3.0';
 const year = '2026';
 const owner = 'Chen, Yi-Cyuan';
 
@@ -21,7 +21,7 @@ const packages = [
     globalName: 'jscryptoClassic',
     entryPoint: 'packages/classic/src/index.ts',
     distDir: 'packages/classic/dist',
-    externals: ['@jscrypto/core', 'crypto-js'],
+    externals: ['@jscrypto/core'],
   },
 ];
 
@@ -38,6 +38,8 @@ for (const pkg of packages) {
   rmSync(`${pkg.distDir}/.tsbuildinfo`, { force: true });
   await buildPackage(pkg);
 }
+
+await buildHashesPackage();
 
 async function buildPackage(pkg) {
   const banner = `/*!
@@ -116,5 +118,44 @@ async function buildPackage(pkg) {
     },
     minify: true,
     outfile: `${pkg.distDir}/${pkg.displayName}.umd.min.js`,
+  });
+}
+
+async function buildHashesPackage() {
+  const entryPoint = 'packages/classic/src/hashes-entry.ts';
+  const distDir = 'packages/classic/dist';
+  const banner = `/*!
+ * @jscrypto/classic hashes v${version}
+ * Copyright ${year} ${owner}
+ * Released under the MIT license
+ */`;
+  const commonOptions = {
+    entryPoints: [entryPoint],
+    bundle: true,
+    sourcemap: true,
+    banner: { js: banner },
+    target: 'es2015',
+    logLevel: 'info',
+  };
+
+  await esbuild.build({
+    ...commonOptions,
+    format: 'esm',
+    external: ['@jscrypto/core'],
+    outfile: `${distDir}/hashes.mjs`,
+  });
+  await esbuild.build({
+    ...commonOptions,
+    format: 'cjs',
+    platform: 'node',
+    external: ['@jscrypto/core'],
+    outfile: `${distDir}/hashes.cjs`,
+  });
+  await esbuild.build({
+    ...commonOptions,
+    format: 'iife',
+    globalName: 'jscryptoClassicHashes',
+    minify: true,
+    outfile: `${distDir}/jscrypto-classic-hashes.iife.min.js`,
   });
 }

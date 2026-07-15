@@ -2,7 +2,7 @@
 
 Classic cipher, mode, padding, KDF, and format components for `@jscrypto`.
 
-This package is the first compatibility preset for online-tools. It is CryptoJS-compatible where classic behavior depends on CryptoJS formats or KDFs.
+This package is the first compatibility preset for online-tools. Classic cipher/mode/padding/KDF/format behavior remains CryptoJS-compatible where that compatibility is intentional. `@jscrypto/classic` does not depend on CryptoJS.
 
 ## Install
 
@@ -31,6 +31,9 @@ const decrypted = cipher.decrypt(ciphertext);
 
 ```ts
 import { registry } from '@jscrypto/classic';
+import { registerClassicHashes } from '@jscrypto/classic/hashes';
+
+registerClassicHashes(registry);
 
 const cipher = registry.createPassphraseCipher({
   cipher: 'AES',
@@ -76,7 +79,8 @@ const decrypted = cipher.decrypt(sealed);
 - Paddings: `pkcs7`, `iso97971`, `ansiX923`, `iso10126`, `zeroPadding`, `noPadding`.
 - KDFs: `pbkdf2`, `evpKdf`.
 - Formats: `opensslFormat`.
-- Preset: `classicPreset`.
+- Opt-in hashes: `@jscrypto/classic/hashes` with `registerClassicHashes(registry)`.
+- Preset: `classicPreset` (does not register hashes).
 - Registries: `registry`, `createClassicRegistry`.
 
 ## Custom Registry
@@ -95,7 +99,9 @@ const registry = createRegistry()
 
 ```html
 <script src="node_modules/@jscrypto/classic/dist/jscrypto-classic.iife.min.js"></script>
+<script src="node_modules/@jscrypto/classic/dist/jscrypto-classic-hashes.iife.min.js"></script>
 <script>
+  jscryptoClassicHashes.registerClassicHashes(jscryptoClassic.registry);
   const cipher = jscryptoClassic.registry.createCipher({
     cipher: 'AES',
     mode: 'CBC',

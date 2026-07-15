@@ -1,5 +1,10 @@
-import { bytesToWordArray, CryptoJS, wordArrayToBytes } from '../adapter/crypto-js.js';
-import type { KdfComponent } from '@jscrypto/core';
+import { concatBytes } from '@jscrypto/core';
+import type { HashComponent, KdfComponent } from '@jscrypto/core';
+import { hmac } from './hmac.js';
+
+declare const TextEncoder: {
+  new(): { encode(input: string): Uint8Array };
+};
 
 export interface Pbkdf2Params {
   passphrase: Uint8Array | string;
@@ -9,55 +14,54 @@ export interface Pbkdf2Params {
   hash?: string;
 }
 
+export interface DerivePbkdf2Params extends Omit<Pbkdf2Params, 'hash'> {
+  hash: HashComponent;
+}
+
 export const pbkdf2: KdfComponent<'PBKDF2'> = {
   kind: 'kdf',
   name: 'PBKDF2',
-  derive(params) {
-    return derivePbkdf2(params as Pbkdf2Params);
+  derive(params, context) {
+    const options = params as Pbkdf2Params;
+    return derivePbkdf2({
+      ...options,
+      hash: context.getHash(options.hash ?? 'SHA256'),
+    });
   },
 };
 
-export function derivePbkdf2(params: Pbkdf2Params): Uint8Array {
+export function derivePbkdf2(params: DerivePbkdf2Params): Uint8Array {
   assertPositiveInteger(params.iterations, 'PBKDF2 iterations');
   assertPositiveInteger(params.length, 'PBKDF2 length');
 
-  const options: Pbkdf2CryptoJsOptions = {
-    keySize: params.length / 4,
-    iterations: params.iterations,
-  };
-  const hasher = getHasher(params.hash);
-  if (hasher) {
-    options.hasher = hasher;
+  const password = toBytes(params.passphrase);
+  const salt = toBytes(params.salt);
+  const blocks: Uint8Array[] = [];
+  const blockCount = Math.ceil(params.length / params.hash.digestSize);
+
+  for (let index = 1; index <= blockCount; index++) {
+    const counter = new Uint8Array([
+      (index >>> 24) & 0xff,
+      (index >>> 16) & 0xff,
+      (index >>> 8) & 0xff,
+      index & 0xff,
+    ]);
+    let block = hmac(params.hash, password, concatBytes(salt, counter));
+    const result = block.slice();
+    for (let iteration = 1; iteration < params.iterations; iteration++) {
+      block = hmac(params.hash, password, block);
+      for (let i = 0; i < result.length; i++) {
+        result[i] ^= block[i];
+      }
+    }
+    blocks.push(result);
   }
 
-  const derived = CryptoJS.PBKDF2(toCryptoJsInput(params.passphrase), toCryptoJsInput(params.salt), options);
-  return wordArrayToBytes(derived);
+  return concatBytes(...blocks).slice(0, params.length);
 }
 
-interface Pbkdf2CryptoJsOptions {
-  keySize: number;
-  iterations: number;
-  hasher?: typeof CryptoJS.algo.SHA256;
-}
-
-function toCryptoJsInput(input: Uint8Array | string): CryptoJS.lib.WordArray | string {
-  return typeof input === 'string' ? input : bytesToWordArray(input);
-}
-
-function getHasher(hash: string | undefined): typeof CryptoJS.algo.SHA256 | undefined {
-  if (!hash) {
-    return undefined;
-  }
-
-  const hasher = (CryptoJS.algo as Record<string, unknown>)[normalizeHashName(hash)];
-  if (!hasher) {
-    throw new Error(`Unsupported PBKDF2 hash: ${hash}`);
-  }
-  return hasher as typeof CryptoJS.algo.SHA256;
-}
-
-function normalizeHashName(hash: string): string {
-  return hash.replace(/-/g, '').toUpperCase();
+function toBytes(input: Uint8Array | string): Uint8Array {
+  return typeof input === 'string' ? new TextEncoder().encode(input) : input;
 }
 
 function assertPositiveInteger(value: number, label: string): void {

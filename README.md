@@ -2,7 +2,7 @@
 
 Composable cryptography components for JavaScript and TypeScript.
 
-`@jscrypto` is a small Uint8Array-first framework for wiring ciphers, modes, paddings, KDFs, formats, and presets through one registry. The first release focuses on the classic CryptoJS-compatible features currently needed by online-tools.
+`@jscrypto` is a small Uint8Array-first framework for wiring ciphers, modes, paddings, KDFs, formats, hashes, and presets through one registry. The first release focuses on classic CryptoJS-compatible cipher/KDF/format behavior currently needed by online-tools. `@jscrypto/classic` no longer depends on CryptoJS.
 
 This project is not affiliated with Node.js `crypto`, the Web Crypto API, or npm.
 
@@ -10,8 +10,9 @@ This project is not affiliated with Node.js `crypto`, the Web Crypto API, or npm
 
 - `@jscrypto/core`: registry, component contracts, transform helpers, byte helpers, and shared errors.
 - `@jscrypto/classic`: AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, OFB, ECB, GCM, classic paddings, PBKDF2, EvpKDF, and OpenSSL `Salted__` formatting.
+- `@jscrypto/classic/hashes`: opt-in hash components (`registerClassicHashes`) for KDF/passphrase flows.
 
-The public package count is intentionally small. `@jscrypto/classic` still keeps internal modules split by cipher, mode, padding, KDF, format, adapter, and preset so those boundaries stay testable and can be split later if the need becomes real.
+The public package count is intentionally small. `@jscrypto/classic` still keeps internal modules split by cipher, mode, padding, KDF, format, hash, and preset so those boundaries stay testable and can be split later if the need becomes real.
 
 ## Install
 
@@ -73,6 +74,9 @@ Passphrase ciphers derive key and IV through a KDF, then optionally wrap salt an
 
 ```ts
 import { registry } from '@jscrypto/classic';
+import { registerClassicHashes } from '@jscrypto/classic/hashes';
+
+registerClassicHashes(registry);
 
 const cipher = registry.createPassphraseCipher({
   cipher: 'AES',
@@ -177,7 +181,10 @@ import { registry } from '@jscrypto/classic';
 ```html
 <script src="node_modules/@jscrypto/core/dist/jscrypto-core.iife.min.js"></script>
 <script src="node_modules/@jscrypto/classic/dist/jscrypto-classic.iife.min.js"></script>
+<!-- Required only for built-in KDF hash implementations. -->
+<script src="node_modules/@jscrypto/classic/dist/jscrypto-classic-hashes.iife.min.js"></script>
 <script>
+  jscryptoClassicHashes.registerClassicHashes(jscryptoClassic.registry);
   const cipher = jscryptoClassic.registry.createCipher({
     cipher: 'AES',
     mode: 'CBC',

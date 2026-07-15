@@ -231,6 +231,8 @@ function deriveSync(
     passphrase: options.passphrase,
     salt,
     length,
+  }, {
+    getHash: registry.getHash.bind(registry),
   });
   if (result instanceof Promise) {
     throw new Error(`KDF ${kdfOptions.name} is asynchronous; use an async passphrase cipher API.`);

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createRegistry } from '@jscrypto/core';
-import { ansiX923, cbc, cfb, ctr, des, ecb, iso97971, noPadding, ofb, pkcs7, zeroPadding } from '@jscrypto/classic';
+import { ansiX923, cbc, cfb, createDesCipher, ctr, des, ecb, iso97971, noPadding, ofb, pkcs7, zeroPadding } from '@jscrypto/classic';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 const key = hexToBytes('0001020304050607');
@@ -21,6 +21,15 @@ function createDesRegistry() {
     .use(zeroPadding)
     .use(noPadding);
 }
+
+test('DES encrypts and decrypts the FIPS block vector', () => {
+  const cipher = createDesCipher(hexToBytes('133457799bbcdff1'));
+  const plaintext = hexToBytes('0123456789abcdef');
+  const ciphertext = hexToBytes('85e813540f0ab405');
+
+  assert.equal(bytesToHex(cipher.encryptBlock(plaintext)), bytesToHex(ciphertext));
+  assert.equal(bytesToHex(cipher.decryptBlock(ciphertext)), bytesToHex(plaintext));
+});
 
 test('DES-CBC encrypts and decrypts with Pkcs7', () => {
   const registry = createDesRegistry();

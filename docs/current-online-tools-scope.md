@@ -44,13 +44,15 @@ Compatibility details:
 
 - Strict unpad validation matching online-tools behavior.
 - CryptoJS-compatible OpenSSL salt envelope.
+- KDF hashes are registry components. `@jscrypto/classic` does not register or bundle them by
+  default; consumers can call `registerClassicHashes(registry)` from
+  `@jscrypto/classic/hashes`, or register a custom `HashComponent` with `registry.useHash(...)`.
 - Text and file chunk flows should be considered before replacing online-tools integration.
 
 ## Out of Scope First
 
 - automatic passphrase/KDF nonce generation for AES-GCM.
 - New backend selection concepts.
-- Global hash/MAC registries.
 - Global encoding or random registries.
 
 ## Existing Scaffold Status
@@ -60,7 +62,7 @@ Implemented enough to test AES, DES, Triple DES, and RC4 against online-tools-co
 - `@jscrypto/core`
 - `@jscrypto/classic`
 
-`@jscrypto/classic` contains internal modules for the CryptoJS adapter, AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, ECB, OFB, GCM, NoPadding, Pkcs7, AnsiX923, Iso10126, Iso97971, ZeroPadding, PBKDF2, EvpKDF, and OpenSSL `Salted__` format.
+`@jscrypto/classic` contains internal modules for AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, ECB, OFB, GCM, NoPadding, Pkcs7, AnsiX923, Iso10126, Iso97971, ZeroPadding, PBKDF2, EvpKDF, and OpenSSL `Salted__` format. The optional `@jscrypto/classic/hashes` entry provides MD5, SHA-1/2/3, and RIPEMD160 components without adding them to the main classic entry. `@jscrypto/classic` no longer depends on CryptoJS.
 
 Current working API:
 
@@ -72,6 +74,7 @@ Current working API:
 - `registry.createPassphraseCipher({ cipher, mode, padding, passphrase, kdf, format })`
 - `registry.createPassphraseCipher(...).createEncryptor()` for streaming passphrase encryption
 - `registry.createPassphraseCipher(...).createDecryptor()` for streaming passphrase decryption
+- `registry.useHash(hash)` / `registry.getHash(name)` for KDF hash registration and lookup
 - `registry.encrypt({ cipher, key, plaintext, ...cipherSpecificOptions })` for stream ciphers
 - `registry.decrypt({ cipher, key, ciphertext, ...cipherSpecificOptions })` for stream ciphers
 - `process(input)` / `finalize(input?)`
