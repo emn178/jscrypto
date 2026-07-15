@@ -83,6 +83,12 @@ const decrypted = cipher.decrypt(sealed);
 - Preset: `classicPreset` (does not register hashes).
 - Registries: `registry`, `createClassicRegistry`.
 
+## Hash Compatibility
+
+`registerClassicHashes(registry)` registers MD5, SHA1, SHA224, SHA256, SHA384, SHA512, KECCAK512, deprecated SHA3, and RIPEMD160.
+
+CryptoJS exposes its Keccak-512 behavior as `SHA3`. This package keeps `SHA3` as a deprecated compatibility alias so existing CryptoJS-compatible KDF settings continue to work. New code should use `KECCAK512`; a future NIST SHA3-512 component should use a distinct name.
+
 ## Custom Registry
 
 ```ts

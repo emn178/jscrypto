@@ -15,6 +15,8 @@ First-class component kinds:
 KDF components resolve hash implementations through the core registry. Applications register a
 `HashComponent` with `registry.useHash(hash)` and KDFs access it through their derive context.
 Hash names are normalized, so `sha-256`, `SHA256`, and `sha256` address the same component.
+CryptoJS-compatible `SHA3` is Keccak-512; the classic hashes entry registers `KECCAK512` as the
+accurate name and keeps `SHA3` as a deprecated compatibility alias.
 
 ## Non-goals for core
 

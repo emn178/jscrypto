@@ -1,4 +1,4 @@
 import { createHash } from './component.js';
-import { sha256Hash } from './native.js';
+import { sha256 as sha256Digest } from 'js-sha256';
 
-export const sha256 = createHash('SHA256', 64, 32, sha256Hash);
+export const sha256 = createHash('SHA256', 64, 32, (input) => new Uint8Array(sha256Digest.arrayBuffer(input)));

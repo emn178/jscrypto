@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { deriveEvpKdf, derivePbkdf2, evpKdf, pbkdf2 } from '@jscrypto/classic';
 import {
+  keccak512,
   md5,
   registerClassicHashes,
   ripemd160,
@@ -75,6 +76,8 @@ test('classic registries require opt-in hash registration', () => {
   registerClassicHashes(registry);
   assert.equal(registry.getHash('sha-256').name, 'SHA256');
   assert.equal(registry.getHash('SHA256').name, 'SHA256');
+  assert.equal(registry.getHash('KECCAK512'), keccak512);
+  assert.equal(registry.getHash('SHA3'), sha3);
 });
 
 test('PBKDF2 component resolves its registered default hash', () => {
@@ -129,6 +132,7 @@ test('KDFs match permanent CryptoJS vectors for every classic hash', () => {
     [sha256, '433c26cdaee1e0228707d88152f8cf', '8f45ebd930d419bd84c40a8713d738'],
     [sha384, '23fee816811e5c5b8894553a432319', '86ad37ab5c5d4370a2da3ee67d2c7c'],
     [sha512, '5560590d63c40751fbf7c2d1db259d', '2d1059f379348cbabab4ba06d4d4e0'],
+    [keccak512, '92a6eb6a8c6f46b7f61e0d19543e9a', '1160862c6cb64adb3515097233c149'],
     [sha3, '92a6eb6a8c6f46b7f61e0d19543e9a', '1160862c6cb64adb3515097233c149'],
     [ripemd160, '387abab580b1b919e8f997a3802914', '9c226abf62735dbdeff154e21d2170'],
   ];

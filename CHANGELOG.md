@@ -1,5 +1,13 @@
 # Change Log
 
+## v0.4.0 / 2026-07-15
+
+### Changed
+
+- changed classic hash components to use external hash implementations: `js-md5`, `js-sha1`, `js-sha256`, `js-sha3`, `js-sha512`, and `@noble/hashes` for RIPEMD-160.
+- added `KECCAK512` as the accurate name for the CryptoJS-compatible SHA3 behavior, while keeping `SHA3` as a deprecated compatibility alias.
+- kept `@jscrypto/classic` Node hash entry points externalized while preserving the self-contained browser hashes bundle.
+
 ## v0.3.1 / 2026-07-15
 
 ### Fixed

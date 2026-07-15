@@ -127,6 +127,15 @@ async function buildHashesPackage() {
   const entryPoint = 'packages/classic/src/hashes-entry.ts';
   const distDir = 'packages/classic/dist';
   const version = readPackageVersion('packages/classic/package.json');
+  const nodeExternals = [
+    '@jscrypto/core',
+    '@noble/hashes/legacy.js',
+    'js-md5',
+    'js-sha1',
+    'js-sha256',
+    'js-sha3',
+    'js-sha512',
+  ];
   const banner = `/*!
  * @jscrypto/classic hashes v${version}
  * Copyright ${year} ${owner}
@@ -144,14 +153,14 @@ async function buildHashesPackage() {
   await esbuild.build({
     ...commonOptions,
     format: 'esm',
-    external: ['@jscrypto/core'],
+    external: nodeExternals,
     outfile: `${distDir}/hashes.mjs`,
   });
   await esbuild.build({
     ...commonOptions,
     format: 'cjs',
     platform: 'node',
-    external: ['@jscrypto/core'],
+    external: nodeExternals,
     outfile: `${distDir}/hashes.cjs`,
   });
   await esbuild.build({

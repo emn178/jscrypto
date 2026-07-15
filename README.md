@@ -108,6 +108,12 @@ const encrypted = concatBytes(
 );
 ```
 
+## Hash Compatibility
+
+Built-in hashes are opt-in through `@jscrypto/classic/hashes`. `registerClassicHashes(registry)` registers MD5, SHA1, SHA224, SHA256, SHA384, SHA512, KECCAK512, deprecated SHA3, and RIPEMD160.
+
+CryptoJS exposes its Keccak-512 behavior as `SHA3`. `@jscrypto/classic` keeps `SHA3` as a deprecated compatibility alias, but new code should use `KECCAK512`. If NIST SHA3-512 is added later, it should be registered under a separate explicit name.
+
 ## Stream Ciphers
 
 Stream ciphers do not use mode, padding, or IV.
