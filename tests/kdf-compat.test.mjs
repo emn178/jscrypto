@@ -14,7 +14,7 @@ import {
   sha512,
 } from '@jscrypto/classic/hashes';
 import { createClassicRegistry, registry as defaultRegistry } from '@jscrypto/classic';
-import { bytesToHex, hexToBytes } from './helpers/bytes.mjs';
+import { bytesToHex, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 test('PBKDF2 matches CryptoJS upstream vectors', () => {
   const cases = [
@@ -122,6 +122,28 @@ test('EvpKDF component resolves its registered default hash', () => {
     bytesToHex(derived),
     'fdbdf3419fff98bdb0241390f62a9db35f4aba29d77566377997314ebfc709f20b5ca7b1081f94b1ac12e3c8ba87d05a',
   );
+});
+
+test('RIPEMD160 matches standard digest vectors', () => {
+  const cases = [
+    ['', '9c1185a5c5e9fc54612808977ee8f548b2258d31'],
+    ['a', '0bdc9d2d256b3ee9daae347be6f4dc835a467ffe'],
+    ['abc', '8eb208f7e05d987a9b044a8e98c6b087f15a0bfc'],
+    ['message digest', '5d0689ef49d2fae572b881b123a85ffa21595f36'],
+    ['abcdefghijklmnopqrstuvwxyz', 'f71c27109c692c1b56bbdceb5b9d2865b3708dbc'],
+    [
+      'abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq',
+      '12a053384a9c0c88e405a06c27dcf49ada62eb2b',
+    ],
+    [
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+      'b0e20b6e3116640286ed3a87a5713079b21f5189',
+    ],
+  ];
+
+  for (const [input, expected] of cases) {
+    assert.equal(bytesToHex(ripemd160.hash(textToBytes(input))), expected);
+  }
 });
 
 test('KDFs match permanent CryptoJS vectors for every classic hash', () => {

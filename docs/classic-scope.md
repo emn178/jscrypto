@@ -64,7 +64,7 @@ Implemented as standalone packages:
 - `@jscrypto/core`
 - `@jscrypto/classic`
 
-`@jscrypto/classic` contains internal modules for AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, ECB, OFB, GCM, NoPadding, Pkcs7, AnsiX923, Iso10126, Iso97971, ZeroPadding, PBKDF2, EvpKDF, and OpenSSL `Salted__` format. The optional `@jscrypto/classic/hashes` entry provides MD5, SHA-1/2, KECCAK512, deprecated SHA3 compatibility alias, and RIPEMD160 components without adding them to the main classic entry. `@jscrypto/classic` no longer depends on CryptoJS.
+`@jscrypto/classic` contains internal modules for AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, ECB, OFB, GCM, NoPadding, Pkcs7, AnsiX923, Iso10126, Iso97971, ZeroPadding, PBKDF2, EvpKDF, and OpenSSL `Salted__` format. The optional `@jscrypto/classic/hashes` entry provides MD5, SHA-1/2, KECCAK512, deprecated SHA3 compatibility alias, and RIPEMD160 components without adding them to the main classic entry. RIPEMD160 is implemented locally, and `@jscrypto/classic` no longer depends on CryptoJS.
 
 Current working API:
 

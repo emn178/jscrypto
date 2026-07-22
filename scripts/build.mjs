@@ -129,7 +129,6 @@ async function buildHashesPackage() {
   const version = readPackageVersion('packages/classic/package.json');
   const nodeExternals = [
     '@jscrypto/core',
-    '@noble/hashes/legacy.js',
     'js-md5',
     'js-sha1',
     'js-sha256',

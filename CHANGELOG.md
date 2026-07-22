@@ -13,6 +13,7 @@
 - `derivePbkdf2` / `deriveEvpKdf` now use `input` instead of `passphrase`.
 - `createPassphraseCipher(...)` remains compatible as a deprecated wrapper: it maps `passphrase` to `kdf.input` and delegates to `createDerivedKeyCipher(...)`.
 - async KDF errors from the derived-key path now say `async derived-key cipher API`.
+- RIPEMD160 is now implemented directly in `@jscrypto/classic/hashes`; removed the `@noble/hashes` dependency.
 
 ## v0.4.0 / 2026-07-15
 
