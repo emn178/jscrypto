@@ -1,6 +1,6 @@
 # @jscrypto
 [![CI](https://github.com/emn178/jscrypto/actions/workflows/ci.yml/badge.svg)](https://github.com/emn178/jscrypto/actions/workflows/ci.yml)
-[![Coverage Status](https://coveralls.io/repos/emn178/jscrypto/badge.svg?branch=master)](https://coveralls.io/r/emn178/jscrypto?branch=master)
+[![Coverage Status](https://coveralls.io/repos/emn178/jscrypto/badge.svg?branch=main)](https://coveralls.io/r/emn178/jscrypto?branch=main)
 
 Composable cryptography components for JavaScript and TypeScript.
 
