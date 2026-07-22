@@ -46,12 +46,16 @@ export interface DerivedKeyCipherRuntimeOptions {
 export function derive(
   registry: Registry,
   options: DeriveOptions,
-): Uint8Array | Promise<Uint8Array> {
+): Uint8Array {
   const { name, ...params } = options;
   const kdf = registry.get<'kdf', KdfComponent>('kdf', name);
-  return kdf.derive(params, {
+  const result = kdf.derive(params, {
     getHash: registry.getHash.bind(registry),
   });
+  if (!(result instanceof Uint8Array)) {
+    throw new TypeError(`KDF ${name} must return a Uint8Array.`);
+  }
+  return result;
 }
 
 export function createDerivedKeyCipher(
@@ -246,14 +250,14 @@ function deriveKeyIv(
   if (options.kdf.length !== undefined && options.kdf.length !== length) {
     throw new Error(`kdf.length (${options.kdf.length}) does not match keySize + ivSize (${length}).`);
   }
-  const derived = deriveSync(registry, options, salt, length);
+  const derived = deriveForCipher(registry, options, salt, length);
   return {
     key: derived.slice(0, keySize),
     iv: ivSize === 0 ? undefined : derived.slice(keySize, keySize + ivSize),
   };
 }
 
-function deriveSync(
+function deriveForCipher(
   registry: Registry,
   options: CreateDerivedKeyCipherOptions,
   salt: Uint8Array,
@@ -261,16 +265,12 @@ function deriveSync(
 ): Uint8Array {
   const name = options.kdf.name;
   const { name: _name, length: _ignoredLength, ...kdfParams } = options.kdf;
-  const result = derive(registry, {
+  return derive(registry, {
     ...kdfParams,
     name,
     salt,
     length,
   } as DeriveOptions);
-  if (result instanceof Promise) {
-    throw new Error(`KDF ${name} is asynchronous; use an async derived-key cipher API.`);
-  }
-  return result;
 }
 
 function toTransformOptions(

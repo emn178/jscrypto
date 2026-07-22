@@ -394,10 +394,10 @@ test('passphrase ciphers cover buffered formats and short OpenSSL decrypt', () =
   assert.equal(bytesToText(noSaltCipher.decrypt(noSaltCipher.encrypt(textToBytes('abc')))), 'abc');
 });
 
-test('passphrase ciphers validate sizing and async kdfs', () => {
-  const asyncKdf = {
+test('passphrase ciphers validate sizing and invalid kdf outputs', () => {
+  const invalidKdf = {
     kind: 'kdf',
-    name: 'Async',
+    name: 'Invalid',
     derive() {
       return Promise.resolve(new Uint8Array());
     },
@@ -413,7 +413,7 @@ test('passphrase ciphers validate sizing and async kdfs', () => {
       return identityTransform();
     },
   };
-  const registry = registerClassicHashes(createRegistry([aes, rc4, cbc, pkcs7, evpKdf, asyncKdf, noKeySizeCipher]));
+  const registry = registerClassicHashes(createRegistry([aes, rc4, cbc, pkcs7, evpKdf, invalidKdf, noKeySizeCipher]));
 
   assert.throws(() => registry.createPassphraseCipher({
     cipher: 'AES',
@@ -441,8 +441,8 @@ test('passphrase ciphers validate sizing and async kdfs', () => {
     mode: 'CBC',
     padding: 'Pkcs7',
     passphrase: 'secret',
-    kdf: 'Async',
-  }).encrypt(textToBytes('a')), /asynchronous/);
+    kdf: 'Invalid',
+  }).encrypt(textToBytes('a')), /must return a Uint8Array/);
 
   const streamCipher = registry.createPassphraseCipher({
     cipher: 'RC4',

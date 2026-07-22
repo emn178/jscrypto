@@ -1,5 +1,12 @@
 # Change Log
 
+## v0.5.1 / 2026-07-22
+
+### Changed
+
+- changed KDF components and `registry.derive(...)` to be synchronous-only and return `Uint8Array`.
+- added runtime validation that custom KDF components return `Uint8Array`.
+
 ## v0.5.0 / 2026-07-22
 
 ### Added

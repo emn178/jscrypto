@@ -72,7 +72,7 @@ export interface KdfDeriveContext {
 }
 
 export interface KdfComponent<Name extends string = string> extends Component<'kdf', Name> {
-  derive(params: unknown, context: KdfDeriveContext): Uint8Array | Promise<Uint8Array>;
+  derive(params: unknown, context: KdfDeriveContext): Uint8Array;
 }
 
 export interface FormatComponent<Name extends string = string> extends Component<'format', Name> {

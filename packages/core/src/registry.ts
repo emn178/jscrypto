@@ -20,7 +20,7 @@ export interface Registry {
   get<Kind extends ComponentKind, T extends Component<Kind>>(kind: Kind, name: string): T;
   list(kind?: ComponentKind): AnyComponent[];
   createCipher(options: CreateTransformOptions): CipherFacade;
-  derive(options: DeriveOptions): Uint8Array | Promise<Uint8Array>;
+  derive(options: DeriveOptions): Uint8Array;
   createDerivedKeyCipher(options: CreateDerivedKeyCipherOptions): DerivedKeyCipherFacade;
   /**
    * @deprecated Use createDerivedKeyCipher({ ..., kdf: { ..., input } }) instead.
