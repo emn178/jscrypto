@@ -166,20 +166,20 @@ test('classic cipher constructors validate keys and blocks', () => {
 });
 
 test('classic kdfs validate inputs and missing registered hashes', () => {
-  assert.throws(() => derivePbkdf2({ passphrase: 'x', salt: 's', iterations: 0, length: 16, hash: sha256 }), /PBKDF2 iterations/);
-  assert.throws(() => derivePbkdf2({ passphrase: 'x', salt: 's', iterations: 1, length: 0, hash: sha256 }), /PBKDF2 length/);
-  assert.throws(() => deriveEvpKdf({ passphrase: 'x', salt: 's', iterations: 0, length: 16, hash: md5 }), /EvpKDF iterations/);
-  assert.throws(() => deriveEvpKdf({ passphrase: 'x', salt: 's', length: 0, hash: md5 }), /EvpKDF length/);
+  assert.throws(() => derivePbkdf2({ input: 'x', salt: 's', iterations: 0, length: 16, hash: sha256 }), /PBKDF2 iterations/);
+  assert.throws(() => derivePbkdf2({ input: 'x', salt: 's', iterations: 1, length: 0, hash: sha256 }), /PBKDF2 length/);
+  assert.throws(() => deriveEvpKdf({ input: 'x', salt: 's', iterations: 0, length: 16, hash: md5 }), /EvpKDF iterations/);
+  assert.throws(() => deriveEvpKdf({ input: 'x', salt: 's', length: 0, hash: md5 }), /EvpKDF length/);
   assert.equal(derivePbkdf2({
-    passphrase: new Uint8Array(65),
+    input: new Uint8Array(65),
     salt: 's',
     iterations: 1,
     length: 16,
     hash: sha256,
   }).length, 16);
   const registry = createRegistry([evpKdf, pbkdf2]);
-  assert.throws(() => evpKdf.derive({ passphrase: 'x', salt: 's', length: 16 }, { getHash: registry.getHash.bind(registry) }), /Hash not registered: MD5/);
-  assert.throws(() => pbkdf2.derive({ passphrase: 'x', salt: 's', iterations: 1, length: 16 }, { getHash: registry.getHash.bind(registry) }), /Hash not registered: SHA256/);
+  assert.throws(() => evpKdf.derive({ input: 'x', salt: 's', length: 16 }, { getHash: registry.getHash.bind(registry) }), /Hash not registered: MD5/);
+  assert.throws(() => pbkdf2.derive({ input: 'x', salt: 's', iterations: 1, length: 16 }, { getHash: registry.getHash.bind(registry) }), /Hash not registered: SHA256/);
 });
 
 test('classic paddings validate edge cases and random fallbacks', () => {

@@ -1,8 +1,10 @@
 # @jscrypto
+[![CI](https://github.com/emn178/jscrypto/actions/workflows/ci.yml/badge.svg)](https://github.com/emn178/jscrypto/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/emn178/jscrypto/badge.svg?branch=master)](https://coveralls.io/r/emn178/jscrypto?branch=master)
 
 Composable cryptography components for JavaScript and TypeScript.
 
-`@jscrypto` is a small Uint8Array-first framework for wiring ciphers, modes, paddings, KDFs, formats, hashes, and presets through one registry. The first release focuses on classic cipher/KDF/format behavior with CryptoJS-compatible outputs where compatibility is intentional. `@jscrypto/classic` no longer depends on CryptoJS.
+`@jscrypto` is a small Uint8Array-first framework for wiring ciphers, modes, paddings, KDFs, formats, hashes, and presets through one registry. The first release focuses on classic cipher/KDF/format behavior and is implemented without a runtime dependency on other crypto frameworks.
 
 This project is not affiliated with Node.js `crypto`, the Web Crypto API, or npm.
 
@@ -10,7 +12,7 @@ This project is not affiliated with Node.js `crypto`, the Web Crypto API, or npm
 
 - `@jscrypto/core`: registry, component contracts, transform helpers, byte helpers, and shared errors.
 - `@jscrypto/classic`: AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, OFB, ECB, GCM, classic paddings, PBKDF2, EvpKDF, and OpenSSL `Salted__` formatting.
-- `@jscrypto/classic/hashes`: opt-in hash components (`registerClassicHashes`) for KDF/passphrase flows.
+- `@jscrypto/classic/hashes`: opt-in hash components (`registerClassicHashes`) for KDF/derived-key flows.
 
 The public package count is intentionally small. `@jscrypto/classic` still keeps internal modules split by cipher, mode, padding, KDF, format, hash, and preset so those boundaries stay testable and can be split later if the need becomes real.
 
@@ -68,9 +70,11 @@ const plaintext = concatBytes(
 );
 ```
 
-## Passphrases
+## Derived Keys
 
-Passphrase ciphers derive key and IV through a KDF, then optionally wrap salt and ciphertext through a format component.
+Derived-key ciphers derive key and IV through a KDF, then optionally wrap salt and ciphertext through a format component. `kdf.input` is the KDF input material: a password/passphrase for PBKDF2 and EvpKDF, IKM for future HKDF, or a shared secret for future X9.63 / ConcatKDF flows.
+
+`registry.derive(...)` returns derived bytes only. It does not split key/IV.
 
 ```ts
 import { registry } from '@jscrypto/classic';
@@ -78,13 +82,22 @@ import { registerClassicHashes } from '@jscrypto/classic/hashes';
 
 registerClassicHashes(registry);
 
-const cipher = registry.createPassphraseCipher({
+const keyMaterial = registry.derive({
+  name: 'PBKDF2',
+  input: 'secret',
+  salt,
+  iterations: 10000,
+  hash: 'SHA256',
+  length: 48,
+});
+
+const cipher = registry.createDerivedKeyCipher({
   cipher: 'AES',
   mode: 'CBC',
   padding: 'Pkcs7',
-  passphrase: 'secret',
   kdf: {
     name: 'EvpKDF',
+    input: 'secret',
     iterations: 1,
     hash: 'MD5',
   },
@@ -95,7 +108,9 @@ const encrypted = cipher.encrypt(plaintext);
 const decrypted = cipher.decrypt(encrypted);
 ```
 
-The passphrase API also supports streaming:
+`createDerivedKeyCipher(...)` derives `key || iv` and splits internally. The older `createPassphraseCipher(...)` API remains available as a deprecated compatibility wrapper.
+
+The derived-key API also supports streaming:
 
 ```ts
 import { concatBytes } from '@jscrypto/core';
@@ -112,7 +127,7 @@ const encrypted = concatBytes(
 
 Built-in hashes are opt-in through `@jscrypto/classic/hashes`. `registerClassicHashes(registry)` registers MD5, SHA1, SHA224, SHA256, SHA384, SHA512, KECCAK512, deprecated SHA3, and RIPEMD160.
 
-CryptoJS exposes its Keccak-512 behavior as `SHA3`. `@jscrypto/classic` keeps `SHA3` as a deprecated compatibility alias, but new code should use `KECCAK512`. If NIST SHA3-512 is added later, it should be registered under a separate explicit name.
+`SHA3` is kept as a deprecated legacy alias for Keccak-512. New code should use `KECCAK512`. If NIST SHA3-512 is added later, it should be registered under a separate explicit name.
 
 ## Stream Ciphers
 

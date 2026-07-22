@@ -73,9 +73,11 @@ Current working API:
 - `registry.createEncryptor({ cipher, mode, padding, key, iv })`
 - `registry.createDecryptor({ cipher, mode, padding, key, iv })`
 - `registry.createCipher({ cipher, mode, padding, key, iv })`
-- `registry.createPassphraseCipher({ cipher, mode, padding, passphrase, kdf, format })`
-- `registry.createPassphraseCipher(...).createEncryptor()` for streaming passphrase encryption
-- `registry.createPassphraseCipher(...).createDecryptor()` for streaming passphrase decryption
+- `registry.createDerivedKeyCipher({ cipher, mode, padding, kdf, format })`
+- `registry.derive({ name, input, length, ...kdfParams })`
+- `registry.createPassphraseCipher({ cipher, mode, padding, passphrase, kdf, format })` (deprecated compatibility alias)
+- `registry.createDerivedKeyCipher(...).createEncryptor()` for streaming derived-key encryption
+- `registry.createDerivedKeyCipher(...).createDecryptor()` for streaming derived-key decryption
 - `registry.useHash(hash)` / `registry.getHash(name)` for KDF hash registration and lookup
 - `registry.encrypt({ cipher, key, plaintext, ...cipherSpecificOptions })` for stream ciphers
 - `registry.decrypt({ cipher, key, ciphertext, ...cipherSpecificOptions })` for stream ciphers

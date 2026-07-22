@@ -6,7 +6,7 @@ declare const TextEncoder: {
 };
 
 export interface EvpKdfParams {
-  passphrase: Uint8Array | string;
+  input: Uint8Array | string;
   salt: Uint8Array | string;
   iterations?: number;
   length: number;
@@ -34,8 +34,11 @@ export function deriveEvpKdf(params: DeriveEvpKdfParams): Uint8Array {
   if (params.iterations !== undefined) {
     assertPositiveInteger(params.iterations, 'EvpKDF iterations');
   }
+  if (params.input === undefined || params.input === null) {
+    throw new TypeError('EvpKDF requires input.');
+  }
 
-  const password = toBytes(params.passphrase);
+  const password = toBytes(params.input);
   const salt = toBytes(params.salt);
   const blocks: Uint8Array[] = [];
   let previous = new Uint8Array(0);

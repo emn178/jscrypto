@@ -1,5 +1,19 @@
 # Change Log
 
+## v0.5.0 / 2026-07-22
+
+### Added
+
+- added `registry.derive(...)` for direct KDF invocation.
+- added `registry.createDerivedKeyCipher(...)` as the general derived-key cipher facade.
+
+### Changed
+
+- preferred examples and docs now use `createDerivedKeyCipher` with `kdf.input`.
+- `derivePbkdf2` / `deriveEvpKdf` now use `input` instead of `passphrase`.
+- `createPassphraseCipher(...)` remains compatible as a deprecated wrapper: it maps `passphrase` to `kdf.input` and delegates to `createDerivedKeyCipher(...)`.
+- async KDF errors from the derived-key path now say `async derived-key cipher API`.
+
 ## v0.4.0 / 2026-07-15
 
 ### Changed

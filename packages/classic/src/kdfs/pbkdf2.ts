@@ -7,7 +7,7 @@ declare const TextEncoder: {
 };
 
 export interface Pbkdf2Params {
-  passphrase: Uint8Array | string;
+  input: Uint8Array | string;
   salt: Uint8Array | string;
   iterations: number;
   length: number;
@@ -33,8 +33,11 @@ export const pbkdf2: KdfComponent<'PBKDF2'> = {
 export function derivePbkdf2(params: DerivePbkdf2Params): Uint8Array {
   assertPositiveInteger(params.iterations, 'PBKDF2 iterations');
   assertPositiveInteger(params.length, 'PBKDF2 length');
+  if (params.input === undefined || params.input === null) {
+    throw new TypeError('PBKDF2 requires input.');
+  }
 
-  const password = toBytes(params.passphrase);
+  const password = toBytes(params.input);
   const salt = toBytes(params.salt);
   const blocks: Uint8Array[] = [];
   const blockCount = Math.ceil(params.length / params.hash.digestSize);

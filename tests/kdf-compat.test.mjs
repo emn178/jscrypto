@@ -19,28 +19,28 @@ import { bytesToHex, hexToBytes } from './helpers/bytes.mjs';
 test('PBKDF2 matches CryptoJS upstream vectors', () => {
   const cases = [
     {
-      passphrase: 'password',
+      input: 'password',
       salt: 'ATHENA.MIT.EDUraeburn',
       iterations: 250000,
       length: 16,
       expected: '62929ab995a1111c75c37bc562261ea3',
     },
     {
-      passphrase: 'password',
+      input: 'password',
       salt: 'ATHENA.MIT.EDUraeburn',
       iterations: 2,
       length: 32,
       expected: '262fb72ea65b44ab5ceba7f8c8bfa7815ff9939204eb7357a59a75877d745777',
     },
     {
-      passphrase: 'password',
+      input: 'password',
       salt: 'ATHENA.MIT.EDUraeburn',
       iterations: 1200,
       length: 16,
       expected: 'c76a982415f1acc71dc197273c5b6ada',
     },
     {
-      passphrase: 'password',
+      input: 'password',
       salt: hexToBytes('1234567878563412'),
       iterations: 5,
       length: 32,
@@ -50,7 +50,7 @@ test('PBKDF2 matches CryptoJS upstream vectors', () => {
 
   for (const item of cases) {
     const derived = derivePbkdf2({
-      passphrase: item.passphrase,
+      input: item.input,
       salt: item.salt,
       iterations: item.iterations,
       length: item.length,
@@ -83,7 +83,7 @@ test('classic registries require opt-in hash registration', () => {
 test('PBKDF2 component resolves its registered default hash', () => {
   const registry = registerClassicHashes(createClassicRegistry());
   const derived = pbkdf2.derive({
-    passphrase: 'password',
+    input: 'password',
     salt: 'ATHENA.MIT.EDUraeburn',
     iterations: 250000,
     length: 16,
@@ -96,7 +96,7 @@ test('PBKDF2 component resolves its registered default hash', () => {
 
 test('EvpKDF matches CryptoJS upstream vector', () => {
   const derived = deriveEvpKdf({
-    passphrase: 'password',
+    input: 'password',
     salt: 'saltsalt',
     length: 48,
       hash: md5,
@@ -111,7 +111,7 @@ test('EvpKDF matches CryptoJS upstream vector', () => {
 test('EvpKDF component resolves its registered default hash', () => {
   const registry = registerClassicHashes(createClassicRegistry());
   const derived = evpKdf.derive({
-    passphrase: 'password',
+    input: 'password',
     salt: 'saltsalt',
     length: 48,
   }, {
@@ -139,14 +139,14 @@ test('KDFs match permanent CryptoJS vectors for every classic hash', () => {
 
   for (const [hash, evpExpected, pbkdf2Expected] of cases) {
     assert.equal(bytesToHex(deriveEvpKdf({
-      passphrase: 'password',
+      input: 'password',
       salt: 'saltsalt',
       iterations: 2,
       length: 15,
       hash,
     })), evpExpected);
     assert.equal(bytesToHex(derivePbkdf2({
-      passphrase: 'password',
+      input: 'password',
       salt: 'saltsalt',
       iterations: 2,
       length: 15,

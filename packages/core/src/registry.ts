@@ -1,5 +1,11 @@
 import type { AnyComponent, Component, ComponentKind, HashComponent, PresetComponent } from './component.js';
 import { DuplicateComponentError, MissingComponentError } from './errors.js';
+import type {
+  CreateDerivedKeyCipherOptions,
+  DeriveOptions,
+  DerivedKeyCipherFacade,
+} from './derived-key.js';
+import { createDerivedKeyCipher, derive } from './derived-key.js';
 import type { CreatePassphraseCipherOptions, PassphraseCipherFacade } from './passphrase.js';
 import { createPassphraseCipher } from './passphrase.js';
 import type { CreateTransformOptions } from './transform.js';
@@ -14,6 +20,11 @@ export interface Registry {
   get<Kind extends ComponentKind, T extends Component<Kind>>(kind: Kind, name: string): T;
   list(kind?: ComponentKind): AnyComponent[];
   createCipher(options: CreateTransformOptions): CipherFacade;
+  derive(options: DeriveOptions): Uint8Array | Promise<Uint8Array>;
+  createDerivedKeyCipher(options: CreateDerivedKeyCipherOptions): DerivedKeyCipherFacade;
+  /**
+   * @deprecated Use createDerivedKeyCipher({ ..., kdf: { ..., input } }) instead.
+   */
   createPassphraseCipher(options: CreatePassphraseCipherOptions): PassphraseCipherFacade;
   encrypt(options: CreateTransformOptions & { plaintext: Uint8Array }): Uint8Array;
   decrypt(options: CreateTransformOptions & { ciphertext: Uint8Array }): Uint8Array;
@@ -100,6 +111,14 @@ export function createRegistry(components: Iterable<AnyComponent> = []): Registr
           return createDecryptor(registry, options);
         },
       };
+    },
+
+    derive(options) {
+      return derive(registry, options);
+    },
+
+    createDerivedKeyCipher(options) {
+      return createDerivedKeyCipher(registry, options);
     },
 
     createPassphraseCipher(options) {

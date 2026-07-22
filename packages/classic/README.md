@@ -2,7 +2,7 @@
 
 Classic cipher, mode, padding, KDF, and format components for `@jscrypto`.
 
-This package provides classic cipher, mode, padding, KDF, and format components. Behavior remains CryptoJS-compatible where that compatibility is intentional. `@jscrypto/classic` does not depend on CryptoJS.
+This package provides classic cipher, mode, padding, KDF, and format components. It is implemented without a runtime dependency on other crypto frameworks.
 
 ## Install
 
@@ -27,7 +27,7 @@ const ciphertext = cipher.encrypt(plaintext);
 const decrypted = cipher.decrypt(ciphertext);
 ```
 
-## Passphrase Encryption
+## Derived-Key Encryption
 
 ```ts
 import { registry } from '@jscrypto/classic';
@@ -35,13 +35,13 @@ import { registerClassicHashes } from '@jscrypto/classic/hashes';
 
 registerClassicHashes(registry);
 
-const cipher = registry.createPassphraseCipher({
+const cipher = registry.createDerivedKeyCipher({
   cipher: 'AES',
   mode: 'CBC',
   padding: 'Pkcs7',
-  passphrase: 'secret',
   kdf: {
     name: 'EvpKDF',
+    input: 'secret',
     iterations: 1,
     hash: 'MD5',
   },
@@ -51,6 +51,8 @@ const cipher = registry.createPassphraseCipher({
 const encrypted = cipher.encrypt(plaintext);
 const decrypted = cipher.decrypt(encrypted);
 ```
+
+`createPassphraseCipher(...)` remains available as a deprecated compatibility alias.
 
 ## AES-GCM
 
@@ -87,7 +89,7 @@ const decrypted = cipher.decrypt(sealed);
 
 `registerClassicHashes(registry)` registers MD5, SHA1, SHA224, SHA256, SHA384, SHA512, KECCAK512, deprecated SHA3, and RIPEMD160.
 
-CryptoJS exposes its Keccak-512 behavior as `SHA3`. This package keeps `SHA3` as a deprecated compatibility alias so existing CryptoJS-compatible KDF settings continue to work. New code should use `KECCAK512`; a future NIST SHA3-512 component should use a distinct name.
+`SHA3` is kept as a deprecated legacy alias for Keccak-512. New code should use `KECCAK512`; a future NIST SHA3-512 component should use a distinct name.
 
 ## Custom Registry
 

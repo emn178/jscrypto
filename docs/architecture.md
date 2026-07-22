@@ -35,7 +35,7 @@ The public npm surface is currently two packages plus one opt-in subpath:
 
 - `@jscrypto/core`: framework contracts and shared helpers.
 - `@jscrypto/classic`: classic ciphers, modes, paddings, KDFs, and formats with CryptoJS-compatible outputs where compatibility is intentional.
-- `@jscrypto/classic/hashes`: opt-in CryptoJS-compatible hash components for KDF/passphrase use.
+- `@jscrypto/classic/hashes`: opt-in CryptoJS-compatible hash components for KDF/derived-key use.
 
 Inside `@jscrypto/classic`, code remains split by concern under `src/ciphers`, `src/modes`, `src/paddings`, `src/kdfs`, `src/formats`, `src/hashes`, and `src/preset`. Concrete hashes are deliberately excluded from the main classic entry and browser bundle; consumers opt in through the hashes subpath and call `registerClassicHashes(registry)`.
 

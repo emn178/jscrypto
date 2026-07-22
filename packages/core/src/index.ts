@@ -21,9 +21,14 @@ export type {
 } from './component.js';
 export { CryptoError, DuplicateComponentError, MissingComponentError } from './errors.js';
 export type {
-  CreatePassphraseCipherOptions,
+  CreateDerivedKeyCipherOptions,
+  DeriveOptions,
+  DerivedKeyCipherFacade,
   FormatOptions,
   KdfOptions,
+} from './derived-key.js';
+export type {
+  CreatePassphraseCipherOptions,
   PassphraseCipherFacade,
 } from './passphrase.js';
 export type { CipherFacade, Registry } from './registry.js';

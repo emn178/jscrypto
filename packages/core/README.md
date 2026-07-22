@@ -32,7 +32,7 @@ const ciphertext = cipher.encrypt(plaintext);
 
 ## What It Provides
 
-- `createRegistry`: component registry with cipher facade and passphrase facade creation.
+- `createRegistry`: component registry with cipher facade and derived-key facade creation.
 - Component contracts: cipher, mode, padding, KDF, format, and preset types.
 - Transform contract: `process(input)` plus `finalize(input?)` for streaming.
 - Byte helpers: `concatBytes`, `equalBytes`, `xorBytes`, and byte assertions.

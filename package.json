@@ -13,7 +13,7 @@
     "clean": "tsc -b --clean && node scripts/clean.mjs",
     "typecheck": "tsc -b --pretty false",
     "test": "npm run build && node --test tests/*.test.mjs",
-    "coverage": "npm run build && c8 --check-coverage --statements 100 --branches 100 --functions 100 --lines 100 --reporter=text --reporter=html --include=packages/core/dist/index.mjs --include=packages/classic/dist/index.mjs --include=packages/classic/dist/hashes.mjs node --test tests/*.test.mjs",
+    "coverage": "npm run build && c8 --check-coverage --statements 100 --branches 100 --functions 100 --lines 100 --reporter=text --reporter=html --reporter=lcov --include=packages/core/dist/index.mjs --include=packages/classic/dist/index.mjs --include=packages/classic/dist/hashes.mjs node --test tests/*.test.mjs",
     "prepack": "npm run build"
   },
   "devDependencies": {

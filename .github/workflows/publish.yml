@@ -1,0 +1,41 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - run: npm ci
+
+      - name: Verify release version
+        run: |
+          CORE_VERSION=$(node -p "require('./packages/core/package.json').version")
+          CLASSIC_VERSION=$(node -p "require('./packages/classic/package.json').version")
+          test "$CORE_VERSION" = "$CLASSIC_VERSION"
+          test "$GITHUB_REF_NAME" = "v$CORE_VERSION"
+
+      - run: npm run build
+      - run: npm test
+
+      - name: Publish @jscrypto/core
+        run: npm publish --access public
+        working-directory: packages/core
+
+      - name: Publish @jscrypto/classic
+        run: npm publish --access public
+        working-directory: packages/classic
