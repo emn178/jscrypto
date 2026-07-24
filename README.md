@@ -12,7 +12,7 @@ This project is not affiliated with Node.js `crypto`, the Web Crypto API, or npm
 
 - `@jscrypto/core`: registry, component contracts, transform helpers, byte helpers, and shared errors.
 - `@jscrypto/classic`: AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, OFB, ECB, GCM, classic paddings, PBKDF2, EvpKDF, and OpenSSL `Salted__` formatting.
-- `@jscrypto/classic/hashes`: opt-in hash components (`registerClassicHashes`) for KDF/derived-key flows.
+- `@jscrypto/classic/hashes`: opt-in hash preset (`classicHashesPreset`) for KDF/derived-key flows.
 
 The public package count is intentionally small. `@jscrypto/classic` still keeps internal modules split by cipher, mode, padding, KDF, format, hash, and preset so those boundaries stay testable and can be split later if the need becomes real.
 
@@ -78,9 +78,9 @@ Derived-key ciphers derive key and IV through a KDF, then optionally wrap salt a
 
 ```ts
 import { registry } from '@jscrypto/classic';
-import { registerClassicHashes } from '@jscrypto/classic/hashes';
+import { classicHashesPreset } from '@jscrypto/classic/hashes';
 
-registerClassicHashes(registry);
+registry.use(classicHashesPreset);
 
 const keyMaterial = registry.derive({
   name: 'PBKDF2',
@@ -125,7 +125,7 @@ const encrypted = concatBytes(
 
 ## Hash Compatibility
 
-Built-in hashes are opt-in through `@jscrypto/classic/hashes`. `registerClassicHashes(registry)` registers MD5, SHA1, SHA224, SHA256, SHA384, SHA512, KECCAK512, deprecated SHA3, and RIPEMD160.
+Built-in hashes are opt-in through `@jscrypto/classic/hashes`. `registry.use(classicHashesPreset)` registers MD5, SHA1, SHA224, SHA256, SHA384, SHA512, KECCAK512, deprecated SHA3, and RIPEMD160.
 
 `SHA3` is kept as a deprecated legacy alias for Keccak-512. New code should use `KECCAK512`. If NIST SHA3-512 is added later, it should be registered under a separate explicit name.
 
@@ -193,6 +193,7 @@ const registry = createRegistry()
 ## Browser Builds
 
 Both packages ship ESM, CommonJS, IIFE, and UMD outputs.
+The classic browser bundle is not standalone; load `@jscrypto/core` first so extensions share the same registry contracts.
 
 ```ts
 import { createRegistry } from '@jscrypto/core';
@@ -205,7 +206,7 @@ import { registry } from '@jscrypto/classic';
 <!-- Required only for built-in KDF hash implementations. -->
 <script src="node_modules/@jscrypto/classic/dist/jscrypto-classic-hashes.iife.min.js"></script>
 <script>
-  jscryptoClassicHashes.registerClassicHashes(jscryptoClassic.registry);
+  jscryptoClassic.registry.use(jscryptoClassicHashes.classicHashesPreset);
   const cipher = jscryptoClassic.registry.createCipher({
     cipher: 'AES',
     mode: 'CBC',

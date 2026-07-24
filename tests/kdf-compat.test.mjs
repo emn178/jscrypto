@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { deriveEvpKdf, derivePbkdf2, evpKdf, pbkdf2 } from '@jscrypto/classic';
 import {
+  classicHashesPreset,
   keccak512,
   md5,
   registerClassicHashes,
@@ -72,16 +73,18 @@ test('classic registries require opt-in hash registration', () => {
     salt: new Uint8Array(8),
   }).encrypt(new Uint8Array()), /Hash not registered: MD5/);
 
-  registerClassicHashes(registry);
-  registerClassicHashes(registry);
+  registry.use(classicHashesPreset);
   assert.equal(registry.getHash('sha-256').name, 'SHA256');
   assert.equal(registry.getHash('SHA256').name, 'SHA256');
   assert.equal(registry.getHash('KECCAK512'), keccak512);
   assert.equal(registry.getHash('SHA3'), sha3);
+
+  registerClassicHashes(registry);
+  registerClassicHashes(registry);
 });
 
 test('PBKDF2 component resolves its registered default hash', () => {
-  const registry = registerClassicHashes(createClassicRegistry());
+  const registry = createClassicRegistry().use(classicHashesPreset);
   const derived = pbkdf2.derive({
     input: 'password',
     salt: 'ATHENA.MIT.EDUraeburn',
@@ -109,7 +112,7 @@ test('EvpKDF matches CryptoJS upstream vector', () => {
 });
 
 test('EvpKDF component resolves its registered default hash', () => {
-  const registry = registerClassicHashes(createClassicRegistry());
+  const registry = createClassicRegistry().use(classicHashesPreset);
   const derived = evpKdf.derive({
     input: 'password',
     salt: 'saltsalt',

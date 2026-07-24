@@ -31,9 +31,9 @@ const decrypted = cipher.decrypt(ciphertext);
 
 ```ts
 import { registry } from '@jscrypto/classic';
-import { registerClassicHashes } from '@jscrypto/classic/hashes';
+import { classicHashesPreset } from '@jscrypto/classic/hashes';
 
-registerClassicHashes(registry);
+registry.use(classicHashesPreset);
 
 const cipher = registry.createDerivedKeyCipher({
   cipher: 'AES',
@@ -81,13 +81,13 @@ const decrypted = cipher.decrypt(sealed);
 - Paddings: `pkcs7`, `iso97971`, `ansiX923`, `iso10126`, `zeroPadding`, `noPadding`.
 - KDFs: `pbkdf2`, `evpKdf`.
 - Formats: `opensslFormat`.
-- Opt-in hashes: `@jscrypto/classic/hashes` with `registerClassicHashes(registry)`.
+- Opt-in hashes: `@jscrypto/classic/hashes` with `classicHashesPreset`.
 - Preset: `classicPreset` (does not register hashes).
 - Registries: `registry`, `createClassicRegistry`.
 
 ## Hash Compatibility
 
-`registerClassicHashes(registry)` registers MD5, SHA1, SHA224, SHA256, SHA384, SHA512, KECCAK512, deprecated SHA3, and RIPEMD160.
+`registry.use(classicHashesPreset)` registers MD5, SHA1, SHA224, SHA256, SHA384, SHA512, KECCAK512, deprecated SHA3, and RIPEMD160.
 
 `SHA3` is kept as a deprecated legacy alias for Keccak-512. New code should use `KECCAK512`; a future NIST SHA3-512 component should use a distinct name.
 
@@ -105,11 +105,14 @@ const registry = createRegistry()
 
 ## Browser Global
 
+The classic browser bundle is not standalone; load `@jscrypto/core` before `@jscrypto/classic`.
+
 ```html
+<script src="node_modules/@jscrypto/core/dist/jscrypto-core.iife.min.js"></script>
 <script src="node_modules/@jscrypto/classic/dist/jscrypto-classic.iife.min.js"></script>
 <script src="node_modules/@jscrypto/classic/dist/jscrypto-classic-hashes.iife.min.js"></script>
 <script>
-  jscryptoClassicHashes.registerClassicHashes(jscryptoClassic.registry);
+  jscryptoClassic.registry.use(jscryptoClassicHashes.classicHashesPreset);
   const cipher = jscryptoClassic.registry.createCipher({
     cipher: 'AES',
     mode: 'CBC',

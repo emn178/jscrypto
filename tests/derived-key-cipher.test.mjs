@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { MissingComponentError, concatBytes } from '@jscrypto/core';
 import { createClassicRegistry, registry } from '@jscrypto/classic';
-import { registerClassicHashes } from '@jscrypto/classic/hashes';
+import { classicHashesPreset } from '@jscrypto/classic/hashes';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
-registerClassicHashes(registry);
+registry.use(classicHashesPreset);
 
 test('registry.derive supports PBKDF2 and EvpKDF with input', () => {
   const pbkdf2 = registry.derive({
@@ -184,7 +184,7 @@ test('createDerivedKeyCipher requires salt without a salt-generating format', ()
       };
     },
   };
-  const localRegistry = registerClassicHashes(createClassicRegistry()).use(bufferedFormat);
+  const localRegistry = createClassicRegistry().use(classicHashesPreset).use(bufferedFormat);
   assert.throws(() => localRegistry.createDerivedKeyCipher({
     cipher: 'AES',
     mode: 'CBC',

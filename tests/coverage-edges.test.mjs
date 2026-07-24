@@ -74,6 +74,8 @@ test('registry covers duplicate, missing, list, constructor, one-shot, and trans
   assert.equal(registry.has('mode', 'ECB'), false);
   assert.equal(registry.list().length, 3);
   assert.equal(registry.list('cipher').length, 1);
+  registry.useHash(md5);
+  assert.equal(registry.getHash('md-5'), md5);
   assert.throws(() => registry.use(aes), DuplicateComponentError);
   assert.throws(() => registry.get('mode', 'ECB'), MissingComponentError);
 

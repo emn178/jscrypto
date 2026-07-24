@@ -9,7 +9,40 @@ on:
       - main
 
 jobs:
-  ci:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Pack npm packages
+        run: |
+          mkdir -p package-artifact
+          npm pack --workspace=@jscrypto/core --pack-destination package-artifact
+          npm pack --workspace=@jscrypto/classic --pack-destination package-artifact
+
+      - name: Upload packed packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-node-24
+          path: package-artifact/*.tgz
+
+  runtime-test:
+    needs: build
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -26,16 +59,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        if: matrix.node-version == '24.x'
-        run: npm run build
+      - name: Download Node 24 packages
+        uses: actions/download-artifact@v4
+        with:
+          name: package-node-24
+          path: package-artifact
 
-      - name: Run tests
-        run: npm test
+      - name: Extract package dist
+        run: |
+          rm -rf packages/core/dist packages/classic/dist
+          tar -xzf package-artifact/jscrypto-core-*.tgz --strip-components=1 -C packages/core package/package.json package/dist
+          tar -xzf package-artifact/jscrypto-classic-*.tgz --strip-components=1 -C packages/classic package/package.json package/dist
+
+      - name: Run tests against package dist
+        if: matrix.node-version != '24.x'
+        run: npm run test:dist
 
       - name: Generate coverage report
         if: matrix.node-version == '24.x'
-        run: npm run coverage
+        run: npm run coverage:dist
 
       - name: Upload to coveralls
         if: matrix.node-version == '24.x'

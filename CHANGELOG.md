@@ -1,5 +1,13 @@
 # Change Log
 
+## v0.6.0 / 2026-07-24
+
+### Changed
+
+- changed the `@jscrypto/classic` browser IIFE/UMD bundles to depend on the `@jscrypto/core` browser global instead of bundling core internally.
+- added `classicHashesPreset` as the preferred opt-in hash registration API; `registerClassicHashes(registry)` remains as a deprecated compatibility helper.
+- changed CI to build npm package tarballs once on Node 24 and run runtime tests against those packaged outputs across supported Node versions.
+
 ## v0.5.1 / 2026-07-22
 
 ### Changed
