@@ -1,6 +1,8 @@
 # @jscrypto
 [![CI](https://github.com/emn178/jscrypto/actions/workflows/ci.yml/badge.svg)](https://github.com/emn178/jscrypto/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/emn178/jscrypto/badge.svg?branch=main)](https://coveralls.io/r/emn178/jscrypto?branch=main)
+[![NPM](https://nodei.co/npm/@jscrypto/core.png?style=flat&data=n,v,d&color=brightgreen)](https://www.npmjs.com/package/@jscrypto/core)
+[![NPM](https://nodei.co/npm/@jscrypto/classic.png?style=flat&data=n,v,d&color=brightgreen)](https://www.npmjs.com/package/@jscrypto/classic)
 
 Composable cryptography components for JavaScript and TypeScript.
 
