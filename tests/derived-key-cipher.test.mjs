@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { MissingComponentError, concatBytes } from '@jscrypto/core';
+import { concatBytes } from '@jscrypto/core';
 import { createClassicRegistry, registry } from '@jscrypto/classic';
 import { classicHashesPreset } from '@jscrypto/classic/hashes';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
@@ -49,7 +49,10 @@ test('registry.derive resolves hashes and missing components', () => {
     input: 'secret',
     salt: 'salt',
     length: 16,
-  }), (error) => error instanceof MissingComponentError);
+  }), {
+    name: 'MissingComponentError',
+    message: 'Component not found: kdf:MissingKdf',
+  });
 });
 
 test('createDerivedKeyCipher matches createPassphraseCipher for OpenSSL EvpKDF', () => {
