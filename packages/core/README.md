@@ -1,4 +1,6 @@
 # @jscrypto/core
+[![NPM](https://img.shields.io/npm/v/@jscrypto/core)](https://www.npmjs.com/package/@jscrypto/core)
+[![CDNJS](https://img.shields.io/jsdelivr/npm/hm/@jscrypto/core)](https://www.jsdelivr.com/package/npm/@jscrypto/core)
 
 Core registry, component contracts, transform helpers, byte helpers, and shared errors for `@jscrypto` packages.
 

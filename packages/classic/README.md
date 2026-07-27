@@ -1,4 +1,6 @@
 # @jscrypto/classic
+[![NPM](https://img.shields.io/npm/v/@jscrypto/classic)](https://www.npmjs.com/package/@jscrypto/classic)
+[![CDNJS](https://img.shields.io/jsdelivr/npm/hm/@jscrypto/classic)](https://www.jsdelivr.com/package/npm/@jscrypto/classic)
 
 Classic cipher, mode, padding, KDF, and format components for `@jscrypto`.
 
