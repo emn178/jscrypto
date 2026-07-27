@@ -11,6 +11,7 @@ export const cbc: ModeComponent<'CBC'> = {
   kind: 'mode',
   name: 'CBC',
   requiresPadding: true,
+  getIvSize: (cipher) => cipher.blockSize,
   createEncryptor({ cipher, iv }) {
     assertIv(cipher.blockSize, iv, 'CBC');
     return createCbcEncryptor(cipher, iv);

@@ -34,6 +34,7 @@ export interface BlockCipher {
 
 export interface ModeComponent<Name extends string = string> extends Component<'mode', Name> {
   readonly requiresPadding?: boolean;
+  getIvSize?(cipher: BlockCipherComponent): number;
   createEncryptor(params: BlockModeTransformParams): Transform;
   createDecryptor(params: BlockModeTransformParams): Transform;
 }

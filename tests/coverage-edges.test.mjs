@@ -435,9 +435,11 @@ test('passphrase ciphers validate sizing and invalid kdf outputs', () => {
     mode: 'CBC',
     padding: 'Pkcs7',
     passphrase: 'secret',
-    kdf: 'EvpKDF',
-    ivSize: -1,
-  }).encrypt(textToBytes('a')), /ivSize/);
+    kdf: {
+      name: 'EvpKDF',
+      length: 1,
+    },
+  }).encrypt(textToBytes('a')), /kdf.length/);
   assert.throws(() => registry.createPassphraseCipher({
     cipher: 'NoKeySize',
     passphrase: 'secret',

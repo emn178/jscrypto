@@ -4,6 +4,7 @@ export const cfb: ModeComponent<'CFB'> = {
   kind: 'mode',
   name: 'CFB',
   requiresPadding: false,
+  getIvSize: (cipher) => cipher.blockSize,
   createEncryptor({ cipher, iv }) {
     assertIv(cipher.blockSize, iv, 'CFB');
     return createCfbEncryptor(cipher, iv);

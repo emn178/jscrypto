@@ -52,7 +52,7 @@ const cipher = registry.createDerivedKeyCipher({
     hash: 'MD5',
   },
   keySize: 16,
-  ivSize: 16,
+  // CBC derives a 16-byte IV from AES's block size.
   format: 'OpenSSL',
 });
 
@@ -60,7 +60,7 @@ const encrypted = cipher.encrypt(plaintext, { salt });
 const decrypted = cipher.decrypt(encrypted);
 ```
 
-The explicit example above derives an AES-128 key. When `keySize` and `ivSize` are omitted, AES defaults to a 32-byte key and a 16-byte IV:
+The explicit example above derives an AES-128 key. When `keySize` is omitted, AES defaults to a 32-byte key. CBC derives a 16-byte IV from AES's block size:
 
 ```ts
 const cipher = registry.createDerivedKeyCipher({
@@ -74,7 +74,7 @@ const cipher = registry.createDerivedKeyCipher({
     hash: 'MD5',
   },
   // keySize: 32
-  // ivSize: 16
+  // CBC derived IV: 16 bytes
   format: 'OpenSSL',
 });
 ```
@@ -98,8 +98,13 @@ const cipher = registry.createCipher({
   key,
 });
 
-const sealed = cipher.encrypt(plaintext, { nonce, aad, tagLength: 16 });
+const sealed = cipher.encrypt(plaintext, { nonce, aad });
 const decrypted = cipher.decrypt(sealed, { nonce, aad });
+
+// The default appended tag length is 16 bytes. If you choose a different
+// appended tag length, pass the same value during decrypt.
+const shortTagSealed = cipher.encrypt(plaintext, { nonce, aad, tagLength: 12 });
+const shortTagDecrypted = cipher.decrypt(shortTagSealed, { nonce, aad, tagLength: 12 });
 ```
 
 ## Components

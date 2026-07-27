@@ -1,4 +1,11 @@
-import type { CipherComponent, FormatComponent, KdfComponent, Transform } from './component.js';
+import type {
+  BlockCipherComponent,
+  CipherComponent,
+  FormatComponent,
+  KdfComponent,
+  ModeComponent,
+  Transform,
+} from './component.js';
 import type { DerivedKeyCipherOperationOptions } from './operation-options.js';
 import { assertNoReservedOperationOptions } from './operation-options.js';
 import { randomBytes } from './random.js';
@@ -30,7 +37,6 @@ export interface CreateDerivedKeyCipherOptions {
   format?: string | (FormatOptions & { saltSize?: number });
   kdf: Omit<DeriveOptions, 'length'> & { length?: number };
   keySize?: number;
-  ivSize?: number;
   [key: string]: unknown;
 }
 
@@ -255,7 +261,7 @@ function deriveKeyIv(
   const ivSize = resolveIvSize(registry, options);
   const length = keySize + ivSize;
   if (options.kdf.length !== undefined && options.kdf.length !== length) {
-    throw new Error(`kdf.length (${options.kdf.length}) does not match keySize + ivSize (${length}).`);
+    throw new Error(`kdf.length (${options.kdf.length}) does not match derived material length (${length}).`);
   }
   const derived = deriveForCipher(registry, options, salt, length);
   return {
@@ -454,13 +460,16 @@ function resolveKeySize(registry: Registry, options: CreateDerivedKeyCipherOptio
 }
 
 function resolveIvSize(registry: Registry, options: CreateDerivedKeyCipherOptions): number {
-  if (options.ivSize !== undefined) {
-    assertNonNegativeInteger(options.ivSize, 'ivSize');
-    return options.ivSize;
+  const cipher = registry.get<'cipher', CipherComponent>('cipher', options.cipher);
+  if (cipher.type !== 'block') {
+    return 0;
+  }
+  if (!options.mode) {
+    return 0;
   }
 
-  const cipher = registry.get<'cipher', CipherComponent>('cipher', options.cipher);
-  return cipher.type === 'block' ? cipher.blockSize : 0;
+  const mode = registry.get<'mode', ModeComponent>('mode', options.mode);
+  return mode.getIvSize?.(cipher as BlockCipherComponent) ?? 0;
 }
 
 function resolveFormatOptions(
@@ -489,12 +498,6 @@ function isStreamingOpenSslFormat(format: FormatComponent): boolean {
 function assertPositiveInteger(value: number, label: string): void {
   if (!Number.isInteger(value) || value <= 0) {
     throw new RangeError(`${label} must be a positive integer.`);
-  }
-}
-
-function assertNonNegativeInteger(value: number, label: string): void {
-  if (!Number.isInteger(value) || value < 0) {
-    throw new RangeError(`${label} must be a non-negative integer.`);
   }
 }
 

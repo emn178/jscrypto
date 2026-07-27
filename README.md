@@ -99,9 +99,9 @@ const keyMaterial = registry.derive({
 });
 ```
 
-`createDerivedKeyCipher(...)` derives key material for a cipher facade. With `ivSize > 0`, it derives `key || iv` and splits internally.
+`createDerivedKeyCipher(...)` derives key material for a cipher facade. The selected mode decides whether IV material is also derived. CBC/CFB/CTR/OFB derive a block-size IV, ECB and GCM derive key material only, and stream ciphers derive key material only.
 
-Explicit key/IV sizes, for example AES-128-CBC:
+Explicit key size, for example AES-128-CBC:
 
 ```ts
 import { randomBytes } from '@jscrypto/core';
@@ -122,7 +122,7 @@ const cipher = registry.createDerivedKeyCipher({
     hash: 'MD5',
   },
   keySize: 16,
-  ivSize: 16,
+  // CBC derives a 16-byte IV from AES's block size.
   format: 'OpenSSL',
 });
 
@@ -144,14 +144,14 @@ const cipher = registry.createDerivedKeyCipher({
     hash: 'MD5',
   },
   // keySize defaults to AES's largest key size: 32 bytes.
-  // ivSize defaults to AES's block size: 16 bytes.
+  // CBC derives a 16-byte IV from AES's block size.
   format: 'OpenSSL',
 });
 ```
 
 KDF salt can be supplied per operation through `{ salt }` or fixed on the facade through `kdf.salt`. On decrypt, OpenSSL format prefers the salt parsed from the `Salted__` header, so callers normally do not pass `{ salt }` again for OpenSSL ciphertext. Formats serialize or parse metadata; they do not generate salt in the new derived-key API.
 
-If `keySize` is omitted, `createDerivedKeyCipher(...)` uses the selected cipher's largest declared key size. For AES this is 32 bytes. If `ivSize` is omitted, block ciphers use their block size and stream ciphers use 0. For AES-CBC this means the default derived material is 48 bytes: 32 bytes of key plus 16 bytes of IV.
+If `keySize` is omitted, `createDerivedKeyCipher(...)` uses the selected cipher's largest declared key size. For AES this is 32 bytes. The selected mode contributes any derived IV length. For AES-CBC this means the default derived material is 48 bytes: 32 bytes of key plus 16 bytes of IV. AES-GCM derives key material only; pass a fresh nonce per operation.
 
 The older `createPassphraseCipher(...)` API remains available as a deprecated compatibility wrapper. It preserves the previous passphrase/OpenSSL convenience behavior, including random salt generation when needed.
 
@@ -210,12 +210,17 @@ const cipher = registry.createCipher({
   key,
 });
 
-const sealed = cipher.encrypt(plaintext, { nonce, aad, tagLength: 16 });
+const sealed = cipher.encrypt(plaintext, { nonce, aad });
 const decrypted = cipher.decrypt(sealed, { nonce, aad });
 
 const ciphertext = sealed.subarray(0, sealed.length - 16);
 const tag = sealed.subarray(sealed.length - 16);
 const detached = cipher.decrypt(ciphertext, { nonce, aad, tag });
+
+// The default appended tag length is 16 bytes. If you choose a different
+// appended tag length, pass the same value during decrypt.
+const shortTagSealed = cipher.encrypt(plaintext, { nonce, aad, tagLength: 12 });
+const shortTagDecrypted = cipher.decrypt(shortTagSealed, { nonce, aad, tagLength: 12 });
 ```
 
 ## Custom Registry

@@ -19,7 +19,6 @@ export interface CreatePassphraseCipherOptions {
   salt?: Uint8Array;
   saltSize?: number;
   keySize?: number;
-  ivSize?: number;
   [option: string]: unknown;
 }
 
@@ -70,7 +69,6 @@ function toDerivedKeyCipherOptions(
     mode,
     padding,
     keySize,
-    ivSize,
     ...rest
   } = options;
 
@@ -80,7 +78,6 @@ function toDerivedKeyCipherOptions(
     mode,
     padding,
     keySize,
-    ivSize,
     format: normalizeFormatOptions(format, saltSize),
     kdf: {
       ...kdfOptions,

@@ -4,6 +4,7 @@ export const ofb: ModeComponent<'OFB'> = {
   kind: 'mode',
   name: 'OFB',
   requiresPadding: false,
+  getIvSize: (cipher) => cipher.blockSize,
   createEncryptor({ cipher, iv }) {
     assertIv(cipher.blockSize, iv, 'OFB');
     return createOfbTransform(cipher, iv);

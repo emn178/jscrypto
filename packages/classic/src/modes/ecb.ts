@@ -4,6 +4,7 @@ export const ecb: ModeComponent<'ECB'> = {
   kind: 'mode',
   name: 'ECB',
   requiresPadding: true,
+  getIvSize: () => 0,
   createEncryptor({ cipher }) {
     return createEcbEncryptor(cipher);
   },

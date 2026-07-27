@@ -4,6 +4,7 @@ export const ctr: ModeComponent<'CTR'> = {
   kind: 'mode',
   name: 'CTR',
   requiresPadding: false,
+  getIvSize: (cipher) => cipher.blockSize,
   createEncryptor({ cipher, iv }) {
     assertIv(cipher.blockSize, iv, 'CTR');
     return createCtrTransform(cipher, iv);

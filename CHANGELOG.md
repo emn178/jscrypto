@@ -7,10 +7,12 @@
 - added per-operation options for cipher facades, so IV, nonce, AAD, detached tag, and other mode-specific values can be passed to `encrypt`, `decrypt`, `createEncryptor`, and `createDecryptor`.
 - added per-operation `salt` support for derived-key cipher facades.
 - added public `randomBytes(length)` to `@jscrypto/core`.
+- added `ModeComponent.getIvSize(...)` so modes define derived-key IV material length.
 
 ### Changed
 
 - changed README examples to prefer reusable cipher facades with operation-specific IV/nonce/salt options.
+- changed `createDerivedKeyCipher(...)` to derive IV material according to the selected mode instead of a public `ivSize` option.
 - changed `createDerivedKeyCipher(...)` so OpenSSL format serializes/parses salt but does not generate salt in the new derived-key API.
 - kept salt validation inside individual KDF implementations instead of exposing KDF salt policy in core component metadata.
 - removed unused `ModeComponent` metadata fields `requiredBlockSize` and `aead`.

@@ -11,6 +11,7 @@ export const gcm: ModeComponent<'GCM'> = {
   kind: 'mode',
   name: 'GCM',
   requiresPadding: false,
+  getIvSize: () => 0,
   createEncryptor({ cipher, iv, options }) {
     return createGcmEncryptor(cipher, getNonce(iv, options), getAad(options), getTagLength(options));
   },

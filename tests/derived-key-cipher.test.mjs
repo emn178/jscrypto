@@ -227,7 +227,6 @@ test('createDerivedKeyCipher decrypt mirrors encrypt without separate iv', () =>
       iterations: 1000,
     },
     keySize: 32,
-    ivSize: 16,
   });
   const encrypted = cipher.encrypt(textToBytes('hello'), { salt });
   assert.equal(bytesToText(cipher.decrypt(encrypted, { salt })), 'hello');
@@ -246,13 +245,78 @@ test('createDerivedKeyCipher GCM derives key only and requires operation nonce',
       iterations: 1000,
     },
     keySize: 16,
-    ivSize: 0,
   });
 
   assert.throws(() => cipher.encrypt(textToBytes('abc'), { salt }), /requires/);
   const sealed = cipher.encrypt(textToBytes('abc'), { salt, nonce, tagLength: 16 });
   assert.ok(sealed.length > 16);
   assert.equal(bytesToText(cipher.decrypt(sealed, { salt, nonce })), 'abc');
+});
+
+test('createDerivedKeyCipher derives IV length from classic modes', () => {
+  const salt = hexToBytes('0102030405060708');
+  const modes = [
+    { mode: 'CFB' },
+    { mode: 'CTR' },
+    { mode: 'OFB' },
+    { mode: 'ECB', padding: 'Pkcs7' },
+  ];
+
+  for (const { mode, padding } of modes) {
+    const cipher = registry.createDerivedKeyCipher({
+      cipher: 'AES',
+      mode,
+      ...(padding ? { padding } : {}),
+      kdf: {
+        name: 'PBKDF2',
+        input: 'secret',
+        hash: 'SHA256',
+        iterations: 1000,
+      },
+      keySize: 16,
+    });
+    const encrypted = cipher.encrypt(textToBytes(`hello-${mode}`), { salt });
+    assert.equal(bytesToText(cipher.decrypt(encrypted, { salt })), `hello-${mode}`);
+  }
+
+  const noIvMode = {
+    kind: 'mode',
+    name: 'NoIv',
+    requiresPadding: false,
+    createEncryptor() {
+      return identityTransform();
+    },
+    createDecryptor() {
+      return identityTransform();
+    },
+  };
+  const noIvRegistry = createClassicRegistry()
+    .use(classicHashesPreset)
+    .use(noIvMode);
+  const noIvCipher = noIvRegistry.createDerivedKeyCipher({
+    cipher: 'AES',
+    mode: 'NoIv',
+    kdf: {
+      name: 'PBKDF2',
+      input: 'secret',
+      hash: 'SHA256',
+      iterations: 1000,
+    },
+    keySize: 16,
+  });
+  assert.equal(bytesToText(noIvCipher.encrypt(textToBytes('abc'), { salt })), 'abc');
+
+  const noModeCipher = registry.createDerivedKeyCipher({
+    cipher: 'AES',
+    kdf: {
+      name: 'PBKDF2',
+      input: 'secret',
+      hash: 'SHA256',
+      iterations: 1000,
+    },
+    keySize: 16,
+  });
+  assert.throws(() => noModeCipher.encrypt(textToBytes('abc'), { salt }), /requires a mode/);
 });
 
 test('createDerivedKeyCipher OpenSSL decrypt without header uses operation or creation salt', () => {
@@ -396,7 +460,6 @@ test('createDerivedKeyCipher allows missing salt when KDF does not require it', 
       input: 'secret',
     },
     keySize: 32,
-    ivSize: 16,
   });
   const encrypted = cipher.encrypt(textToBytes('abc'));
   assert.equal(bytesToText(cipher.decrypt(encrypted)), 'abc');
@@ -615,3 +678,14 @@ test('KDF helpers require input', async () => {
     hash: sha256,
   }), /requires input/);
 });
+
+function identityTransform() {
+  return {
+    process(input) {
+      return input;
+    },
+    finalize(input = new Uint8Array(0)) {
+      return input;
+    },
+  };
+}
