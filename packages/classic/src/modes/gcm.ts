@@ -10,8 +10,6 @@ import {
 export const gcm: ModeComponent<'GCM'> = {
   kind: 'mode',
   name: 'GCM',
-  aead: true,
-  requiredBlockSize: 16,
   requiresPadding: false,
   createEncryptor({ cipher, iv, options }) {
     return createGcmEncryptor(cipher, getNonce(iv, options), getAad(options), getTagLength(options));

@@ -4,6 +4,39 @@ import { concatBytes } from '@jscrypto/core';
 import { createClassicRegistry, registry } from '@jscrypto/classic';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
+test('cipher facade accepts per-operation iv options', () => {
+  const key = hexToBytes('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
+  const iv = hexToBytes('000102030405060708090a0b0c0d0e0f');
+  const cipher = createClassicRegistry().createCipher({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs7',
+    key,
+  });
+
+  const encrypted = cipher.encrypt(textToBytes('abc'), { iv });
+  assert.equal(bytesToHex(encrypted), 'e98b50daffee0c8e527bba7859e83713');
+  assert.equal(bytesToText(cipher.decrypt(encrypted, { iv })), 'abc');
+
+  const encryptor = cipher.createEncryptor({ iv });
+  assert.equal(bytesToHex(encryptor.finalize(textToBytes('abc'))), 'e98b50daffee0c8e527bba7859e83713');
+});
+
+test('cipher facade rejects reserved operation option keys', () => {
+  const key = hexToBytes('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
+  const iv = hexToBytes('000102030405060708090a0b0c0d0e0f');
+  const cipher = createClassicRegistry().createCipher({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs7',
+    key,
+    iv,
+  });
+
+  assert.throws(() => cipher.encrypt(textToBytes('abc'), { key: new Uint8Array(32) }), /reserved key: key/);
+  assert.throws(() => cipher.createEncryptor({ mode: 'ECB' }), /reserved key: mode/);
+});
+
 test('cipher facade encrypts and decrypts one-shot calls', () => {
   const key = hexToBytes('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
   const iv = hexToBytes('000102030405060708090a0b0c0d0e0f');

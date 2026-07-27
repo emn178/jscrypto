@@ -8,6 +8,7 @@ import {
   assertBlockSize,
   assertBytes,
   assertIv,
+  assertNoReservedOperationOptions,
   assertPaddedInput,
   concatBytes,
   createRegistry,
@@ -65,6 +66,8 @@ test('core helpers cover error branches', () => {
   assert.throws(() => assertPaddedInput(new Uint8Array(), 2, 'Test'), /Invalid Test/);
   assert.throws(() => assertIv(16, undefined, 'CBC'), /requires an IV/);
   assert.throws(() => assertIv(16, new Uint8Array(8), 'CBC'), /IV length/);
+  assertNoReservedOperationOptions(undefined);
+  assertNoReservedOperationOptions({});
 });
 
 test('registry covers duplicate, missing, list, constructor, one-shot, and transform APIs', () => {
@@ -170,8 +173,10 @@ test('classic cipher constructors validate keys and blocks', () => {
 test('classic kdfs validate inputs and missing registered hashes', () => {
   assert.throws(() => derivePbkdf2({ input: 'x', salt: 's', iterations: 0, length: 16, hash: sha256 }), /PBKDF2 iterations/);
   assert.throws(() => derivePbkdf2({ input: 'x', salt: 's', iterations: 1, length: 0, hash: sha256 }), /PBKDF2 length/);
+  assert.throws(() => derivePbkdf2({ input: 'x', iterations: 1, length: 16, hash: sha256 }), /requires salt/);
   assert.throws(() => deriveEvpKdf({ input: 'x', salt: 's', iterations: 0, length: 16, hash: md5 }), /EvpKDF iterations/);
   assert.throws(() => deriveEvpKdf({ input: 'x', salt: 's', length: 0, hash: md5 }), /EvpKDF length/);
+  assert.throws(() => deriveEvpKdf({ input: 'x', length: 16, hash: md5 }), /requires salt/);
   assert.equal(derivePbkdf2({
     input: new Uint8Array(65),
     salt: 's',
@@ -283,7 +288,7 @@ test('passphrase ciphers cover no-format and random salt branches', () => {
       kdf: 'EvpKDF',
       format: 'OpenSSL',
     });
-    assert.equal(bytesToHex(randomSaltCipher.encrypt(textToBytes('abc')).subarray(0, 16)), '53616c7465645f5fffffffffffffffff');
+    assert.equal(bytesToHex(randomSaltCipher.encrypt(textToBytes('abc')).subarray(0, 16)), '53616c7465645f5f0000000000000000');
   });
   withNoCryptoRandom(() => {
     const randomSaltCipher = registry.createPassphraseCipher({

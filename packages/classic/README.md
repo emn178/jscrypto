@@ -13,28 +13,32 @@ npm install @jscrypto/core @jscrypto/classic
 ## Quick Start
 
 ```ts
+import { randomBytes } from '@jscrypto/core';
 import { registry } from '@jscrypto/classic';
 
+const key = randomBytes(32);
+const iv = randomBytes(16);
 const cipher = registry.createCipher({
   cipher: 'AES',
   mode: 'CBC',
   padding: 'Pkcs7',
   key,
-  iv,
 });
 
-const ciphertext = cipher.encrypt(plaintext);
-const decrypted = cipher.decrypt(ciphertext);
+const ciphertext = cipher.encrypt(plaintext, { iv });
+const decrypted = cipher.decrypt(ciphertext, { iv });
 ```
 
 ## Derived-Key Encryption
 
 ```ts
+import { randomBytes } from '@jscrypto/core';
 import { registry } from '@jscrypto/classic';
 import { classicHashesPreset } from '@jscrypto/classic/hashes';
 
 registry.use(classicHashesPreset);
 
+const salt = randomBytes(8);
 const cipher = registry.createDerivedKeyCipher({
   cipher: 'AES',
   mode: 'CBC',
@@ -45,33 +49,55 @@ const cipher = registry.createDerivedKeyCipher({
     iterations: 1,
     hash: 'MD5',
   },
+  keySize: 16,
+  ivSize: 16,
   format: 'OpenSSL',
 });
 
-const encrypted = cipher.encrypt(plaintext);
+const encrypted = cipher.encrypt(plaintext, { salt });
 const decrypted = cipher.decrypt(encrypted);
 ```
 
-`createPassphraseCipher(...)` remains available as a deprecated compatibility alias.
+The explicit example above derives an AES-128 key. When `keySize` and `ivSize` are omitted, AES defaults to a 32-byte key and a 16-byte IV:
+
+```ts
+const cipher = registry.createDerivedKeyCipher({
+  cipher: 'AES',
+  mode: 'CBC',
+  padding: 'Pkcs7',
+  kdf: {
+    name: 'EvpKDF',
+    input: 'secret',
+    iterations: 1,
+    hash: 'MD5',
+  },
+  // keySize: 32
+  // ivSize: 16
+  format: 'OpenSSL',
+});
+```
+
+OpenSSL format stores the salt in the `Salted__` envelope, so decrypt normally reads it from the ciphertext. `createPassphraseCipher(...)` remains available as a deprecated compatibility alias that preserves passphrase/OpenSSL convenience behavior.
 
 ## AES-GCM
 
 GCM is an AEAD mode. It does not use padding, and encrypted output is `ciphertext || tag` by default. Decryption also supports detached tags by passing `tag`.
 
 ```ts
+import { randomBytes } from '@jscrypto/core';
 import { registry } from '@jscrypto/classic';
 
+const key = randomBytes(32);
+const nonce = randomBytes(12);
+const aad = new TextEncoder().encode('metadata');
 const cipher = registry.createCipher({
   cipher: 'AES',
   mode: 'GCM',
   key,
-  iv: nonce,
-  aad,
-  tagLength: 16,
 });
 
-const sealed = cipher.encrypt(plaintext);
-const decrypted = cipher.decrypt(sealed);
+const sealed = cipher.encrypt(plaintext, { nonce, aad, tagLength: 16 });
+const decrypted = cipher.decrypt(sealed, { nonce, aad });
 ```
 
 ## Components
@@ -110,15 +136,17 @@ The classic browser bundle is not standalone; load `@jscrypto/core` before `@jsc
 ```html
 <script src="node_modules/@jscrypto/core/dist/jscrypto-core.iife.min.js"></script>
 <script src="node_modules/@jscrypto/classic/dist/jscrypto-classic.iife.min.js"></script>
-<script src="node_modules/@jscrypto/classic/dist/jscrypto-classic-hashes.iife.min.js"></script>
 <script>
-  jscryptoClassic.registry.use(jscryptoClassicHashes.classicHashesPreset);
+  const key = jscryptoCore.randomBytes(32);
+  const iv = jscryptoCore.randomBytes(16);
   const cipher = jscryptoClassic.registry.createCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',
     key,
-    iv,
   });
+  const ciphertext = cipher.encrypt(plaintext, { iv });
 </script>
 ```
+
+Load `jscrypto-classic-hashes.iife.min.js` only when browser code uses KDFs that resolve classic hash components.

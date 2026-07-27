@@ -37,6 +37,9 @@ export function deriveEvpKdf(params: DeriveEvpKdfParams): Uint8Array {
   if (params.input === undefined || params.input === null) {
     throw new TypeError('EvpKDF requires input.');
   }
+  if (params.salt === undefined || params.salt === null) {
+    throw new TypeError('EvpKDF requires salt.');
+  }
 
   const password = toBytes(params.input);
   const salt = toBytes(params.salt);

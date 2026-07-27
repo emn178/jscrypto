@@ -1,5 +1,25 @@
 # Change Log
 
+## v0.7.0 / 2026-07-27
+
+### Added
+
+- added per-operation options for cipher facades, so IV, nonce, AAD, detached tag, and other mode-specific values can be passed to `encrypt`, `decrypt`, `createEncryptor`, and `createDecryptor`.
+- added per-operation `salt` support for derived-key cipher facades.
+- added public `randomBytes(length)` to `@jscrypto/core`.
+
+### Changed
+
+- changed README examples to prefer reusable cipher facades with operation-specific IV/nonce/salt options.
+- changed `createDerivedKeyCipher(...)` so OpenSSL format serializes/parses salt but does not generate salt in the new derived-key API.
+- kept salt validation inside individual KDF implementations instead of exposing KDF salt policy in core component metadata.
+- removed unused `ModeComponent` metadata fields `requiredBlockSize` and `aead`.
+
+### Fixed
+
+- prevented operation options from overriding reserved facade creation keys such as `cipher`, `mode`, `padding`, `key`, `kdf`, and `format`.
+- made `randomBytes(length)` fill large buffers in Web Crypto-compatible chunks.
+
 ## v0.6.0 / 2026-07-24
 
 ### Changed

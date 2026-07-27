@@ -41,6 +41,10 @@ Inside `@jscrypto/classic`, code remains split by concern under `src/ciphers`, `
 
 Mode components provide stateful transform factories only. One-shot encryption and decryption are registry conveniences built by creating a transform and finalizing it with the complete input.
 
+Cipher facades accept per-operation material at `encrypt`, `decrypt`, `createEncryptor`, and `createDecryptor` time. Core forwards these options to mode and cipher components without encoding mode-specific parameter names. For derived-key ciphers the KDF `salt` is also an operation option. Core passes salt when available; each KDF validates or defaults its own salt behavior. Formats serialize or parse metadata such as salt; they do not generate random salt in the derived-key API.
+
+`@jscrypto/core` exports `randomBytes(length)` for caller-owned salt, IV, and nonce material. Operation options must not override reserved facade keys such as `cipher`, `mode`, `padding`, `key`, `kdf`, or `format`.
+
 Cipher components are split by `type`:
 
 - `block`: exposes `create(key).encryptBlock/decryptBlock` and is composed with mode and padding components.

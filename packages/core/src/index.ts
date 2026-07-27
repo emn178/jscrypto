@@ -33,6 +33,15 @@ export type {
 } from './passphrase.js';
 export type { CipherFacade, Registry } from './registry.js';
 export { createRegistry } from './registry.js';
+export type {
+  CipherOperationOptions,
+  DerivedKeyCipherOperationOptions,
+} from './operation-options.js';
+export {
+  RESERVED_OPERATION_OPTION_KEYS,
+  assertNoReservedOperationOptions,
+} from './operation-options.js';
+export { randomBytes } from './random.js';
 export type { CreateTransformOptions } from './transform.js';
 export { assertBlockMultiple, assertBlockSize, assertIv, assertPaddedInput, getBlockPaddingLength } from './blocks.js';
 export { assertBytes, concatBytes, equalBytes, xorBytes } from './bytes.js';

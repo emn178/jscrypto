@@ -27,44 +27,49 @@ npm install @jscrypto/core @jscrypto/classic
 ## Quick Start
 
 ```ts
+import { randomBytes } from '@jscrypto/core';
 import { registry } from '@jscrypto/classic';
+
+const key = randomBytes(32);
+const iv = randomBytes(16);
 
 const cipher = registry.createCipher({
   cipher: 'AES',
   mode: 'CBC',
   padding: 'Pkcs7',
   key,
-  iv,
 });
 
-const ciphertext = cipher.encrypt(plaintext);
-const decrypted = cipher.decrypt(ciphertext);
+const ciphertext = cipher.encrypt(plaintext, { iv });
+const decrypted = cipher.decrypt(ciphertext, { iv });
 ```
 
-`createCipher` returns a reusable facade. Each `encrypt` or `decrypt` call creates a fresh transform internally, so the facade can be reused safely for multiple one-shot calls.
+`createCipher(...)` returns a reusable facade. The key and selected algorithm stay on the facade; per-message material such as IV, nonce, AAD, and authentication tag is passed to `encrypt`, `decrypt`, `createEncryptor`, or `createDecryptor`.
 
 ## Streaming
 
 ```ts
-import { concatBytes } from '@jscrypto/core';
+import { concatBytes, randomBytes } from '@jscrypto/core';
 import { registry } from '@jscrypto/classic';
+
+const key = randomBytes(32);
+const iv = randomBytes(16);
 
 const cipher = registry.createCipher({
   cipher: 'AES',
   mode: 'CBC',
   padding: 'Pkcs7',
   key,
-  iv,
 });
 
-const encryptor = cipher.createEncryptor();
+const encryptor = cipher.createEncryptor({ iv });
 const ciphertext = concatBytes(
   encryptor.process(chunk1),
   encryptor.process(chunk2),
   encryptor.finalize(),
 );
 
-const decryptor = cipher.createDecryptor();
+const decryptor = cipher.createDecryptor({ iv });
 const plaintext = concatBytes(
   decryptor.process(ciphertext.subarray(0, 7)),
   decryptor.process(ciphertext.subarray(7)),
@@ -74,25 +79,40 @@ const plaintext = concatBytes(
 
 ## Derived Keys
 
-Derived-key ciphers derive key and IV through a KDF, then optionally wrap salt and ciphertext through a format component. `kdf.input` is the KDF input material: a password/passphrase for PBKDF2 and EvpKDF, IKM for future HKDF, or a shared secret for future X9.63 / ConcatKDF flows.
+Derived-key ciphers derive key material through a KDF, then optionally split it into `key || iv` and wrap salt/ciphertext through a format component. `kdf.input` is the KDF input material: a password/passphrase for PBKDF2 and EvpKDF, IKM for future HKDF, or a shared secret for future X9.63 / ConcatKDF flows.
 
 `registry.derive(...)` returns derived bytes only. It does not split key/IV.
 
 ```ts
+import { randomBytes } from '@jscrypto/core';
 import { registry } from '@jscrypto/classic';
 import { classicHashesPreset } from '@jscrypto/classic/hashes';
 
 registry.use(classicHashesPreset);
 
+const salt = randomBytes(8);
 const keyMaterial = registry.derive({
   name: 'PBKDF2',
   input: 'secret',
   salt,
   iterations: 10000,
   hash: 'SHA256',
-  length: 48,
+  length: 32,
 });
+```
 
+`createDerivedKeyCipher(...)` derives key material for a cipher facade. With `ivSize > 0`, it derives `key || iv` and splits internally.
+
+Explicit key/IV sizes, for example AES-128-CBC:
+
+```ts
+import { randomBytes } from '@jscrypto/core';
+import { registry } from '@jscrypto/classic';
+import { classicHashesPreset } from '@jscrypto/classic/hashes';
+
+registry.use(classicHashesPreset);
+
+const salt = randomBytes(8);
 const cipher = registry.createDerivedKeyCipher({
   cipher: 'AES',
   mode: 'CBC',
@@ -103,21 +123,47 @@ const cipher = registry.createDerivedKeyCipher({
     iterations: 1,
     hash: 'MD5',
   },
+  keySize: 16,
+  ivSize: 16,
   format: 'OpenSSL',
 });
 
-const encrypted = cipher.encrypt(plaintext);
+const encrypted = cipher.encrypt(plaintext, { salt });
 const decrypted = cipher.decrypt(encrypted);
 ```
 
-`createDerivedKeyCipher(...)` derives `key || iv` and splits internally. The older `createPassphraseCipher(...)` API remains available as a deprecated compatibility wrapper.
+Using cipher defaults, which select AES-256-CBC:
+
+```ts
+const cipher = registry.createDerivedKeyCipher({
+  cipher: 'AES',
+  mode: 'CBC',
+  padding: 'Pkcs7',
+  kdf: {
+    name: 'EvpKDF',
+    input: 'secret',
+    iterations: 1,
+    hash: 'MD5',
+  },
+  // keySize defaults to AES's largest key size: 32 bytes.
+  // ivSize defaults to AES's block size: 16 bytes.
+  format: 'OpenSSL',
+});
+```
+
+KDF salt can be supplied per operation through `{ salt }` or fixed on the facade through `kdf.salt`. On decrypt, OpenSSL format prefers the salt parsed from the `Salted__` header, so callers normally do not pass `{ salt }` again for OpenSSL ciphertext. Formats serialize or parse metadata; they do not generate salt in the new derived-key API.
+
+If `keySize` is omitted, `createDerivedKeyCipher(...)` uses the selected cipher's largest declared key size. For AES this is 32 bytes. If `ivSize` is omitted, block ciphers use their block size and stream ciphers use 0. For AES-CBC this means the default derived material is 48 bytes: 32 bytes of key plus 16 bytes of IV.
+
+The older `createPassphraseCipher(...)` API remains available as a deprecated compatibility wrapper. It preserves the previous passphrase/OpenSSL convenience behavior, including random salt generation when needed.
 
 The derived-key API also supports streaming:
 
 ```ts
-import { concatBytes } from '@jscrypto/core';
+import { concatBytes, randomBytes } from '@jscrypto/core';
 
-const encryptor = cipher.createEncryptor();
+const salt = randomBytes(8);
+const encryptor = cipher.createEncryptor({ salt });
 const encrypted = concatBytes(
   encryptor.process(chunk1),
   encryptor.process(chunk2),
@@ -138,6 +184,7 @@ Stream ciphers do not use mode, padding, or IV.
 ```ts
 import { registry } from '@jscrypto/classic';
 
+const key = new TextEncoder().encode('secret');
 const cipher = registry.createCipher({
   cipher: 'RC4Drop',
   key,
@@ -152,30 +199,25 @@ const ciphertext = cipher.encrypt(plaintext);
 GCM is an AEAD mode. It does not use padding, and encrypted output is `ciphertext || tag` by default. Decryption also supports detached tags by passing `tag`.
 
 ```ts
+import { randomBytes } from '@jscrypto/core';
 import { registry } from '@jscrypto/classic';
+
+const key = randomBytes(32);
+const nonce = randomBytes(12);
+const aad = new TextEncoder().encode('metadata');
 
 const cipher = registry.createCipher({
   cipher: 'AES',
   mode: 'GCM',
   key,
-  iv: nonce,
-  aad,
-  tagLength: 16,
 });
 
-const sealed = cipher.encrypt(plaintext);
-const decrypted = cipher.decrypt(sealed);
+const sealed = cipher.encrypt(plaintext, { nonce, aad, tagLength: 16 });
+const decrypted = cipher.decrypt(sealed, { nonce, aad });
 
 const ciphertext = sealed.subarray(0, sealed.length - 16);
 const tag = sealed.subarray(sealed.length - 16);
-const detached = registry.createCipher({
-  cipher: 'AES',
-  mode: 'GCM',
-  key,
-  iv: nonce,
-  aad,
-  tag,
-}).decrypt(ciphertext);
+const detached = cipher.decrypt(ciphertext, { nonce, aad, tag });
 ```
 
 ## Custom Registry
@@ -197,27 +239,23 @@ const registry = createRegistry()
 Both packages ship ESM, CommonJS, IIFE, and UMD outputs.
 The classic browser bundle is not standalone; load `@jscrypto/core` first so extensions share the same registry contracts.
 
-```ts
-import { createRegistry } from '@jscrypto/core';
-import { registry } from '@jscrypto/classic';
-```
-
 ```html
 <script src="node_modules/@jscrypto/core/dist/jscrypto-core.iife.min.js"></script>
 <script src="node_modules/@jscrypto/classic/dist/jscrypto-classic.iife.min.js"></script>
-<!-- Required only for built-in KDF hash implementations. -->
-<script src="node_modules/@jscrypto/classic/dist/jscrypto-classic-hashes.iife.min.js"></script>
 <script>
-  jscryptoClassic.registry.use(jscryptoClassicHashes.classicHashesPreset);
+  const key = jscryptoCore.randomBytes(32);
+  const iv = jscryptoCore.randomBytes(16);
   const cipher = jscryptoClassic.registry.createCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',
     key,
-    iv,
   });
+  const ciphertext = cipher.encrypt(plaintext, { iv });
 </script>
 ```
+
+Load `@jscrypto/classic/dist/jscrypto-classic-hashes.iife.min.js` only when browser code uses KDFs that resolve classic hash components.
 
 ## Supported Classic Components
 

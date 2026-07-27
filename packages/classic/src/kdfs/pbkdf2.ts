@@ -36,6 +36,9 @@ export function derivePbkdf2(params: DerivePbkdf2Params): Uint8Array {
   if (params.input === undefined || params.input === null) {
     throw new TypeError('PBKDF2 requires input.');
   }
+  if (params.salt === undefined || params.salt === null) {
+    throw new TypeError('PBKDF2 requires salt.');
+  }
 
   const password = toBytes(params.input);
   const salt = toBytes(params.salt);

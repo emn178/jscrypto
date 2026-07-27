@@ -8,9 +8,22 @@ import type {
 import { createDerivedKeyCipher, derive } from './derived-key.js';
 import type { CreatePassphraseCipherOptions, PassphraseCipherFacade } from './passphrase.js';
 import { createPassphraseCipher } from './passphrase.js';
+import type { CipherOperationOptions } from './operation-options.js';
+import { assertNoReservedOperationOptions } from './operation-options.js';
 import type { CreateTransformOptions } from './transform.js';
 import { createDecryptor, createEncryptor } from './transform.js';
 import type { Transform } from './component.js';
+
+function mergeTransformOptions(
+  base: CreateTransformOptions,
+  operation?: CipherOperationOptions,
+): CreateTransformOptions {
+  if (!operation) {
+    return base;
+  }
+  assertNoReservedOperationOptions(operation);
+  return { ...base, ...operation };
+}
 
 export interface Registry {
   use(component: AnyComponent): Registry;
@@ -33,10 +46,10 @@ export interface Registry {
 }
 
 export interface CipherFacade {
-  encrypt(plaintext: Uint8Array): Uint8Array;
-  decrypt(ciphertext: Uint8Array): Uint8Array;
-  createEncryptor(): Transform;
-  createDecryptor(): Transform;
+  encrypt(plaintext: Uint8Array, options?: CipherOperationOptions): Uint8Array;
+  decrypt(ciphertext: Uint8Array, options?: CipherOperationOptions): Uint8Array;
+  createEncryptor(options?: CipherOperationOptions): Transform;
+  createDecryptor(options?: CipherOperationOptions): Transform;
 }
 
 export function createRegistry(components: Iterable<AnyComponent> = []): Registry {
@@ -95,20 +108,20 @@ export function createRegistry(components: Iterable<AnyComponent> = []): Registr
 
     createCipher(options) {
       return {
-        encrypt(plaintext) {
-          return createEncryptor(registry, options).finalize(plaintext);
+        encrypt(plaintext, operationOptions) {
+          return createEncryptor(registry, mergeTransformOptions(options, operationOptions)).finalize(plaintext);
         },
 
-        decrypt(ciphertext) {
-          return createDecryptor(registry, options).finalize(ciphertext);
+        decrypt(ciphertext, operationOptions) {
+          return createDecryptor(registry, mergeTransformOptions(options, operationOptions)).finalize(ciphertext);
         },
 
-        createEncryptor() {
-          return createEncryptor(registry, options);
+        createEncryptor(operationOptions) {
+          return createEncryptor(registry, mergeTransformOptions(options, operationOptions));
         },
 
-        createDecryptor() {
-          return createDecryptor(registry, options);
+        createDecryptor(operationOptions) {
+          return createDecryptor(registry, mergeTransformOptions(options, operationOptions));
         },
       };
     },

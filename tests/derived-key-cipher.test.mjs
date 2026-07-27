@@ -81,10 +81,7 @@ test('createDerivedKeyCipher matches createPassphraseCipher for OpenSSL EvpKDF',
       input: 'secret',
       salt,
     },
-    format: {
-      name: 'OpenSSL',
-      saltSize: 8,
-    },
+    format: 'OpenSSL',
   });
 
   const plaintext = textToBytes('abc');
@@ -125,7 +122,82 @@ test('createDerivedKeyCipher matches createPassphraseCipher for PBKDF2', () => {
   assert.equal(bytesToHex(derived.encrypt(plaintext)), bytesToHex(passphrase.encrypt(plaintext)));
 });
 
-test('createDerivedKeyCipher accepts OpenSSL format shorthand and saltSize', () => {
+test('createDerivedKeyCipher accepts OpenSSL format with explicit salt', () => {
+  const salt = hexToBytes('0001020304050607');
+  const cipher = registry.createDerivedKeyCipher({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs7',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      hash: 'MD5',
+      iterations: 1,
+      salt,
+    },
+    format: 'OpenSSL',
+  });
+  const encrypted = cipher.encrypt(textToBytes('abc'));
+  assert.equal(bytesToHex(encrypted.subarray(0, 8)), '53616c7465645f5f');
+  assert.equal(bytesToText(cipher.decrypt(encrypted)), 'abc');
+
+  const operationSaltCipher = registry.createDerivedKeyCipher({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs7',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      hash: 'MD5',
+      iterations: 1,
+    },
+    format: 'OpenSSL',
+  });
+  const operationEncrypted = operationSaltCipher.encrypt(textToBytes('abc'), { salt });
+  assert.equal(bytesToHex(operationEncrypted.subarray(0, 16)), '53616c7465645f5f0001020304050607');
+  assert.equal(bytesToText(operationSaltCipher.decrypt(operationEncrypted)), 'abc');
+});
+
+test('createDerivedKeyCipher requires salt for OpenSSL format encrypt', () => {
+  assert.throws(() => registry.createDerivedKeyCipher({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs7',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      hash: 'MD5',
+      iterations: 1,
+    },
+    format: 'OpenSSL',
+  }).encrypt(textToBytes('abc')), /requires salt/);
+});
+
+test('createDerivedKeyCipher operation salt overrides kdf.salt', () => {
+  const creationSalt = hexToBytes('0001020304050607');
+  const operationSalt = hexToBytes('0102030405060708');
+  const cipher = registry.createDerivedKeyCipher({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs7',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      hash: 'MD5',
+      iterations: 1,
+      salt: creationSalt,
+    },
+    format: 'OpenSSL',
+  });
+
+  const encrypted = cipher.encrypt(textToBytes('abc'), { salt: operationSalt });
+  assert.equal(bytesToHex(encrypted.subarray(8, 16)), bytesToHex(operationSalt));
+  assert.notEqual(bytesToHex(encrypted.subarray(8, 16)), bytesToHex(creationSalt));
+});
+
+test('createDerivedKeyCipher OpenSSL decrypt prefers parsed salt over operation salt', () => {
+  const parsedSalt = hexToBytes('0001020304050607');
+  const operationSalt = hexToBytes('ffffffffffffffff');
   const cipher = registry.createDerivedKeyCipher({
     cipher: 'AES',
     mode: 'CBC',
@@ -138,11 +210,68 @@ test('createDerivedKeyCipher accepts OpenSSL format shorthand and saltSize', () 
     },
     format: 'OpenSSL',
   });
-  const encrypted = cipher.encrypt(textToBytes('abc'));
-  assert.equal(bytesToHex(encrypted.subarray(0, 8)), '53616c7465645f5f');
-  assert.equal(bytesToText(cipher.decrypt(encrypted)), 'abc');
+  const encrypted = cipher.encrypt(textToBytes('abc'), { salt: parsedSalt });
+  assert.equal(bytesToText(cipher.decrypt(encrypted, { salt: operationSalt })), 'abc');
+});
 
-  const sized = registry.createDerivedKeyCipher({
+test('createDerivedKeyCipher decrypt mirrors encrypt without separate iv', () => {
+  const salt = hexToBytes('0001020304050607');
+  const cipher = registry.createDerivedKeyCipher({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs7',
+    kdf: {
+      name: 'PBKDF2',
+      input: 'secret',
+      hash: 'SHA256',
+      iterations: 1000,
+    },
+    keySize: 32,
+    ivSize: 16,
+  });
+  const encrypted = cipher.encrypt(textToBytes('hello'), { salt });
+  assert.equal(bytesToText(cipher.decrypt(encrypted, { salt })), 'hello');
+});
+
+test('createDerivedKeyCipher GCM derives key only and requires operation nonce', () => {
+  const salt = hexToBytes('0102030405060708');
+  const nonce = hexToBytes('000000000000000000000000');
+  const cipher = registry.createDerivedKeyCipher({
+    cipher: 'AES',
+    mode: 'GCM',
+    kdf: {
+      name: 'PBKDF2',
+      input: 'secret',
+      hash: 'SHA256',
+      iterations: 1000,
+    },
+    keySize: 16,
+    ivSize: 0,
+  });
+
+  assert.throws(() => cipher.encrypt(textToBytes('abc'), { salt }), /requires/);
+  const sealed = cipher.encrypt(textToBytes('abc'), { salt, nonce, tagLength: 16 });
+  assert.ok(sealed.length > 16);
+  assert.equal(bytesToText(cipher.decrypt(sealed, { salt, nonce })), 'abc');
+});
+
+test('createDerivedKeyCipher OpenSSL decrypt without header uses operation or creation salt', () => {
+  const salt = hexToBytes('0001020304050607');
+  const rawCipher = registry.createDerivedKeyCipher({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs7',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      hash: 'MD5',
+      iterations: 1,
+      salt,
+    },
+  });
+  const rawEncrypted = rawCipher.encrypt(textToBytes('abc'));
+
+  const operationSaltCipher = registry.createDerivedKeyCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',
@@ -152,15 +281,53 @@ test('createDerivedKeyCipher accepts OpenSSL format shorthand and saltSize', () 
       hash: 'MD5',
       iterations: 1,
     },
-    format: {
-      name: 'OpenSSL',
-      saltSize: 8,
+    format: 'OpenSSL',
+  });
+  assert.equal(bytesToText(operationSaltCipher.decrypt(rawEncrypted, { salt })), 'abc');
+
+  const creationSaltCipher = registry.createDerivedKeyCipher({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs7',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      hash: 'MD5',
+      iterations: 1,
+      salt,
+    },
+    format: 'OpenSSL',
+  });
+  assert.equal(bytesToText(creationSaltCipher.decrypt(rawEncrypted)), 'abc');
+
+  const emptySaltRaw = registry.createDerivedKeyCipher({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs7',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      hash: 'MD5',
+      iterations: 1,
     },
   });
-  assert.equal(bytesToText(sized.decrypt(sized.encrypt(textToBytes('abc')))), 'abc');
+  const emptySaltEncrypted = emptySaltRaw.encrypt(textToBytes('abc'), { salt: null });
+  const emptySaltOpenSsl = registry.createDerivedKeyCipher({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs7',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      hash: 'MD5',
+      iterations: 1,
+    },
+    format: 'OpenSSL',
+  });
+  assert.equal(bytesToText(emptySaltOpenSsl.decrypt(emptySaltEncrypted)), 'abc');
 });
 
-test('createDerivedKeyCipher requires salt without a salt-generating format', () => {
+test('createDerivedKeyCipher requires salt without a format', () => {
   assert.throws(() => registry.createDerivedKeyCipher({
     cipher: 'AES',
     mode: 'CBC',
@@ -200,6 +367,57 @@ test('createDerivedKeyCipher requires salt without a salt-generating format', ()
     },
     format: 'DerivedBuffered',
   }).encrypt(textToBytes('abc')), /requires salt/);
+});
+
+test('createDerivedKeyCipher allows missing salt when KDF does not require it', () => {
+  const optionalSaltKdf = {
+    kind: 'kdf',
+    name: 'OptionalSalt',
+    derive(params) {
+      const input = typeof params.input === 'string'
+        ? new TextEncoder().encode(params.input)
+        : params.input;
+      const salt = params.salt instanceof Uint8Array ? params.salt : new Uint8Array(0);
+      const out = new Uint8Array(params.length);
+      for (let i = 0; i < out.length; i++) {
+        const saltByte = salt.length === 0 ? 0 : salt[i % salt.length];
+        out[i] = (input[i % input.length] ^ saltByte ^ i) & 0xff;
+      }
+      return out;
+    },
+  };
+  const localRegistry = createClassicRegistry().use(optionalSaltKdf);
+  const cipher = localRegistry.createDerivedKeyCipher({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs7',
+    kdf: {
+      name: 'OptionalSalt',
+      input: 'secret',
+    },
+    keySize: 32,
+    ivSize: 16,
+  });
+  const encrypted = cipher.encrypt(textToBytes('abc'));
+  assert.equal(bytesToText(cipher.decrypt(encrypted)), 'abc');
+});
+
+test('createDerivedKeyCipher rejects reserved operation option keys', () => {
+  const salt = hexToBytes('0001020304050607');
+  const cipher = registry.createDerivedKeyCipher({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs7',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      hash: 'MD5',
+      iterations: 1,
+      salt,
+    },
+  });
+  assert.throws(() => cipher.encrypt(textToBytes('abc'), { key: new Uint8Array(32) }), /reserved key: key/);
+  assert.throws(() => cipher.createEncryptor({ cipher: 'RC4' }), /reserved key: cipher/);
 });
 
 test('createDerivedKeyCipher rejects string kdf and length conflicts', () => {
