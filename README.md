@@ -10,9 +10,12 @@ This project is not affiliated with Node.js `crypto`, the Web Crypto API, or npm
 
 ## Packages
 
-- `@jscrypto/core`: registry, component contracts, transform helpers, byte helpers, and shared errors.
-- `@jscrypto/classic`: AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, OFB, ECB, GCM, classic paddings, PBKDF2, EvpKDF, and OpenSSL `Salted__` formatting.
-- `@jscrypto/classic/hashes`: opt-in hash preset (`classicHashesPreset`) for KDF/derived-key flows.
+| Package | Description |
+| --- | --- |
+| [`@jscrypto/core`](https://github.com/emn178/jscrypto/tree/main/packages/core) | Registry, component contracts, transform helpers, byte helpers, and shared errors. |
+| [`@jscrypto/classic`](https://github.com/emn178/jscrypto/tree/main/packages/classic) | AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, OFB, ECB, GCM, classic paddings, PBKDF2, EvpKDF, hashes, and OpenSSL `Salted__` formatting. |
+| [`@jscrypto/speck`](https://github.com/emn178/jscrypto-speck) | SPECK block cipher components for `@jscrypto/core` registries. |
+| [`@jscrypto/hkdf`](https://github.com/emn178/jscrypto-hkdf) | RFC 5869 HKDF, HKDF-Extract, and HKDF-Expand KDF components. |
 
 The public package count is intentionally small. `@jscrypto/classic` still keeps internal modules split by cipher, mode, padding, KDF, format, hash, and preset so those boundaries stay testable and can be split later if the need becomes real.
 
