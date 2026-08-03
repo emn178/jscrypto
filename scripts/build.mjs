@@ -27,9 +27,11 @@ const packages = [
     displayName: 'jscrypto-classic',
     globalName: 'jscryptoClassic',
     entryPoint: 'packages/classic/src/index.ts',
+    nodeEntryPoint: 'packages/classic/src/index-node.ts',
     packageJson: 'packages/classic/package.json',
     distDir: 'packages/classic/dist',
     externals: ['@jscrypto/core'],
+    nodeExternals: ['node:crypto'],
   },
 ];
 
@@ -58,9 +60,11 @@ await buildHashesPackage();
  *   displayName: string,
  *   globalName: string,
  *   entryPoint: string,
+ *   nodeEntryPoint?: string,
  *   packageJson: string,
  *   distDir: string,
  *   externals: string[],
+ *   nodeExternals?: string[],
  * }} pkg
  */
 async function buildPackage(pkg) {
@@ -81,6 +85,24 @@ async function buildPackage(pkg) {
       },
     ],
   }, banner);
+
+  if (pkg.nodeEntryPoint) {
+    await buildEntry({
+      input: pkg.nodeEntryPoint,
+      external: [...pkg.externals, ...(pkg.nodeExternals || [])],
+      outputs: [
+        {
+          file: `${pkg.distDir}/index.node.mjs`,
+          format: 'esm',
+        },
+        {
+          file: `${pkg.distDir}/index.node.cjs`,
+          format: 'cjs',
+          exports: 'named',
+        },
+      ],
+    }, banner);
+  }
 
   await buildEntry({
     input: pkg.entryPoint,

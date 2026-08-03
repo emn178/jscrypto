@@ -21,6 +21,14 @@ test('CommonJS builds can be required', () => {
   assert.equal(typeof hashes.registerClassicHashes, 'function');
 });
 
+test('package exports route Node imports to the native classic build', async () => {
+  assert.match(import.meta.resolve('@jscrypto/classic'), /packages[\\/]classic[\\/]dist[\\/]index\.node\.mjs$/);
+
+  const classic = await import('@jscrypto/classic');
+  assert.equal(typeof classic.createAesCipher, 'function');
+  assert.equal(typeof classic.registry.createCipher, 'function');
+});
+
 test('browser IIFE builds expose globals', async () => {
   const context = {};
   vm.createContext(context);

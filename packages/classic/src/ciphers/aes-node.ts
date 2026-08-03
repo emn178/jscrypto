@@ -1,5 +1,5 @@
 import type { BlockCipher, CipherComponent } from '@jscrypto/core';
-import { ecb as nobleEcb } from '@noble/ciphers/aes.js';
+import { createCipheriv, createDecipheriv } from 'node:crypto';
 
 const BLOCK_SIZE = 16;
 
@@ -19,17 +19,18 @@ export function createAesCipher(key: Uint8Array): BlockCipher {
     throw new Error('AES key must be 128, 192, or 256 bits.');
   }
 
+  const algorithm = `aes-${key.length * 8}-ecb`;
   return {
     blockSize: BLOCK_SIZE,
 
     encrypt(input, output) {
       assertBlocks(input, output);
-      return nobleEcb(key, { disablePadding: true }).encrypt(input, output);
+      return cryptBlocks(algorithm, key, input, output, true);
     },
 
     decrypt(input, output) {
       assertBlocks(input, output);
-      return nobleEcb(key, { disablePadding: true }).decrypt(input, output);
+      return cryptBlocks(algorithm, key, input, output, false);
     },
   };
 }
@@ -41,4 +42,24 @@ function assertBlocks(input: Uint8Array, output: Uint8Array): void {
   if (output.length !== input.length) {
     throw new Error('AES output length must equal input length.');
   }
+}
+
+function cryptBlocks(
+  algorithm: string,
+  key: Uint8Array,
+  input: Uint8Array,
+  output: Uint8Array,
+  encrypt: boolean,
+): Uint8Array {
+  const cipher = encrypt
+    ? createCipheriv(algorithm, key, null)
+    : createDecipheriv(algorithm, key, null);
+  cipher.setAutoPadding(false);
+  const result = cipher.update(input);
+  const final = cipher.final();
+  output.set(result, 0);
+  if (final.length > 0) {
+    output.set(final, result.length);
+  }
+  return output;
 }

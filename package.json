@@ -16,7 +16,7 @@
     "test:dist": "node --test tests/*.test.mjs",
     "benchmark:aes": "npm run build && node benchmarks/aes.mjs",
     "coverage": "npm run build && npm run coverage:dist",
-    "coverage:dist": "c8 --check-coverage --statements 100 --branches 100 --functions 100 --lines 100 --reporter=text --reporter=html --reporter=lcov --include=packages/core/dist/index.mjs --include=packages/classic/dist/index.mjs --include=packages/classic/dist/hashes.mjs node --test tests/*.test.mjs",
+    "coverage:dist": "c8 --check-coverage --statements 100 --branches 100 --functions 100 --lines 100 --reporter=text --reporter=html --reporter=lcov --exclude-after-remap --exclude=**/node_modules/** --include=packages/core/src/** --include=packages/classic/src/** node --test tests/*.test.mjs",
     "prepack": "npm run build"
   },
   "devDependencies": {
