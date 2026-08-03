@@ -1,7 +1,6 @@
 import {
   assertBlockMultiple as assertCoreBlockMultiple,
   assertIv,
-  xorBytes,
   type BlockCipher,
   type ModeComponent,
   type Transform,
@@ -31,10 +30,16 @@ function createCbcEncryptor(cipher: BlockCipher, iv: Uint8Array, mutableInput: b
       const output = mutableInput ? input : new Uint8Array(input.length);
 
       for (let offset = 0; offset < input.length; offset += cipher.blockSize) {
-        const block = xorBytes(input.subarray(offset, offset + cipher.blockSize), previous);
-        const encrypted = output.subarray(offset, offset + cipher.blockSize);
-        cipher.encrypt(block, encrypted);
-        previous = encrypted;
+        for (let index = 0; index < cipher.blockSize; index++) {
+          output[offset + index] = input[offset + index] ^ previous[index];
+        }
+        if (cipher.encryptBlock) {
+          cipher.encryptBlock(output, offset, output, offset);
+        } else {
+          const encrypted = output.subarray(offset, offset + cipher.blockSize);
+          cipher.encrypt(encrypted, encrypted);
+        }
+        previous = output.subarray(offset, offset + cipher.blockSize);
       }
 
       return output;
@@ -47,7 +52,8 @@ function createCbcEncryptor(cipher: BlockCipher, iv: Uint8Array, mutableInput: b
 }
 
 function createCbcDecryptor(cipher: BlockCipher, iv: Uint8Array, mutableInput: boolean): Transform {
-  let previous = iv;
+  let previous = iv.slice();
+  let current = new Uint8Array(cipher.blockSize);
 
   return {
     process(input) {
@@ -55,14 +61,21 @@ function createCbcDecryptor(cipher: BlockCipher, iv: Uint8Array, mutableInput: b
       const output = mutableInput ? input : new Uint8Array(input.length);
 
       for (let offset = 0; offset < input.length; offset += cipher.blockSize) {
-        const block = input.subarray(offset, offset + cipher.blockSize);
-        const current = block.slice();
-        const decrypted = output.subarray(offset, offset + cipher.blockSize);
-        cipher.decrypt(block, decrypted);
-        for (let index = 0; index < cipher.blockSize; index++) {
-          decrypted[index] ^= previous[index];
+        current.set(input.subarray(offset, offset + cipher.blockSize));
+        if (cipher.decryptBlock) {
+          cipher.decryptBlock(input, offset, output, offset);
+        } else {
+          cipher.decrypt(
+            input.subarray(offset, offset + cipher.blockSize),
+            output.subarray(offset, offset + cipher.blockSize),
+          );
         }
+        for (let index = 0; index < cipher.blockSize; index++) {
+          output[offset + index] ^= previous[index];
+        }
+        const nextPrevious = previous;
         previous = current;
+        current = nextPrevious;
       }
 
       return output;

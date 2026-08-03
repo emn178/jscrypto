@@ -23,10 +23,21 @@ function createOfbTransform(cipher: BlockCipher, iv: Uint8Array, mutableInput: b
   return {
     process(input) {
       const output = mutableInput ? input : new Uint8Array(input.length);
+      let offset = 0;
 
-      for (let i = 0; i < input.length; i++) {
+      if (position === cipher.blockSize) {
+        for (; offset + cipher.blockSize <= input.length; offset += cipher.blockSize) {
+          encryptFeedback(cipher, feedback, keystream);
+          feedback.set(keystream);
+          for (let index = 0; index < cipher.blockSize; index++) {
+            output[offset + index] = input[offset + index] ^ keystream[index];
+          }
+        }
+      }
+
+      for (let i = offset; i < input.length; i++) {
         if (position === cipher.blockSize) {
-          cipher.encrypt(feedback, keystream);
+          encryptFeedback(cipher, feedback, keystream);
           feedback.set(keystream);
           position = 0;
         }
@@ -42,6 +53,14 @@ function createOfbTransform(cipher: BlockCipher, iv: Uint8Array, mutableInput: b
       return input.length === 0 ? new Uint8Array(0) : this.process(input);
     },
   };
+}
+
+function encryptFeedback(cipher: BlockCipher, feedback: Uint8Array, keystream: Uint8Array): void {
+  if (cipher.encryptBlock) {
+    cipher.encryptBlock(feedback, 0, keystream, 0);
+  } else {
+    cipher.encrypt(feedback, keystream);
+  }
 }
 
 function getMutableInput(options: unknown): boolean {

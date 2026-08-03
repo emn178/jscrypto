@@ -29,6 +29,18 @@ export interface StreamCipherComponent<Name extends string = string> extends Com
 export interface BlockCipher {
   readonly blockSize: number;
   /**
+   * Optional low-level single-block hook for modes that need per-block feedback.
+   * Implementations must read from `input` at `inputOffset` and write exactly one
+   * block to `output` at `outputOffset`.
+   */
+  encryptBlock?(input: Uint8Array, inputOffset: number, output: Uint8Array, outputOffset: number): void;
+  /**
+   * Optional low-level single-block hook for modes that need per-block feedback.
+   * Implementations must read from `input` at `inputOffset` and write exactly one
+   * block to `output` at `outputOffset`.
+   */
+  decryptBlock?(input: Uint8Array, inputOffset: number, output: Uint8Array, outputOffset: number): void;
+  /**
    * Encrypts one or more complete blocks into `output`.
    * `output` must have the same length as `input` and may be the same buffer as `input`.
    */

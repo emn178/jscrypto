@@ -23,10 +23,21 @@ function createCtrTransform(cipher: BlockCipher, iv: Uint8Array, mutableInput: b
   return {
     process(input) {
       const output = mutableInput ? input : new Uint8Array(input.length);
+      let offset = 0;
 
-      for (let i = 0; i < input.length; i++) {
+      if (position === cipher.blockSize) {
+        for (; offset + cipher.blockSize <= input.length; offset += cipher.blockSize) {
+          encryptCounter(cipher, counter, keystream);
+          incrementCounter(counter);
+          for (let index = 0; index < cipher.blockSize; index++) {
+            output[offset + index] = input[offset + index] ^ keystream[index];
+          }
+        }
+      }
+
+      for (let i = offset; i < input.length; i++) {
         if (position === cipher.blockSize) {
-          cipher.encrypt(counter, keystream);
+          encryptCounter(cipher, counter, keystream);
           incrementCounter(counter);
           position = 0;
         }
@@ -42,6 +53,14 @@ function createCtrTransform(cipher: BlockCipher, iv: Uint8Array, mutableInput: b
       return input.length === 0 ? new Uint8Array(0) : this.process(input);
     },
   };
+}
+
+function encryptCounter(cipher: BlockCipher, counter: Uint8Array, keystream: Uint8Array): void {
+  if (cipher.encryptBlock) {
+    cipher.encryptBlock(counter, 0, keystream, 0);
+  } else {
+    cipher.encrypt(counter, keystream);
+  }
 }
 
 function incrementCounter(counter: Uint8Array): void {

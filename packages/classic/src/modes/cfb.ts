@@ -32,10 +32,26 @@ function createCfbTransform(cipher: BlockCipher, iv: Uint8Array, encrypting: boo
   return {
     process(input) {
       const output = mutableInput ? input : new Uint8Array(input.length);
+      let offset = 0;
 
-      for (let i = 0; i < input.length; i++) {
+      if (position === 0) {
+        for (; offset + cipher.blockSize <= input.length; offset += cipher.blockSize) {
+          encryptFeedback(cipher, feedback, keystream);
+          for (let index = 0; index < cipher.blockSize; index++) {
+            const inputByte = input[offset + index];
+            const outputByte = inputByte ^ keystream[index];
+            output[offset + index] = outputByte;
+            nextFeedback[index] = encrypting ? outputByte : inputByte;
+          }
+          const previousFeedback = feedback;
+          feedback = nextFeedback;
+          nextFeedback = previousFeedback;
+        }
+      }
+
+      for (let i = offset; i < input.length; i++) {
         if (position === 0) {
-          cipher.encrypt(feedback, keystream);
+          encryptFeedback(cipher, feedback, keystream);
         }
 
         const inputByte = input[i];
@@ -45,8 +61,9 @@ function createCfbTransform(cipher: BlockCipher, iv: Uint8Array, encrypting: boo
         position++;
 
         if (position === cipher.blockSize) {
+          const previousFeedback = feedback;
           feedback = nextFeedback;
-          nextFeedback = new Uint8Array(cipher.blockSize);
+          nextFeedback = previousFeedback;
           position = 0;
         }
       }
@@ -58,6 +75,14 @@ function createCfbTransform(cipher: BlockCipher, iv: Uint8Array, encrypting: boo
       return input.length === 0 ? new Uint8Array(0) : this.process(input);
     },
   };
+}
+
+function encryptFeedback(cipher: BlockCipher, feedback: Uint8Array, keystream: Uint8Array): void {
+  if (cipher.encryptBlock) {
+    cipher.encryptBlock(feedback, 0, keystream, 0);
+  } else {
+    cipher.encrypt(feedback, keystream);
+  }
 }
 
 function getMutableInput(options: unknown): boolean {
