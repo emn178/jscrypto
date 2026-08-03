@@ -23,6 +23,7 @@ export const gcm: ModeComponent<'GCM'> = {
 const BLOCK_SIZE = 16;
 const DEFAULT_TAG_LENGTH = 16;
 const R_WORD = 0xe1000000;
+const GHASH_WINDOW_BITS = 8;
 
 function createGcmEncryptor(cipher: BlockCipher, nonce: Uint8Array, aad: Uint8Array, tagLength: number): Transform {
   assertGcmCipher(cipher);
@@ -69,7 +70,7 @@ function createGcmDecryptor(
 
   return {
     process(input) {
-      pending = concatBytes(pending, input);
+      pending = pending.length === 0 ? input : concatBytes(pending, input);
       return new Uint8Array(0);
     },
 
@@ -84,8 +85,8 @@ function createGcmDecryptor(
         if (pending.length < tagLength) {
           throw new Error('GCM ciphertext must include an authentication tag.');
         }
-        ciphertext = new Uint8Array(pending.subarray(0, pending.length - tagLength));
-        tag = new Uint8Array(pending.subarray(pending.length - tagLength));
+        ciphertext = pending.subarray(0, pending.length - tagLength);
+        tag = pending.subarray(pending.length - tagLength);
       }
 
       const auth = createGhash(h);
@@ -114,36 +115,74 @@ interface Ghash {
 }
 
 function createGhash(h: Uint8Array): Ghash {
-  const hValue = blockToWords(h);
+  const table = createGhashTable(blockToWords(h), GHASH_WINDOW_BITS);
+  const windowSize = 1 << GHASH_WINDOW_BITS;
   let state = createZeroWords();
   let pending = new Uint8Array(0);
 
-  function updateBlock(block: Uint8Array): void {
-    state = multiplyGf128(xorWords(state, blockToWords(padBlock(block))), hValue);
+  function updateWords(w0: number, w1: number, w2: number, w3: number): void {
+    state = multiplyGf128Window([
+      (state[0] ^ w0) >>> 0,
+      (state[1] ^ w1) >>> 0,
+      (state[2] ^ w2) >>> 0,
+      (state[3] ^ w3) >>> 0,
+    ], table, windowSize);
+  }
+
+  function updateBlock(input: Uint8Array, offset: number): void {
+    updateWords(
+      readUint32BE(input, offset),
+      readUint32BE(input, offset + 4),
+      readUint32BE(input, offset + 8),
+      readUint32BE(input, offset + 12),
+    );
+  }
+
+  function updatePartialBlock(input: Uint8Array): void {
+    updateWords(
+      readUint32BEPadded(input, 0),
+      readUint32BEPadded(input, 4),
+      readUint32BEPadded(input, 8),
+      readUint32BEPadded(input, 12),
+    );
   }
 
   return {
     h,
 
     update(input) {
-      const data = concatBytes(pending, input);
-      const processLength = data.length - (data.length % BLOCK_SIZE);
-      for (let offset = 0; offset < processLength; offset += BLOCK_SIZE) {
-        updateBlock(data.subarray(offset, offset + BLOCK_SIZE));
+      let offset = 0;
+      if (pending.length !== 0) {
+        const needed = BLOCK_SIZE - pending.length;
+        if (input.length < needed) {
+          pending = concatBytes(pending, input);
+          return;
+        }
+        const block = new Uint8Array(BLOCK_SIZE);
+        block.set(pending);
+        block.set(input.subarray(0, needed), pending.length);
+        updateBlock(block, 0);
+        pending = new Uint8Array(0);
+        offset = needed;
       }
-      pending = data.slice(processLength);
+
+      const processLength = input.length - ((input.length - offset) % BLOCK_SIZE);
+      for (; offset < processLength; offset += BLOCK_SIZE) {
+        updateBlock(input, offset);
+      }
+      pending = offset === input.length ? new Uint8Array(0) : input.slice(offset);
     },
 
     pad() {
       if (pending.length !== 0) {
-        updateBlock(pending);
+        updatePartialBlock(pending);
         pending = new Uint8Array(0);
       }
     },
 
     digest(aadLength, ciphertextLength) {
       this.pad();
-      updateBlock(createLengthBlock(aadLength, ciphertextLength));
+      updateBlock(createLengthBlock(aadLength, ciphertextLength), 0);
       return wordsToBlock(state);
     },
   };
@@ -167,20 +206,43 @@ function createInitialCounter(h: Uint8Array, nonce: Uint8Array): Uint8Array {
 }
 
 function createCounterXor(cipher: BlockCipher, counter: Uint8Array): (input: Uint8Array) => Uint8Array {
-  const keystream: Uint8Array<ArrayBufferLike> = new Uint8Array(BLOCK_SIZE);
-  let position = BLOCK_SIZE;
+  let pendingKeystream: Uint8Array = new Uint8Array(0);
+  let pendingOffset = 0;
 
   return (input) => {
     const output = new Uint8Array(input.length);
+    let inputOffset = 0;
 
-    for (let i = 0; i < input.length; i++) {
-      if (position === BLOCK_SIZE) {
-        cipher.encrypt(counter, keystream);
+    while (pendingOffset < pendingKeystream.length && inputOffset < input.length) {
+      output[inputOffset] = input[inputOffset] ^ pendingKeystream[pendingOffset];
+      inputOffset++;
+      pendingOffset++;
+    }
+
+    if (pendingOffset === pendingKeystream.length) {
+      pendingKeystream = new Uint8Array(0);
+      pendingOffset = 0;
+    }
+
+    const remaining = input.length - inputOffset;
+    if (remaining !== 0) {
+      const blocks = Math.ceil(remaining / BLOCK_SIZE);
+      const keystream = new Uint8Array(blocks * BLOCK_SIZE);
+      for (let offset = 0; offset < keystream.length; offset += BLOCK_SIZE) {
+        keystream.set(counter, offset);
         incrementCounter(counter);
-        position = 0;
       }
-      output[i] = input[i] ^ keystream[position];
-      position++;
+
+      cipher.encrypt(keystream, keystream);
+      for (let i = 0; i < remaining; i++) {
+        output[inputOffset + i] = input[inputOffset + i] ^ keystream[i];
+      }
+
+      const used = remaining % BLOCK_SIZE;
+      if (used !== 0) {
+        pendingKeystream = keystream.slice(remaining - used, remaining - used + BLOCK_SIZE);
+        pendingOffset = used;
+      }
     }
 
     return output;
@@ -206,18 +268,56 @@ function createZeroWords(): Words128 {
   return [0, 0, 0, 0];
 }
 
-function multiplyGf128(x: Words128, y: Words128): Words128 {
-  const z = createZeroWords();
-  const v: Words128 = [y[0], y[1], y[2], y[3]];
+// Adapted from @noble/ciphers' GHASH window-table approach (MIT).
+function createGhashTable(h: Words128, windowBits: number): Uint32Array {
+  const windowSize = 1 << windowBits;
+  const windows = 128 / windowBits;
+  const doubled: Words128[] = [];
+  const value: Words128 = [h[0], h[1], h[2], h[3]];
 
-  for (let i = 0; i < 128; i++) {
-    if ((x[i >>> 5] & (0x80000000 >>> (i & 31))) !== 0) {
-      xorWordsInPlace(z, v);
-    }
-    shiftRightAndReduce(v);
+  for (let bit = 0; bit < 128; bit++) {
+    doubled.push([value[0], value[1], value[2], value[3]]);
+    shiftRightAndReduce(value);
   }
 
-  return z;
+  const table = new Uint32Array(windows * windowSize * 4);
+  for (let window = 0; window < windows; window++) {
+    for (let selector = 0; selector < windowSize; selector++) {
+      const item = createZeroWords();
+      for (let bit = 0; bit < windowBits; bit++) {
+        if (((selector >>> (windowBits - bit - 1)) & 1) !== 0) {
+          xorWordsInPlace(item, doubled[(window * windowBits) + bit]);
+        }
+      }
+      const offset = ((window * windowSize) + selector) * 4;
+      table[offset] = item[0];
+      table[offset + 1] = item[1];
+      table[offset + 2] = item[2];
+      table[offset + 3] = item[3];
+    }
+  }
+  return table;
+}
+
+function multiplyGf128Window(input: Words128, table: Uint32Array, windowSize: number): Words128 {
+  const output = createZeroWords();
+  const mask = windowSize - 1;
+  const windows = 128 / GHASH_WINDOW_BITS;
+
+  for (let window = 0; window < windows; window++) {
+    const bitOffset = window * GHASH_WINDOW_BITS;
+    const word = bitOffset >>> 5;
+    const shift = 32 - GHASH_WINDOW_BITS - (bitOffset & 31);
+    const selector = (input[word] >>> shift) & mask;
+    if (selector !== 0) {
+      const tableOffset = ((window * windowSize) + selector) * 4;
+      output[0] = (output[0] ^ table[tableOffset]) >>> 0;
+      output[1] = (output[1] ^ table[tableOffset + 1]) >>> 0;
+      output[2] = (output[2] ^ table[tableOffset + 2]) >>> 0;
+      output[3] = (output[3] ^ table[tableOffset + 3]) >>> 0;
+    }
+  }
+  return output;
 }
 
 function shiftRightAndReduce(words: Words128): void {
@@ -229,15 +329,6 @@ function shiftRightAndReduce(words: Words128): void {
   if (lsb) {
     words[0] = (words[0] ^ R_WORD) >>> 0;
   }
-}
-
-function xorWords(left: Words128, right: Words128): Words128 {
-  return [
-    (left[0] ^ right[0]) >>> 0,
-    (left[1] ^ right[1]) >>> 0,
-    (left[2] ^ right[2]) >>> 0,
-    (left[3] ^ right[3]) >>> 0,
-  ];
 }
 
 function xorWordsInPlace(left: Words128, right: Words128): void {
@@ -258,15 +349,6 @@ function incrementCounter(counter: Uint8Array): void {
   counter[13] = value >>> 16;
   counter[14] = value >>> 8;
   counter[15] = value;
-}
-
-function padBlock(input: Uint8Array): Uint8Array {
-  if (input.length === BLOCK_SIZE) {
-    return input;
-  }
-  const output = new Uint8Array(BLOCK_SIZE);
-  output.set(input);
-  return output;
 }
 
 function createLengthBlock(aadLength: number, ciphertextLength: number): Uint8Array {
@@ -307,6 +389,15 @@ function readUint32BE(input: Uint8Array, offset: number): number {
     (input[offset + 1] << 16) |
     (input[offset + 2] << 8) |
     input[offset + 3]
+  ) >>> 0;
+}
+
+function readUint32BEPadded(input: Uint8Array, offset: number): number {
+  return (
+    (((input[offset] ?? 0) << 24) >>> 0) |
+    ((input[offset + 1] ?? 0) << 16) |
+    ((input[offset + 2] ?? 0) << 8) |
+    (input[offset + 3] ?? 0)
   ) >>> 0;
 }
 
