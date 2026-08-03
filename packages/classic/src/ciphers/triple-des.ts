@@ -20,14 +20,24 @@ export function createTripleDesCipher(key: Uint8Array): BlockCipher {
   const first = createDesCipher(key.subarray(0, 8));
   const second = createDesCipher(key.subarray(8, 16));
   const third = createDesCipher(key.length === 24 ? key.subarray(16, 24) : key.subarray(0, 8));
+  const firstOutput = new Uint8Array(8);
+  const secondOutput = new Uint8Array(8);
 
   return {
     blockSize: 8,
 
+    encryptBlock(input, inputOffset, output, outputOffset) {
+      encryptTripleBlockAt(input, inputOffset, output, outputOffset, first, second, third, firstOutput, secondOutput);
+    },
+
+    decryptBlock(input, inputOffset, output, outputOffset) {
+      decryptTripleBlockAt(input, inputOffset, output, outputOffset, first, second, third, firstOutput, secondOutput);
+    },
+
     encrypt(input, output) {
       assertBlocks(input, output);
       for (let offset = 0; offset < input.length; offset += 8) {
-        encryptTripleBlock(input.subarray(offset, offset + 8), output.subarray(offset, offset + 8), first, second, third);
+        encryptTripleBlockAt(input, offset, output, offset, first, second, third, firstOutput, secondOutput);
       }
       return output;
     },
@@ -35,39 +45,71 @@ export function createTripleDesCipher(key: Uint8Array): BlockCipher {
     decrypt(input, output) {
       assertBlocks(input, output);
       for (let offset = 0; offset < input.length; offset += 8) {
-        decryptTripleBlock(input.subarray(offset, offset + 8), output.subarray(offset, offset + 8), first, second, third);
+        decryptTripleBlockAt(input, offset, output, offset, first, second, third, firstOutput, secondOutput);
       }
       return output;
     },
   };
 }
 
-function encryptTripleBlock(
+function encryptTripleBlockAt(
   input: Uint8Array,
+  inputOffset: number,
   output: Uint8Array,
+  outputOffset: number,
   first: BlockCipher,
   second: BlockCipher,
   third: BlockCipher,
+  firstOutput: Uint8Array,
+  secondOutput: Uint8Array,
 ): void {
-  const firstOutput = new Uint8Array(8);
-  const secondOutput = new Uint8Array(8);
-  first.encrypt(input, firstOutput);
-  second.decrypt(firstOutput, secondOutput);
-  third.encrypt(secondOutput, output);
+  encryptBlock(first, input, inputOffset, firstOutput, 0);
+  decryptBlock(second, firstOutput, 0, secondOutput, 0);
+  encryptBlock(third, secondOutput, 0, output, outputOffset);
 }
 
-function decryptTripleBlock(
+function decryptTripleBlockAt(
   input: Uint8Array,
+  inputOffset: number,
   output: Uint8Array,
+  outputOffset: number,
   first: BlockCipher,
   second: BlockCipher,
   third: BlockCipher,
+  thirdOutput: Uint8Array,
+  secondOutput: Uint8Array,
 ): void {
-  const thirdOutput = new Uint8Array(8);
-  const secondOutput = new Uint8Array(8);
-  third.decrypt(input, thirdOutput);
-  second.encrypt(thirdOutput, secondOutput);
-  first.decrypt(secondOutput, output);
+  decryptBlock(third, input, inputOffset, thirdOutput, 0);
+  encryptBlock(second, thirdOutput, 0, secondOutput, 0);
+  decryptBlock(first, secondOutput, 0, output, outputOffset);
+}
+
+function encryptBlock(
+  cipher: BlockCipher,
+  input: Uint8Array,
+  inputOffset: number,
+  output: Uint8Array,
+  outputOffset: number,
+): void {
+  if (cipher.encryptBlock) {
+    cipher.encryptBlock(input, inputOffset, output, outputOffset);
+  } else {
+    cipher.encrypt(input.subarray(inputOffset, inputOffset + 8), output.subarray(outputOffset, outputOffset + 8));
+  }
+}
+
+function decryptBlock(
+  cipher: BlockCipher,
+  input: Uint8Array,
+  inputOffset: number,
+  output: Uint8Array,
+  outputOffset: number,
+): void {
+  if (cipher.decryptBlock) {
+    cipher.decryptBlock(input, inputOffset, output, outputOffset);
+  } else {
+    cipher.decrypt(input.subarray(inputOffset, inputOffset + 8), output.subarray(outputOffset, outputOffset + 8));
+  }
 }
 
 function assertBlocks(input: Uint8Array, output: Uint8Array): void {
