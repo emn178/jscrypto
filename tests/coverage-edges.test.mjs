@@ -161,12 +161,15 @@ test('classic cipher constructors validate keys and blocks', () => {
   assert.throws(() => createAesCipher(new Uint8Array(15)), /AES key/);
   assert.throws(() => createDesCipher(new Uint8Array(7)), /DES key/);
   assert.throws(() => createTripleDesCipher(new Uint8Array(15)), /Triple DES key/);
-  assert.throws(() => createAesCipher(new Uint8Array(16)).encryptBlock(new Uint8Array(15)), /AES block/);
-  assert.throws(() => createAesCipher(new Uint8Array(16)).decryptBlock(new Uint8Array(15)), /AES block/);
-  assert.throws(() => createDesCipher(new Uint8Array(8)).encryptBlock(new Uint8Array(7)), /DES block/);
-  assert.throws(() => createDesCipher(new Uint8Array(8)).decryptBlock(new Uint8Array(7)), /DES block/);
-  assert.throws(() => createTripleDesCipher(new Uint8Array(16)).encryptBlock(new Uint8Array(7)), /Triple DES block/);
-  assert.throws(() => createTripleDesCipher(new Uint8Array(16)).decryptBlock(new Uint8Array(7)), /Triple DES block/);
+  assert.throws(() => createAesCipher(new Uint8Array(16)).encrypt(new Uint8Array(15), new Uint8Array(15)), /multiple of 128 bits/);
+  assert.throws(() => createAesCipher(new Uint8Array(16)).decrypt(new Uint8Array(16), new Uint8Array(15)), /output length/);
+  assert.throws(() => createAesCipher(new Uint8Array(16)).decrypt(new Uint8Array(16), new Uint8Array(17)), /output length/);
+  assert.throws(() => createDesCipher(new Uint8Array(8)).encrypt(new Uint8Array(7), new Uint8Array(7)), /multiple of 64 bits/);
+  assert.throws(() => createDesCipher(new Uint8Array(8)).decrypt(new Uint8Array(8), new Uint8Array(7)), /output length/);
+  assert.throws(() => createDesCipher(new Uint8Array(8)).decrypt(new Uint8Array(8), new Uint8Array(9)), /output length/);
+  assert.throws(() => createTripleDesCipher(new Uint8Array(16)).encrypt(new Uint8Array(7), new Uint8Array(7)), /multiple of 64 bits/);
+  assert.throws(() => createTripleDesCipher(new Uint8Array(16)).decrypt(new Uint8Array(8), new Uint8Array(7)), /output length/);
+  assert.throws(() => createTripleDesCipher(new Uint8Array(16)).decrypt(new Uint8Array(8), new Uint8Array(9)), /output length/);
 
 });
 
@@ -218,11 +221,17 @@ test('classic paddings validate edge cases and random fallbacks', () => {
 test('mode finalizers and counter carry branches are covered', () => {
   const blockCipher = {
     blockSize: 2,
-    encryptBlock(block) {
-      return new Uint8Array(block.map((byte) => byte ^ 0xff));
+    encrypt(input, output) {
+      for (let index = 0; index < input.length; index++) {
+        output[index] = input[index] ^ 0xff;
+      }
+      return output;
     },
-    decryptBlock(block) {
-      return new Uint8Array(block.map((byte) => byte ^ 0xff));
+    decrypt(input, output) {
+      for (let index = 0; index < input.length; index++) {
+        output[index] = input[index] ^ 0xff;
+      }
+      return output;
     },
   };
 
@@ -239,12 +248,17 @@ test('mode finalizers and counter carry branches are covered', () => {
   const observedCounters = [];
   const ctrCipher = {
     blockSize: 2,
-    encryptBlock(block) {
-      observedCounters.push(bytesToHex(block));
-      return new Uint8Array([0, 0]);
+    encrypt(input, output) {
+      for (let offset = 0; offset < input.length; offset += 2) {
+        observedCounters.push(bytesToHex(input.subarray(offset, offset + 2)));
+        output[offset] = 0;
+        output[offset + 1] = 0;
+      }
+      return output;
     },
-    decryptBlock(block) {
-      return block;
+    decrypt(input, output) {
+      output.set(input);
+      return output;
     },
   };
   ctr.createEncryptor({ cipher: ctrCipher, iv: new Uint8Array([0xff, 0xff]) }).process(new Uint8Array(3));

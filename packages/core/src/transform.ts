@@ -8,6 +8,11 @@ export interface CreateTransformOptions {
   padding?: string;
   key: Uint8Array;
   iv?: Uint8Array;
+  /**
+   * Allows modes to reuse or mutate input buffers when they can do so safely.
+   * Modes may ignore this optimization hint.
+   */
+  inplace?: boolean;
   [option: string]: unknown;
 }
 

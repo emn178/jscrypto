@@ -26,9 +26,11 @@ test('DES encrypts and decrypts the FIPS block vector', () => {
   const cipher = createDesCipher(hexToBytes('133457799bbcdff1'));
   const plaintext = hexToBytes('0123456789abcdef');
   const ciphertext = hexToBytes('85e813540f0ab405');
+  const encrypted = new Uint8Array(8);
+  const decrypted = new Uint8Array(8);
 
-  assert.equal(bytesToHex(cipher.encryptBlock(plaintext)), bytesToHex(ciphertext));
-  assert.equal(bytesToHex(cipher.decryptBlock(ciphertext)), bytesToHex(plaintext));
+  assert.equal(bytesToHex(cipher.encrypt(plaintext, encrypted)), bytesToHex(ciphertext));
+  assert.equal(bytesToHex(cipher.decrypt(ciphertext, decrypted)), bytesToHex(plaintext));
 });
 
 test('DES-CBC encrypts and decrypts with Pkcs7', () => {

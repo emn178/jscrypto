@@ -3,6 +3,15 @@ import type { BlockCipher, CipherComponent } from '@jscrypto/core';
 const BLOCK_SIZE = 16;
 const sbox = new Uint8Array(256);
 const inverseSbox = new Uint8Array(256);
+const encTable0 = new Uint32Array(256);
+const encTable1 = new Uint32Array(256);
+const encTable2 = new Uint32Array(256);
+const encTable3 = new Uint32Array(256);
+const decTable0 = new Uint32Array(256);
+const decTable1 = new Uint32Array(256);
+const decTable2 = new Uint32Array(256);
+const decTable3 = new Uint32Array(256);
+const rcon = new Uint8Array([0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36]);
 
 export const aes: CipherComponent<'AES'> = {
   kind: 'cipher',
@@ -20,165 +29,128 @@ export function createAesCipher(key: Uint8Array): BlockCipher {
     throw new Error('AES key must be 128, 192, or 256 bits.');
   }
 
-  const roundKeys = expandKey(key);
-  const rounds = key.length / 4 + 6;
-
+  const { decryptKeys, encryptKeys, rounds } = expandKey(key);
   return {
     blockSize: BLOCK_SIZE,
 
-    encryptBlock(block) {
-      assertBlock(block);
-      const state = new Uint8Array(block);
-
-      addRoundKey(state, roundKeys, 0);
-      for (let round = 1; round < rounds; round++) {
-        substituteBytes(state, sbox);
-        shiftRows(state);
-        mixColumns(state);
-        addRoundKey(state, roundKeys, round);
-      }
-      substituteBytes(state, sbox);
-      shiftRows(state);
-      addRoundKey(state, roundKeys, rounds);
-
-      return state;
+    encrypt(input, output) {
+      return cryptBlocks(input, output, encryptKeys, rounds, sbox, encTable0, encTable1, encTable2, encTable3);
     },
 
-    decryptBlock(block) {
-      assertBlock(block);
-      const state = new Uint8Array(block);
-
-      addRoundKey(state, roundKeys, rounds);
-      for (let round = rounds - 1; round > 0; round--) {
-        inverseShiftRows(state);
-        substituteBytes(state, inverseSbox);
-        addRoundKey(state, roundKeys, round);
-        inverseMixColumns(state);
-      }
-      inverseShiftRows(state);
-      substituteBytes(state, inverseSbox);
-      addRoundKey(state, roundKeys, 0);
-
-      return state;
+    decrypt(input, output) {
+      return cryptBlocks(input, output, decryptKeys, rounds, inverseSbox, decTable0, decTable1, decTable2, decTable3, true);
     },
   };
 }
 
-initializeSboxes();
+initializeTables();
 
-function assertBlock(block: Uint8Array): void {
-  if (block.length !== BLOCK_SIZE) {
-    throw new Error('AES block must be 128 bits.');
+function assertBlocks(input: Uint8Array, output: Uint8Array): void {
+  if (input.length % BLOCK_SIZE !== 0) {
+    throw new Error('AES input length must be a multiple of 128 bits.');
+  }
+  if (output.length !== input.length) {
+    throw new Error('AES output length must equal input length.');
   }
 }
 
-function expandKey(key: Uint8Array): Uint8Array {
+function expandKey(key: Uint8Array): { encryptKeys: Uint32Array; decryptKeys: Uint32Array; rounds: number } {
   const words = key.length / 4;
   const rounds = words + 6;
-  const roundKeys = new Uint8Array(BLOCK_SIZE * (rounds + 1));
-  roundKeys.set(key);
+  const rows = (rounds + 1) * 4;
+  const encryptKeys = new Uint32Array(rows);
+  const decryptKeys = new Uint32Array(rows);
 
-  let rcon = 1;
-  const temp = new Uint8Array(4);
-  for (let word = words; word < 4 * (rounds + 1); word++) {
-    const offset = (word - 1) * 4;
-    temp.set(roundKeys.subarray(offset, offset + 4));
-
-    if (word % words === 0) {
-      const first = temp[0];
-      temp[0] = sbox[temp[1]] ^ rcon;
-      temp[1] = sbox[temp[2]];
-      temp[2] = sbox[temp[3]];
-      temp[3] = sbox[first];
-      rcon = xtime(rcon);
-    } else if (words > 6 && word % words === 4) {
-      for (let index = 0; index < 4; index++) {
-        temp[index] = sbox[temp[index]];
-      }
+  for (let row = 0; row < rows; row++) {
+    if (row < words) {
+      encryptKeys[row] = wordFromBytes(key, row * 4);
+      continue;
     }
 
-    const previousOffset = (word - words) * 4;
-    const outputOffset = word * 4;
-    for (let index = 0; index < 4; index++) {
-      roundKeys[outputOffset + index] = roundKeys[previousOffset + index] ^ temp[index];
+    let temp = encryptKeys[row - 1];
+    if (row % words === 0) {
+      temp = subWord((temp << 8) | (temp >>> 24)) ^ (rcon[(row / words) | 0] << 24);
+    } else if (words > 6 && row % words === 4) {
+      temp = subWord(temp);
     }
+    encryptKeys[row] = encryptKeys[row - words] ^ temp;
   }
 
-  return roundKeys;
-}
-
-function addRoundKey(state: Uint8Array, roundKeys: Uint8Array, round: number): void {
-  const offset = round * BLOCK_SIZE;
-  for (let index = 0; index < BLOCK_SIZE; index++) {
-    state[index] ^= roundKeys[offset + index];
+  for (let inverseRow = 0; inverseRow < rows; inverseRow++) {
+    const row = rows - inverseRow;
+    const key = inverseRow % 4 ? encryptKeys[row] : encryptKeys[row - 4];
+    decryptKeys[inverseRow] = inverseRow < 4 || row <= 4
+      ? key
+      : decTable0[sbox[key >>> 24]]
+        ^ decTable1[sbox[(key >>> 16) & 0xff]]
+        ^ decTable2[sbox[(key >>> 8) & 0xff]]
+        ^ decTable3[sbox[key & 0xff]];
   }
+
+  return { decryptKeys, encryptKeys, rounds };
 }
 
-function substituteBytes(state: Uint8Array, table: Uint8Array): void {
-  for (let index = 0; index < BLOCK_SIZE; index++) {
-    state[index] = table[state[index]];
+function cryptBlocks(
+  input: Uint8Array,
+  output: Uint8Array,
+  keys: Uint32Array,
+  rounds: number,
+  box: Uint8Array,
+  table0: Uint32Array,
+  table1: Uint32Array,
+  table2: Uint32Array,
+  table3: Uint32Array,
+  swapRows = false
+): Uint8Array {
+  assertBlocks(input, output);
+  const view = new DataView(input.buffer, input.byteOffset, input.byteLength);
+  const outputView = new DataView(output.buffer, output.byteOffset, output.byteLength);
+  let o1 = 4;
+  let o3 = 12;
+  if (swapRows) {
+    o1 = 12;
+    o3 = 4;
   }
-}
+  for (let offset = 0; offset < input.length; offset += BLOCK_SIZE) {
+    let off1 = offset + o1;
+    let off2 = offset + 8;
+    let off3 = offset + o3;
+    let w0 = view.getUint32(offset, false);
+    let w1 = view.getUint32(off1, false);
+    let w2 = view.getUint32(off2, false);
+    let w3 = view.getUint32(off3, false);
 
-function shiftRows(state: Uint8Array): void {
-  const copy = new Uint8Array(state);
-  state[1] = copy[5];
-  state[5] = copy[9];
-  state[9] = copy[13];
-  state[13] = copy[1];
-  state[2] = copy[10];
-  state[6] = copy[14];
-  state[10] = copy[2];
-  state[14] = copy[6];
-  state[3] = copy[15];
-  state[7] = copy[3];
-  state[11] = copy[7];
-  state[15] = copy[11];
-}
+    let s0 = w0 ^ keys[0];
+    let s1 = w1 ^ keys[1];
+    let s2 = w2 ^ keys[2];
+    let s3 = w3 ^ keys[3];
+    let keyIndex = 4;
 
-function inverseShiftRows(state: Uint8Array): void {
-  const copy = new Uint8Array(state);
-  state[1] = copy[13];
-  state[5] = copy[1];
-  state[9] = copy[5];
-  state[13] = copy[9];
-  state[2] = copy[10];
-  state[6] = copy[14];
-  state[10] = copy[2];
-  state[14] = copy[6];
-  state[3] = copy[7];
-  state[7] = copy[11];
-  state[11] = copy[15];
-  state[15] = copy[3];
-}
+    for (let round = 1; round < rounds; round++) {
+      const t0 = table0[s0 >>> 24] ^ table1[(s1 >>> 16) & 0xff] ^ table2[(s2 >>> 8) & 0xff] ^ table3[s3 & 0xff] ^ keys[keyIndex++];
+      const t1 = table0[s1 >>> 24] ^ table1[(s2 >>> 16) & 0xff] ^ table2[(s3 >>> 8) & 0xff] ^ table3[s0 & 0xff] ^ keys[keyIndex++];
+      const t2 = table0[s2 >>> 24] ^ table1[(s3 >>> 16) & 0xff] ^ table2[(s0 >>> 8) & 0xff] ^ table3[s1 & 0xff] ^ keys[keyIndex++];
+      const t3 = table0[s3 >>> 24] ^ table1[(s0 >>> 16) & 0xff] ^ table2[(s1 >>> 8) & 0xff] ^ table3[s2 & 0xff] ^ keys[keyIndex++];
+      s0 = t0;
+      s1 = t1;
+      s2 = t2;
+      s3 = t3;
+    }
 
-function mixColumns(state: Uint8Array): void {
-  for (let offset = 0; offset < BLOCK_SIZE; offset += 4) {
-    const a = state[offset];
-    const b = state[offset + 1];
-    const c = state[offset + 2];
-    const d = state[offset + 3];
-    state[offset] = xtime(a) ^ (xtime(b) ^ b) ^ c ^ d;
-    state[offset + 1] = a ^ xtime(b) ^ (xtime(c) ^ c) ^ d;
-    state[offset + 2] = a ^ b ^ xtime(c) ^ (xtime(d) ^ d);
-    state[offset + 3] = (xtime(a) ^ a) ^ b ^ c ^ xtime(d);
+    let output0 = ((box[s0 >>> 24] << 24) | (box[(s1 >>> 16) & 0xff] << 16) | (box[(s2 >>> 8) & 0xff] << 8) | box[s3 & 0xff]) ^ keys[keyIndex++];
+    let output1 = ((box[s1 >>> 24] << 24) | (box[(s2 >>> 16) & 0xff] << 16) | (box[(s3 >>> 8) & 0xff] << 8) | box[s0 & 0xff]) ^ keys[keyIndex++];
+    let output2 = ((box[s2 >>> 24] << 24) | (box[(s3 >>> 16) & 0xff] << 16) | (box[(s0 >>> 8) & 0xff] << 8) | box[s1 & 0xff]) ^ keys[keyIndex++];
+    let output3 = ((box[s3 >>> 24] << 24) | (box[(s0 >>> 16) & 0xff] << 16) | (box[(s1 >>> 8) & 0xff] << 8) | box[s2 & 0xff]) ^ keys[keyIndex];
+  
+    outputView.setUint32(offset, output0, false);
+    outputView.setUint32(off1, output1, false);
+    outputView.setUint32(off2, output2, false);
+    outputView.setUint32(off3, output3, false);
   }
+  return output;
 }
 
-function inverseMixColumns(state: Uint8Array): void {
-  for (let offset = 0; offset < BLOCK_SIZE; offset += 4) {
-    const a = state[offset];
-    const b = state[offset + 1];
-    const c = state[offset + 2];
-    const d = state[offset + 3];
-    state[offset] = multiply(a, 14) ^ multiply(b, 11) ^ multiply(c, 13) ^ multiply(d, 9);
-    state[offset + 1] = multiply(a, 9) ^ multiply(b, 14) ^ multiply(c, 11) ^ multiply(d, 13);
-    state[offset + 2] = multiply(a, 13) ^ multiply(b, 9) ^ multiply(c, 14) ^ multiply(d, 11);
-    state[offset + 3] = multiply(a, 11) ^ multiply(b, 13) ^ multiply(c, 9) ^ multiply(d, 14);
-  }
-}
-
-function initializeSboxes(): void {
+function initializeTables(): void {
   for (let value = 0; value < 256; value++) {
     const inverse = value === 0 ? 0 : power(value, 254);
     const substituted = inverse
@@ -190,6 +162,41 @@ function initializeSboxes(): void {
     sbox[value] = substituted;
     inverseSbox[substituted] = value;
   }
+
+  const doubles = new Uint16Array(256);
+  for (let value = 0; value < 256; value++) {
+    doubles[value] = xtime(value);
+  }
+
+  for (let value = 0; value < 256; value++) {
+    const substituted = sbox[value];
+    const x2 = doubles[value];
+    const x4 = doubles[x2];
+    const x8 = doubles[x4];
+
+    let table = (doubles[substituted] * 0x101) ^ (substituted * 0x1010100);
+    encTable0[value] = (table << 24) | (table >>> 8);
+    encTable1[value] = (table << 16) | (table >>> 16);
+    encTable2[value] = (table << 8) | (table >>> 24);
+    encTable3[value] = table;
+
+    table = (x8 * 0x1010101) ^ (x4 * 0x10001) ^ (x2 * 0x101) ^ (value * 0x1010100);
+    decTable0[substituted] = (table << 24) | (table >>> 8);
+    decTable1[substituted] = (table << 16) | (table >>> 16);
+    decTable2[substituted] = (table << 8) | (table >>> 24);
+    decTable3[substituted] = table;
+  }
+}
+
+function subWord(word: number): number {
+  return (sbox[word >>> 24] << 24)
+    | (sbox[(word >>> 16) & 0xff] << 16)
+    | (sbox[(word >>> 8) & 0xff] << 8)
+    | sbox[word & 0xff];
+}
+
+function wordFromBytes(bytes: Uint8Array, offset: number): number {
+  return (bytes[offset] << 24) | (bytes[offset + 1] << 16) | (bytes[offset + 2] << 8) | bytes[offset + 3];
 }
 
 function power(value: number, exponent: number): number {

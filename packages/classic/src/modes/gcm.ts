@@ -26,12 +26,12 @@ const R_WORD = 0xe1000000;
 
 function createGcmEncryptor(cipher: BlockCipher, nonce: Uint8Array, aad: Uint8Array, tagLength: number): Transform {
   assertGcmCipher(cipher);
-  const auth = createGhash(cipher.encryptBlock(new Uint8Array(BLOCK_SIZE)));
+  const auth = createGhash(encryptRawBlock(cipher, new Uint8Array(BLOCK_SIZE)));
   auth.update(aad);
   auth.pad();
 
   const j0 = createInitialCounter(auth.h, nonce);
-  const tagMask = cipher.encryptBlock(j0);
+  const tagMask = encryptRawBlock(cipher, j0);
   const counter = j0.slice();
   incrementCounter(counter);
   const xor = createCounterXor(cipher, counter);
@@ -62,9 +62,9 @@ function createGcmDecryptor(
   detachedTag?: Uint8Array,
 ): Transform {
   assertGcmCipher(cipher);
-  const h = cipher.encryptBlock(new Uint8Array(BLOCK_SIZE));
+  const h = encryptRawBlock(cipher, new Uint8Array(BLOCK_SIZE));
   const j0 = createInitialCounter(h, nonce);
-  const tagMask = cipher.encryptBlock(j0);
+  const tagMask = encryptRawBlock(cipher, j0);
   let pending: Uint8Array<ArrayBufferLike> = new Uint8Array(0);
 
   return {
@@ -167,7 +167,7 @@ function createInitialCounter(h: Uint8Array, nonce: Uint8Array): Uint8Array {
 }
 
 function createCounterXor(cipher: BlockCipher, counter: Uint8Array): (input: Uint8Array) => Uint8Array {
-  let keystream: Uint8Array<ArrayBufferLike> = new Uint8Array(0);
+  const keystream: Uint8Array<ArrayBufferLike> = new Uint8Array(BLOCK_SIZE);
   let position = BLOCK_SIZE;
 
   return (input) => {
@@ -175,7 +175,7 @@ function createCounterXor(cipher: BlockCipher, counter: Uint8Array): (input: Uin
 
     for (let i = 0; i < input.length; i++) {
       if (position === BLOCK_SIZE) {
-        keystream = cipher.encryptBlock(counter);
+        cipher.encrypt(counter, keystream);
         incrementCounter(counter);
         position = 0;
       }
@@ -185,6 +185,11 @@ function createCounterXor(cipher: BlockCipher, counter: Uint8Array): (input: Uin
 
     return output;
   };
+}
+
+function encryptRawBlock(cipher: BlockCipher, input: Uint8Array): Uint8Array {
+  const output = new Uint8Array(BLOCK_SIZE);
+  return cipher.encrypt(input, output);
 }
 
 function createTag(auth: Ghash, tagMask: Uint8Array, aadLength: number, ciphertextLength: number, tagLength: number): Uint8Array {

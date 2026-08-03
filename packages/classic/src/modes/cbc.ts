@@ -12,28 +12,28 @@ export const cbc: ModeComponent<'CBC'> = {
   name: 'CBC',
   requiresPadding: true,
   getIvSize: (cipher) => cipher.blockSize,
-  createEncryptor({ cipher, iv }) {
+  createEncryptor({ cipher, iv, options }) {
     assertIv(cipher.blockSize, iv, 'CBC');
-    return createCbcEncryptor(cipher, iv);
+    return createCbcEncryptor(cipher, iv, getInplace(options));
   },
-  createDecryptor({ cipher, iv }) {
+  createDecryptor({ cipher, iv, options }) {
     assertIv(cipher.blockSize, iv, 'CBC');
-    return createCbcDecryptor(cipher, iv);
+    return createCbcDecryptor(cipher, iv, getInplace(options));
   },
 };
 
-function createCbcEncryptor(cipher: BlockCipher, iv: Uint8Array): Transform {
+function createCbcEncryptor(cipher: BlockCipher, iv: Uint8Array, inplace: boolean): Transform {
   let previous = iv;
 
   return {
     process(input) {
       assertBlockMultiple(cipher.blockSize, input);
-      const output = new Uint8Array(input.length);
+      const output = inplace ? input : new Uint8Array(input.length);
 
       for (let offset = 0; offset < input.length; offset += cipher.blockSize) {
         const block = xorBytes(input.subarray(offset, offset + cipher.blockSize), previous);
-        const encrypted = cipher.encryptBlock(block);
-        output.set(encrypted, offset);
+        const encrypted = output.subarray(offset, offset + cipher.blockSize);
+        cipher.encrypt(block, encrypted);
         previous = encrypted;
       }
 
@@ -46,19 +46,23 @@ function createCbcEncryptor(cipher: BlockCipher, iv: Uint8Array): Transform {
   };
 }
 
-function createCbcDecryptor(cipher: BlockCipher, iv: Uint8Array): Transform {
+function createCbcDecryptor(cipher: BlockCipher, iv: Uint8Array, inplace: boolean): Transform {
   let previous = iv;
 
   return {
     process(input) {
       assertBlockMultiple(cipher.blockSize, input);
-      const output = new Uint8Array(input.length);
+      const output = inplace ? input : new Uint8Array(input.length);
 
       for (let offset = 0; offset < input.length; offset += cipher.blockSize) {
         const block = input.subarray(offset, offset + cipher.blockSize);
-        const decrypted = cipher.decryptBlock(block);
-        output.set(xorBytes(decrypted, previous), offset);
-        previous = block.slice();
+        const current = block.slice();
+        const decrypted = output.subarray(offset, offset + cipher.blockSize);
+        cipher.decrypt(block, decrypted);
+        for (let index = 0; index < cipher.blockSize; index++) {
+          decrypted[index] ^= previous[index];
+        }
+        previous = current;
       }
 
       return output;
@@ -72,4 +76,8 @@ function createCbcDecryptor(cipher: BlockCipher, iv: Uint8Array): Transform {
 
 function assertBlockMultiple(blockSize: number, input: Uint8Array): void {
   assertCoreBlockMultiple(input, blockSize, 'CBC');
+}
+
+function getInplace(options: unknown): boolean {
+  return typeof options === 'object' && options !== null && 'inplace' in options && options.inplace === true;
 }

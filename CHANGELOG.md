@@ -1,5 +1,23 @@
 # Change Log
 
+## v0.8.0 / 2026-08-03
+
+### Added
+
+- added `inplace: true` as a transform creation hint so block modes can reuse caller-owned buffers when the selected mode can do so safely.
+- added raw block cipher `encrypt(input, output)` and `decrypt(input, output)` methods for caller-owned output buffers.
+- added an AES benchmark comparing raw AES throughput against CryptoJS, `@noble/ciphers`, and Node.js `crypto`.
+
+### Changed
+
+- changed classic AES, DES, and Triple DES internals to use the new raw block cipher buffer API.
+- optimized the classic AES implementation with lookup tables for faster block encryption and decryption.
+- changed ECB, CBC, CFB, CTR, and OFB modes to honor `inplace: true` where their transform logic can safely write into the input buffer.
+
+### Removed
+
+- removed block cipher `encryptBlock(block)` and `decryptBlock(block)` from the public component contract.
+
 ## v0.7.0 / 2026-07-27
 
 ### Added

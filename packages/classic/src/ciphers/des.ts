@@ -31,16 +31,22 @@ export function createDesCipher(key: Uint8Array): BlockCipher {
   return {
     blockSize: 8,
 
-    encryptBlock(block) {
-      assertBlock(block, 'DES');
-      return processBlock(block, subkeys);
+    encrypt(input, output) {
+      return processBlocks(input, output, subkeys, 'DES');
     },
 
-    decryptBlock(block) {
-      assertBlock(block, 'DES');
-      return processBlock(block, subkeys.slice().reverse());
+    decrypt(input, output) {
+      return processBlocks(input, output, subkeys.slice().reverse(), 'DES');
     },
   };
+}
+
+function processBlocks(input: Uint8Array, output: Uint8Array, subkeys: readonly Uint8Array[], name: string): Uint8Array {
+  assertBlocks(input, output, name);
+  for (let offset = 0; offset < input.length; offset += 8) {
+    output.set(processBlock(input.subarray(offset, offset + 8), subkeys), offset);
+  }
+  return output;
 }
 
 function createSubkeys(key: Uint8Array): Uint8Array[] {
@@ -147,8 +153,11 @@ function xorBits(left: Uint8Array, right: Uint8Array): Uint8Array {
   return output;
 }
 
-function assertBlock(block: Uint8Array, name: string): void {
-  if (block.length !== 8) {
-    throw new Error(`${name} block must be 64 bits.`);
+function assertBlocks(input: Uint8Array, output: Uint8Array, name: string): void {
+  if (input.length % 8 !== 0) {
+    throw new Error(`${name} input length must be a multiple of 64 bits.`);
+  }
+  if (output.length !== input.length) {
+    throw new Error(`${name} output length must equal input length.`);
   }
 }

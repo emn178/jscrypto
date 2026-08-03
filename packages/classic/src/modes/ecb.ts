@@ -5,25 +5,20 @@ export const ecb: ModeComponent<'ECB'> = {
   name: 'ECB',
   requiresPadding: true,
   getIvSize: () => 0,
-  createEncryptor({ cipher }) {
-    return createEcbEncryptor(cipher);
+  createEncryptor({ cipher, options }) {
+    return createEcbEncryptor(cipher, getInplace(options));
   },
-  createDecryptor({ cipher }) {
-    return createEcbDecryptor(cipher);
+  createDecryptor({ cipher, options }) {
+    return createEcbDecryptor(cipher, getInplace(options));
   },
 };
 
-function createEcbEncryptor(cipher: BlockCipher): Transform {
+function createEcbEncryptor(cipher: BlockCipher, inplace: boolean): Transform {
   return {
     process(input) {
       assertBlockMultiple(cipher.blockSize, input);
-      const output = new Uint8Array(input.length);
-
-      for (let offset = 0; offset < input.length; offset += cipher.blockSize) {
-        output.set(cipher.encryptBlock(input.subarray(offset, offset + cipher.blockSize)), offset);
-      }
-
-      return output;
+      const output = inplace ? input : new Uint8Array(input.length);
+      return cipher.encrypt(input, output);
     },
 
     finalize(input = new Uint8Array(0)) {
@@ -32,17 +27,12 @@ function createEcbEncryptor(cipher: BlockCipher): Transform {
   };
 }
 
-function createEcbDecryptor(cipher: BlockCipher): Transform {
+function createEcbDecryptor(cipher: BlockCipher, inplace: boolean): Transform {
   return {
     process(input) {
       assertBlockMultiple(cipher.blockSize, input);
-      const output = new Uint8Array(input.length);
-
-      for (let offset = 0; offset < input.length; offset += cipher.blockSize) {
-        output.set(cipher.decryptBlock(input.subarray(offset, offset + cipher.blockSize)), offset);
-      }
-
-      return output;
+      const output = inplace ? input : new Uint8Array(input.length);
+      return cipher.decrypt(input, output);
     },
 
     finalize(input = new Uint8Array(0)) {
@@ -53,4 +43,8 @@ function createEcbDecryptor(cipher: BlockCipher): Transform {
 
 function assertBlockMultiple(blockSize: number, input: Uint8Array): void {
   assertCoreBlockMultiple(input, blockSize, 'ECB');
+}
+
+function getInplace(options: unknown): boolean {
+  return typeof options === 'object' && options !== null && 'inplace' in options && options.inplace === true;
 }

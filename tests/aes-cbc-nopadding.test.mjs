@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { concatBytes, createRegistry } from '@jscrypto/core';
-import { aes, cbc, noPadding } from '@jscrypto/classic';
+import { aes, cbc, createAesCipher, noPadding } from '@jscrypto/classic';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 test('AES-256-CBC encrypts and decrypts with NoPadding', () => {
@@ -80,6 +80,25 @@ test('AES-256-CBC streams encryption and decryption with NoPadding', () => {
   );
 
   assert.equal(bytesToText(decrypted), '1234567890123456');
+});
+
+test('AES-256-CBC mode can process in place', () => {
+  const key = hexToBytes('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
+  const iv = hexToBytes('000102030405060708090a0b0c0d0e0f');
+  const input = textToBytes('1234567890123456');
+  const original = input.slice();
+  const cipher = createAesCipher(key);
+  const encryptor = cbc.createEncryptor({ cipher, iv, options: { inplace: true } });
+  const ciphertext = encryptor.process(input);
+
+  assert.equal(ciphertext, input);
+  assert.equal(bytesToHex(ciphertext), 'b9b4ff87297a91139a3eecdcecfd8fdf');
+
+  const decryptor = cbc.createDecryptor({ cipher, iv, options: { inplace: true } });
+  const decrypted = decryptor.process(ciphertext);
+
+  assert.equal(decrypted, ciphertext);
+  assert.deepEqual(decrypted, original);
 });
 
 test('streaming NoPadding encryption rejects partial final blocks', () => {

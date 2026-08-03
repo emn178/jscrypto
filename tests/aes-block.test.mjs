@@ -25,10 +25,43 @@ for (const { name, key, ciphertext } of [
   test(`${name} encrypts and decrypts a FIPS-197 block`, () => {
     const cipher = createAesCipher(hexToBytes(key));
     const input = hexToBytes(plaintext);
-    const encrypted = cipher.encryptBlock(input);
+    const encrypted = new Uint8Array(input.length);
+    const decrypted = new Uint8Array(input.length);
 
+    assert.equal(cipher.encrypt(input, encrypted), encrypted);
     assert.equal(bytesToHex(encrypted), ciphertext);
-    assert.deepEqual(cipher.decryptBlock(encrypted), input);
+    assert.equal(cipher.decrypt(encrypted, decrypted), decrypted);
+    assert.deepEqual(decrypted, input);
     assert.equal(bytesToHex(input), plaintext);
   });
+
+  test(`${name} encrypts and decrypts multiple raw blocks`, () => {
+    const cipher = createAesCipher(hexToBytes(key));
+    const input = hexToBytes(`${plaintext}${plaintext}`);
+    const output = new Uint8Array(input.length);
+    const encrypted = cipher.encrypt(input, output);
+
+    assert.equal(encrypted, output);
+    assert.equal(bytesToHex(encrypted), `${ciphertext}${ciphertext}`);
+    assert.deepEqual(cipher.decrypt(encrypted, new Uint8Array(encrypted.length)), input);
+  });
+
+  test(`${name} encrypts and decrypts multiple raw blocks in place`, () => {
+    const cipher = createAesCipher(hexToBytes(key));
+    const input = hexToBytes(`${plaintext}${plaintext}`);
+    const encrypted = input.slice();
+
+    assert.equal(cipher.encrypt(encrypted, encrypted), encrypted);
+    assert.equal(bytesToHex(encrypted), `${ciphertext}${ciphertext}`);
+    assert.equal(cipher.decrypt(encrypted, encrypted), encrypted);
+    assert.deepEqual(encrypted, input);
+  });
 }
+
+test('AES raw block API validates input and output lengths', () => {
+  const cipher = createAesCipher(new Uint8Array(16));
+
+  assert.throws(() => cipher.encrypt(new Uint8Array(15), new Uint8Array(15)), /multiple of 128 bits/);
+  assert.throws(() => cipher.decrypt(new Uint8Array(16), new Uint8Array(15)), /output length/);
+  assert.throws(() => cipher.decrypt(new Uint8Array(16), new Uint8Array(17)), /output length/);
+});

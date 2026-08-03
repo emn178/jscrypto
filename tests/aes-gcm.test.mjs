@@ -158,11 +158,13 @@ test('AES-GCM rejects invalid options and authentication failures', () => {
 test('GCM requires a 128-bit block cipher', () => {
   const blockCipher = {
     blockSize: 8,
-    encryptBlock(block) {
-      return block;
+    encrypt(input, output) {
+      output.set(input);
+      return output;
     },
-    decryptBlock(block) {
-      return block;
+    decrypt(input, output) {
+      output.set(input);
+      return output;
     },
   };
 

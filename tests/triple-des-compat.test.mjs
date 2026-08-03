@@ -32,9 +32,11 @@ test('TripleDES encrypts and decrypts two-key and three-key block vectors', () =
   for (const [keyHex, expected] of cases) {
     const cipher = createTripleDesCipher(hexToBytes(keyHex));
     const ciphertext = hexToBytes(expected);
+    const encrypted = new Uint8Array(8);
+    const decrypted = new Uint8Array(8);
 
-    assert.equal(bytesToHex(cipher.encryptBlock(plaintext)), expected);
-    assert.equal(bytesToHex(cipher.decryptBlock(ciphertext)), bytesToHex(plaintext));
+    assert.equal(bytesToHex(cipher.encrypt(plaintext, encrypted)), expected);
+    assert.equal(bytesToHex(cipher.decrypt(ciphertext, decrypted)), bytesToHex(plaintext));
   }
 });
 

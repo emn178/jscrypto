@@ -28,8 +28,16 @@ export interface StreamCipherComponent<Name extends string = string> extends Com
 
 export interface BlockCipher {
   readonly blockSize: number;
-  encryptBlock(block: Uint8Array): Uint8Array;
-  decryptBlock(block: Uint8Array): Uint8Array;
+  /**
+   * Encrypts one or more complete blocks into `output`.
+   * `output` must have the same length as `input` and may be the same buffer as `input`.
+   */
+  encrypt(input: Uint8Array, output: Uint8Array): Uint8Array;
+  /**
+   * Decrypts one or more complete blocks into `output`.
+   * `output` must have the same length as `input` and may be the same buffer as `input`.
+   */
+  decrypt(input: Uint8Array, output: Uint8Array): Uint8Array;
 }
 
 export interface ModeComponent<Name extends string = string> extends Component<'mode', Name> {

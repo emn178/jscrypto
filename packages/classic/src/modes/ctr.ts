@@ -5,28 +5,28 @@ export const ctr: ModeComponent<'CTR'> = {
   name: 'CTR',
   requiresPadding: false,
   getIvSize: (cipher) => cipher.blockSize,
-  createEncryptor({ cipher, iv }) {
+  createEncryptor({ cipher, iv, options }) {
     assertIv(cipher.blockSize, iv, 'CTR');
-    return createCtrTransform(cipher, iv);
+    return createCtrTransform(cipher, iv, getInplace(options));
   },
-  createDecryptor({ cipher, iv }) {
+  createDecryptor({ cipher, iv, options }) {
     assertIv(cipher.blockSize, iv, 'CTR');
-    return createCtrTransform(cipher, iv);
+    return createCtrTransform(cipher, iv, getInplace(options));
   },
 };
 
-function createCtrTransform(cipher: BlockCipher, iv: Uint8Array): Transform {
+function createCtrTransform(cipher: BlockCipher, iv: Uint8Array, inplace: boolean): Transform {
   const counter = iv.slice();
   let keystream: Uint8Array = new Uint8Array(cipher.blockSize);
   let position = cipher.blockSize;
 
   return {
     process(input) {
-      const output = new Uint8Array(input.length);
+      const output = inplace ? input : new Uint8Array(input.length);
 
       for (let i = 0; i < input.length; i++) {
         if (position === cipher.blockSize) {
-          keystream = cipher.encryptBlock(counter);
+          cipher.encrypt(counter, keystream);
           incrementCounter(counter);
           position = 0;
         }
@@ -51,4 +51,8 @@ function incrementCounter(counter: Uint8Array): void {
       return;
     }
   }
+}
+
+function getInplace(options: unknown): boolean {
+  return typeof options === 'object' && options !== null && 'inplace' in options && options.inplace === true;
 }
