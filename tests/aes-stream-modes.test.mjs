@@ -56,17 +56,17 @@ for (const [modeName, mode] of [
   ['CFB', cfb],
   ['OFB', ofb],
 ]) {
-  test(`AES-256-${modeName} can process in place`, () => {
+  test(`AES-256-${modeName} can mutate input buffers`, () => {
     const input = textToBytes('abc');
     const original = input.slice();
     const cipher = aes.create(key);
-    const encryptor = mode.createEncryptor({ cipher, iv, options: { inplace: true } });
+    const encryptor = mode.createEncryptor({ cipher, iv, options: { mutableInput: true } });
     const ciphertext = encryptor.process(input);
 
     assert.equal(ciphertext, input);
     assert.notDeepEqual(ciphertext, original);
 
-    const decryptor = mode.createDecryptor({ cipher, iv, options: { inplace: true } });
+    const decryptor = mode.createDecryptor({ cipher, iv, options: { mutableInput: true } });
     const decrypted = decryptor.process(ciphertext);
 
     assert.equal(decrypted, ciphertext);
@@ -109,7 +109,7 @@ test('AES-256-CTR handles data longer than one block', () => {
   assert.equal(bytesToText(decrypted), bytesToText(input));
 });
 
-test('AES-256-CTR can process in place through the registry facade', () => {
+test('AES-256-CTR can mutate input buffers through the registry facade', () => {
   const registry = createRegistry()
     .use(aes)
     .use(ctr)
@@ -122,7 +122,7 @@ test('AES-256-CTR can process in place through the registry facade', () => {
     padding: 'NoPadding',
     key,
     iv,
-    inplace: true,
+    mutableInput: true,
   });
   const ciphertext = encryptor.process(input);
   assert.deepEqual(encryptor.finalize(), new Uint8Array());
@@ -136,7 +136,7 @@ test('AES-256-CTR can process in place through the registry facade', () => {
     padding: 'NoPadding',
     key,
     iv,
-    inplace: true,
+    mutableInput: true,
   });
   const decrypted = decryptor.process(ciphertext);
   assert.deepEqual(decryptor.finalize(), new Uint8Array());

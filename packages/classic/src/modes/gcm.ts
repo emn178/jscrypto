@@ -13,10 +13,10 @@ export const gcm: ModeComponent<'GCM'> = {
   requiresPadding: false,
   getIvSize: () => 0,
   createEncryptor({ cipher, iv, options }) {
-    return createGcmEncryptor(cipher, getNonce(iv, options), getAad(options), getTagLength(options));
+    return createGcmEncryptor(cipher, getNonce(iv, options), getAad(options), getTagLength(options), getMutableInput(options));
   },
   createDecryptor({ cipher, iv, options }) {
-    return createGcmDecryptor(cipher, getNonce(iv, options), getAad(options), getTagLength(options), getTag(options));
+    return createGcmDecryptor(cipher, getNonce(iv, options), getAad(options), getTagLength(options), getTag(options), getMutableInput(options));
   },
 };
 
@@ -25,7 +25,13 @@ const DEFAULT_TAG_LENGTH = 16;
 const R_WORD = 0xe1000000;
 const GHASH_WINDOW_BITS = 8;
 
-function createGcmEncryptor(cipher: BlockCipher, nonce: Uint8Array, aad: Uint8Array, tagLength: number): Transform {
+function createGcmEncryptor(
+  cipher: BlockCipher,
+  nonce: Uint8Array,
+  aad: Uint8Array,
+  tagLength: number,
+  mutableInput: boolean,
+): Transform {
   assertGcmCipher(cipher);
   const auth = createGhash(encryptRawBlock(cipher, new Uint8Array(BLOCK_SIZE)));
   auth.updateFinal(aad);
@@ -39,11 +45,11 @@ function createGcmEncryptor(cipher: BlockCipher, nonce: Uint8Array, aad: Uint8Ar
   let ciphertextLength = 0;
   let pendingPlaintext = new Uint8Array(0);
 
-  function encryptPlaintext(input: Uint8Array, final = false): Uint8Array {
+  function encryptPlaintext(input: Uint8Array, final = false, output?: Uint8Array): Uint8Array {
     if (input.length === 0) {
       return new Uint8Array(0);
     }
-    const ciphertext = xor(input);
+    const ciphertext = xor(input, output);
     if (final) {
       auth.updateFinal(ciphertext);
     } else {
@@ -55,20 +61,21 @@ function createGcmEncryptor(cipher: BlockCipher, nonce: Uint8Array, aad: Uint8Ar
 
   return {
     process(input) {
-      const data = pendingPlaintext.length === 0 ? input : concatBytes(pendingPlaintext, input);
-      const fullLength = data.length - (data.length % BLOCK_SIZE);
-      if (fullLength === 0) {
-        pendingPlaintext = data.slice();
+      if (pendingPlaintext.length) {
+        input = concatBytes(pendingPlaintext, input);
+      }
+      const fullLength = input.length - (input.length % BLOCK_SIZE);
+      pendingPlaintext = fullLength === input.length ? new Uint8Array(0) : input.slice(fullLength);
+      if (!fullLength) {
         return new Uint8Array(0);
       }
-
-      pendingPlaintext = fullLength === data.length ? new Uint8Array(0) : data.slice(fullLength);
-      return encryptPlaintext(data.subarray(0, fullLength));
+      const fullInput = input.subarray(0, fullLength);
+      return encryptPlaintext(fullInput, false, mutableInput ? fullInput : undefined);
     },
 
     finalize(input = new Uint8Array(0)) {
       const ciphertext = input.length === 0 ? new Uint8Array(0) : this.process(input);
-      const finalCiphertext = encryptPlaintext(pendingPlaintext, true);
+      const finalCiphertext = encryptPlaintext(pendingPlaintext, true, mutableInput ? pendingPlaintext : undefined);
       pendingPlaintext = new Uint8Array(0);
       const tag = createTag(auth, tagMask, aad.length, ciphertextLength, tagLength);
       return concatBytes(ciphertext, finalCiphertext, tag);
@@ -82,6 +89,7 @@ function createGcmDecryptor(
   aad: Uint8Array,
   tagLength: number,
   detachedTag?: Uint8Array,
+  mutableInput = false,
 ): Transform {
   assertGcmCipher(cipher);
   const h = encryptRawBlock(cipher, new Uint8Array(BLOCK_SIZE));
@@ -120,7 +128,7 @@ function createGcmDecryptor(
 
       const counter = j0.slice();
       incrementCounter(counter);
-      const plaintext = createCounterXor(cipher, counter)(ciphertext);
+      const plaintext = createCounterXor(cipher, counter)(ciphertext, mutableInput ? ciphertext : undefined);
       pending = new Uint8Array(0);
       return plaintext;
     },
@@ -209,9 +217,9 @@ function createInitialCounter(h: Uint8Array, nonce: Uint8Array): Uint8Array {
   return auth.digest(0, nonce.length);
 }
 
-function createCounterXor(cipher: BlockCipher, counter: Uint8Array): (input: Uint8Array) => Uint8Array {
-  return (input) => {
-    const output = new Uint8Array(input.length);
+function createCounterXor(cipher: BlockCipher, counter: Uint8Array): (input: Uint8Array, output?: Uint8Array) => Uint8Array {
+  return (input, target) => {
+    const output = target ?? new Uint8Array(input.length);
     if (input.length !== 0) {
       const blocks = Math.ceil(input.length / BLOCK_SIZE);
       const keystream = new Uint8Array(blocks * BLOCK_SIZE);
@@ -441,6 +449,13 @@ function getTagLength(options: unknown): number {
 
 function getOptions(options: unknown): Record<string, unknown> {
   return typeof options === 'object' && options !== null ? options as Record<string, unknown> : {};
+}
+
+function getMutableInput(options: unknown): boolean {
+  if (typeof options !== 'object' || options === null) {
+    return false;
+  }
+  return 'mutableInput' in options && options.mutableInput === true;
 }
 
 function assertGcmCipher(cipher: BlockCipher): void {

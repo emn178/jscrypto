@@ -85,6 +85,46 @@ test('AES-GCM streams encryption and verifies before releasing plaintext', () =>
   assert.equal(bytesToText(decryptor.finalize(ciphertext.subarray(11))), 'hello gcm streaming');
 });
 
+test('AES-GCM can mutate input buffers for full blocks', () => {
+  const registry = createAesGcmRegistry();
+  const key = hexToBytes('000102030405060708090a0b0c0d0e0f');
+  const nonce = hexToBytes('101112131415161718191a1b');
+  const plaintext = textToBytes('0123456789abcdef0123456789abcdef');
+  const expectedPlaintext = plaintext.slice();
+  const encryptor = registry.createEncryptor({ cipher: 'AES', mode: 'GCM', key, nonce, mutableInput: true });
+
+  const ciphertext = encryptor.process(plaintext);
+  assert.equal(ciphertext.buffer, plaintext.buffer);
+  assert.notDeepEqual(plaintext, expectedPlaintext);
+
+  const sealed = concatBytes(ciphertext, encryptor.finalize());
+  const decrypted = registry.decrypt({ cipher: 'AES', mode: 'GCM', key, nonce, ciphertext: sealed });
+  assert.deepEqual(decrypted, expectedPlaintext);
+
+  const sealedCopy = sealed.slice();
+  const decryptor = gcm.createDecryptor({ cipher: createAesCipher(key), iv: nonce, options: { mutableInput: true } });
+  const mutablePlaintext = decryptor.finalize(sealedCopy);
+  assert.equal(mutablePlaintext.buffer, sealedCopy.buffer);
+  assert.deepEqual(mutablePlaintext, expectedPlaintext);
+});
+
+test('AES-GCM streams with mutable input after a pending partial chunk', () => {
+  const registry = createAesGcmRegistry();
+  const key = hexToBytes('000102030405060708090a0b0c0d0e0f');
+  const nonce = hexToBytes('101112131415161718191a1b');
+  const plaintext = textToBytes('pending block then full block data');
+  const expected = registry.encrypt({ cipher: 'AES', mode: 'GCM', key, nonce, plaintext });
+  const encryptor = registry.createEncryptor({ cipher: 'AES', mode: 'GCM', key, nonce, mutableInput: true });
+
+  const ciphertext = concatBytes(
+    encryptor.process(plaintext.subarray(0, 7)),
+    encryptor.process(plaintext.subarray(7, 29)),
+    encryptor.finalize(plaintext.subarray(29)),
+  );
+
+  assert.deepEqual(ciphertext, expected);
+});
+
 test('AES-GCM supports detached tags and shorter tag lengths', () => {
   const registry = createAesGcmRegistry();
   const key = hexToBytes('000102030405060708090a0b0c0d0e0f');

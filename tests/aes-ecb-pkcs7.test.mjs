@@ -41,18 +41,18 @@ test('AES-256-ECB streams encryption and decryption with Pkcs7', () => {
   assert.equal(bytesToText(decrypted), 'abc');
 });
 
-test('AES-256-ECB mode can process in place', () => {
+test('AES-256-ECB mode can mutate input buffers', () => {
   const key = hexToBytes('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
   const input = textToBytes('1234567890123456');
   const original = input.slice();
   const cipher = createAesCipher(key);
-  const encryptor = ecb.createEncryptor({ cipher, options: { inplace: true } });
+  const encryptor = ecb.createEncryptor({ cipher, options: { mutableInput: true } });
   const ciphertext = encryptor.process(input);
 
   assert.equal(ciphertext, input);
   assert.notDeepEqual(ciphertext, original);
 
-  const decryptor = ecb.createDecryptor({ cipher, options: { inplace: true } });
+  const decryptor = ecb.createDecryptor({ cipher, options: { mutableInput: true } });
   const decrypted = decryptor.process(ciphertext);
 
   assert.equal(decrypted, ciphertext);

@@ -65,7 +65,7 @@ function runSuite(bits, direction) {
     return checksumBytes(output);
   });
 
-  const jscryptoInPlace = measure(`${bits} jscrypto in-place ${direction}`, options.warmupBlocks, options.blocks, (blocks) => {
+  const jscryptoMutable = measure(`${bits} jscrypto mutable ${direction}`, options.warmupBlocks, options.blocks, (blocks) => {
     const source = input.slice(0, blocks * BLOCK_SIZE);
     const output = direction === 'encrypt'
       ? encryptJscryptoBlocks(jscryptoCipher, source, source)
@@ -103,7 +103,7 @@ function runSuite(bits, direction) {
     aes: `AES-${bits}`,
     direction,
     jscrypto,
-    jscryptoInPlace,
+    jscryptoMutable,
     cryptojs,
     noble,
     node,
@@ -241,7 +241,7 @@ function printTable(rows) {
   for (const row of rows) {
     console.log(`${row.aes} ${row.direction}`);
     // console.log(`  jscrypto          ${formatNumber(row.jscrypto.opsPerSecond).padStart(12)} ops/s  ${formatNumber(row.jscrypto.bytesPerSecond / 1024 / 1024).padStart(5)} MiB/s`);
-    console.log(`  jscrypto inplace  ${formatNumber(row.jscryptoInPlace.opsPerSecond).padStart(12)} ops/s  ${formatNumber(row.jscryptoInPlace.bytesPerSecond / 1024 / 1024).padStart(5)} MiB/s`);
+    console.log(`  jscrypto mutable  ${formatNumber(row.jscryptoMutable.opsPerSecond).padStart(12)} ops/s  ${formatNumber(row.jscryptoMutable.bytesPerSecond / 1024 / 1024).padStart(5)} MiB/s`);
     // console.log(`  crypto-js         ${formatNumber(row.cryptojs.opsPerSecond).padStart(12)} ops/s  ${formatNumber(row.cryptojs.bytesPerSecond / 1024 / 1024).padStart(5)} MiB/s`);
     console.log(`  noble             ${formatNumber(row.noble.opsPerSecond).padStart(12)} ops/s  ${formatNumber(row.noble.bytesPerSecond / 1024 / 1024).padStart(5)} MiB/s`);
     // console.log(`  node              ${formatNumber(row.node.opsPerSecond).padStart(12)} ops/s  ${formatNumber(row.node.bytesPerSecond / 1024 / 1024).padStart(5)} MiB/s`);
@@ -252,7 +252,7 @@ function printTable(rows) {
   const checksum = rows.reduce(
     (acc, row) => (
       acc + row.jscrypto.checksum + row.cryptojs.checksum + row.noble.checksum + row.node.checksum
-      + row.jscryptoInPlace.checksum
+      + row.jscryptoMutable.checksum
     ) >>> 0,
     0,
   );

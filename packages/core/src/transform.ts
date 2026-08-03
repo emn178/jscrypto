@@ -10,9 +10,9 @@ export interface CreateTransformOptions {
   iv?: Uint8Array;
   /**
    * Allows modes to reuse or mutate input buffers when they can do so safely.
-   * Modes may ignore this optimization hint.
-   */
-  inplace?: boolean;
+   * This is an optimization hint; modes may ignore it.
+  */
+  mutableInput?: boolean;
   [option: string]: unknown;
 }
 

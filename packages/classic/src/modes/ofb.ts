@@ -7,22 +7,22 @@ export const ofb: ModeComponent<'OFB'> = {
   getIvSize: (cipher) => cipher.blockSize,
   createEncryptor({ cipher, iv, options }) {
     assertIv(cipher.blockSize, iv, 'OFB');
-    return createOfbTransform(cipher, iv, getInplace(options));
+    return createOfbTransform(cipher, iv, getMutableInput(options));
   },
   createDecryptor({ cipher, iv, options }) {
     assertIv(cipher.blockSize, iv, 'OFB');
-    return createOfbTransform(cipher, iv, getInplace(options));
+    return createOfbTransform(cipher, iv, getMutableInput(options));
   },
 };
 
-function createOfbTransform(cipher: BlockCipher, iv: Uint8Array, inplace: boolean): Transform {
+function createOfbTransform(cipher: BlockCipher, iv: Uint8Array, mutableInput: boolean): Transform {
   let feedback: Uint8Array = iv.slice();
   let keystream: Uint8Array = new Uint8Array(cipher.blockSize);
   let position = cipher.blockSize;
 
   return {
     process(input) {
-      const output = inplace ? input : new Uint8Array(input.length);
+      const output = mutableInput ? input : new Uint8Array(input.length);
 
       for (let i = 0; i < input.length; i++) {
         if (position === cipher.blockSize) {
@@ -44,6 +44,9 @@ function createOfbTransform(cipher: BlockCipher, iv: Uint8Array, inplace: boolea
   };
 }
 
-function getInplace(options: unknown): boolean {
-  return typeof options === 'object' && options !== null && 'inplace' in options && options.inplace === true;
+function getMutableInput(options: unknown): boolean {
+  if (typeof options !== 'object' || options === null) {
+    return false;
+  }
+  return 'mutableInput' in options && options.mutableInput === true;
 }

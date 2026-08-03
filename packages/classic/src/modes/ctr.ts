@@ -7,22 +7,22 @@ export const ctr: ModeComponent<'CTR'> = {
   getIvSize: (cipher) => cipher.blockSize,
   createEncryptor({ cipher, iv, options }) {
     assertIv(cipher.blockSize, iv, 'CTR');
-    return createCtrTransform(cipher, iv, getInplace(options));
+    return createCtrTransform(cipher, iv, getMutableInput(options));
   },
   createDecryptor({ cipher, iv, options }) {
     assertIv(cipher.blockSize, iv, 'CTR');
-    return createCtrTransform(cipher, iv, getInplace(options));
+    return createCtrTransform(cipher, iv, getMutableInput(options));
   },
 };
 
-function createCtrTransform(cipher: BlockCipher, iv: Uint8Array, inplace: boolean): Transform {
+function createCtrTransform(cipher: BlockCipher, iv: Uint8Array, mutableInput: boolean): Transform {
   const counter = iv.slice();
   let keystream: Uint8Array = new Uint8Array(cipher.blockSize);
   let position = cipher.blockSize;
 
   return {
     process(input) {
-      const output = inplace ? input : new Uint8Array(input.length);
+      const output = mutableInput ? input : new Uint8Array(input.length);
 
       for (let i = 0; i < input.length; i++) {
         if (position === cipher.blockSize) {
@@ -53,6 +53,9 @@ function incrementCounter(counter: Uint8Array): void {
   }
 }
 
-function getInplace(options: unknown): boolean {
-  return typeof options === 'object' && options !== null && 'inplace' in options && options.inplace === true;
+function getMutableInput(options: unknown): boolean {
+  if (typeof options !== 'object' || options === null) {
+    return false;
+  }
+  return 'mutableInput' in options && options.mutableInput === true;
 }

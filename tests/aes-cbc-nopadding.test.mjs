@@ -82,19 +82,19 @@ test('AES-256-CBC streams encryption and decryption with NoPadding', () => {
   assert.equal(bytesToText(decrypted), '1234567890123456');
 });
 
-test('AES-256-CBC mode can process in place', () => {
+test('AES-256-CBC mode can mutate input buffers', () => {
   const key = hexToBytes('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
   const iv = hexToBytes('000102030405060708090a0b0c0d0e0f');
   const input = textToBytes('1234567890123456');
   const original = input.slice();
   const cipher = createAesCipher(key);
-  const encryptor = cbc.createEncryptor({ cipher, iv, options: { inplace: true } });
+  const encryptor = cbc.createEncryptor({ cipher, iv, options: { mutableInput: true } });
   const ciphertext = encryptor.process(input);
 
   assert.equal(ciphertext, input);
   assert.equal(bytesToHex(ciphertext), 'b9b4ff87297a91139a3eecdcecfd8fdf');
 
-  const decryptor = cbc.createDecryptor({ cipher, iv, options: { inplace: true } });
+  const decryptor = cbc.createDecryptor({ cipher, iv, options: { mutableInput: true } });
   const decrypted = decryptor.process(ciphertext);
 
   assert.equal(decrypted, ciphertext);
