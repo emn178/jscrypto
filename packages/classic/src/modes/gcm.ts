@@ -28,8 +28,7 @@ const GHASH_WINDOW_BITS = 8;
 function createGcmEncryptor(cipher: BlockCipher, nonce: Uint8Array, aad: Uint8Array, tagLength: number): Transform {
   assertGcmCipher(cipher);
   const auth = createGhash(encryptRawBlock(cipher, new Uint8Array(BLOCK_SIZE)));
-  auth.update(aad);
-  auth.pad();
+  auth.updateFinal(aad);
 
   const j0 = createInitialCounter(auth.h, nonce);
   const tagMask = encryptRawBlock(cipher, j0);
@@ -38,19 +37,41 @@ function createGcmEncryptor(cipher: BlockCipher, nonce: Uint8Array, aad: Uint8Ar
   const xor = createCounterXor(cipher, counter);
 
   let ciphertextLength = 0;
+  let pendingPlaintext = new Uint8Array(0);
+
+  function encryptPlaintext(input: Uint8Array, final = false): Uint8Array {
+    if (input.length === 0) {
+      return new Uint8Array(0);
+    }
+    const ciphertext = xor(input);
+    if (final) {
+      auth.updateFinal(ciphertext);
+    } else {
+      auth.update(ciphertext);
+    }
+    ciphertextLength += ciphertext.length;
+    return ciphertext;
+  }
 
   return {
     process(input) {
-      const ciphertext = xor(input);
-      auth.update(ciphertext);
-      ciphertextLength += ciphertext.length;
-      return ciphertext;
+      const data = pendingPlaintext.length === 0 ? input : concatBytes(pendingPlaintext, input);
+      const fullLength = data.length - (data.length % BLOCK_SIZE);
+      if (fullLength === 0) {
+        pendingPlaintext = data.slice();
+        return new Uint8Array(0);
+      }
+
+      pendingPlaintext = fullLength === data.length ? new Uint8Array(0) : data.slice(fullLength);
+      return encryptPlaintext(data.subarray(0, fullLength));
     },
 
     finalize(input = new Uint8Array(0)) {
       const ciphertext = input.length === 0 ? new Uint8Array(0) : this.process(input);
+      const finalCiphertext = encryptPlaintext(pendingPlaintext, true);
+      pendingPlaintext = new Uint8Array(0);
       const tag = createTag(auth, tagMask, aad.length, ciphertextLength, tagLength);
-      return concatBytes(ciphertext, tag);
+      return concatBytes(ciphertext, finalCiphertext, tag);
     },
   };
 }
@@ -90,9 +111,8 @@ function createGcmDecryptor(
       }
 
       const auth = createGhash(h);
-      auth.update(aad);
-      auth.pad();
-      auth.update(ciphertext);
+      auth.updateFinal(aad);
+      auth.updateFinal(ciphertext);
       const expectedTag = createTag(auth, tagMask, aad.length, ciphertext.length, tagLength);
       if (!equalBytes(expectedTag, tag)) {
         throw new Error('GCM authentication failed.');
@@ -110,7 +130,7 @@ function createGcmDecryptor(
 interface Ghash {
   readonly h: Uint8Array;
   update(input: Uint8Array): void;
-  pad(): void;
+  updateFinal(input: Uint8Array): void;
   digest(aadLength: number, ciphertextLength: number): Uint8Array;
 }
 
@@ -118,7 +138,6 @@ function createGhash(h: Uint8Array): Ghash {
   const table = createGhashTable(blockToWords(h), GHASH_WINDOW_BITS);
   const windowSize = 1 << GHASH_WINDOW_BITS;
   let state = createZeroWords();
-  let pending = new Uint8Array(0);
 
   function updateWords(w0: number, w1: number, w2: number, w3: number): void {
     state = multiplyGf128Window([
@@ -151,37 +170,22 @@ function createGhash(h: Uint8Array): Ghash {
     h,
 
     update(input) {
-      let offset = 0;
-      if (pending.length !== 0) {
-        const needed = BLOCK_SIZE - pending.length;
-        if (input.length < needed) {
-          pending = concatBytes(pending, input);
-          return;
-        }
-        const block = new Uint8Array(BLOCK_SIZE);
-        block.set(pending);
-        block.set(input.subarray(0, needed), pending.length);
-        updateBlock(block, 0);
-        pending = new Uint8Array(0);
-        offset = needed;
-      }
-
-      const processLength = input.length - ((input.length - offset) % BLOCK_SIZE);
-      for (; offset < processLength; offset += BLOCK_SIZE) {
+      for (let offset = 0; offset < input.length; offset += BLOCK_SIZE) {
         updateBlock(input, offset);
       }
-      pending = offset === input.length ? new Uint8Array(0) : input.slice(offset);
     },
 
-    pad() {
-      if (pending.length !== 0) {
-        updatePartialBlock(pending);
-        pending = new Uint8Array(0);
+    updateFinal(input) {
+      const fullLength = input.length - (input.length % BLOCK_SIZE);
+      for (let offset = 0; offset < fullLength; offset += BLOCK_SIZE) {
+        updateBlock(input, offset);
+      }
+      if (fullLength !== input.length) {
+        updatePartialBlock(input.subarray(fullLength));
       }
     },
 
     digest(aadLength, ciphertextLength) {
-      this.pad();
       updateBlock(createLengthBlock(aadLength, ciphertextLength), 0);
       return wordsToBlock(state);
     },
@@ -201,32 +205,15 @@ function createInitialCounter(h: Uint8Array, nonce: Uint8Array): Uint8Array {
   }
 
   const auth = createGhash(h);
-  auth.update(nonce);
+  auth.updateFinal(nonce);
   return auth.digest(0, nonce.length);
 }
 
 function createCounterXor(cipher: BlockCipher, counter: Uint8Array): (input: Uint8Array) => Uint8Array {
-  let pendingKeystream: Uint8Array = new Uint8Array(0);
-  let pendingOffset = 0;
-
   return (input) => {
     const output = new Uint8Array(input.length);
-    let inputOffset = 0;
-
-    while (pendingOffset < pendingKeystream.length && inputOffset < input.length) {
-      output[inputOffset] = input[inputOffset] ^ pendingKeystream[pendingOffset];
-      inputOffset++;
-      pendingOffset++;
-    }
-
-    if (pendingOffset === pendingKeystream.length) {
-      pendingKeystream = new Uint8Array(0);
-      pendingOffset = 0;
-    }
-
-    const remaining = input.length - inputOffset;
-    if (remaining !== 0) {
-      const blocks = Math.ceil(remaining / BLOCK_SIZE);
+    if (input.length !== 0) {
+      const blocks = Math.ceil(input.length / BLOCK_SIZE);
       const keystream = new Uint8Array(blocks * BLOCK_SIZE);
       for (let offset = 0; offset < keystream.length; offset += BLOCK_SIZE) {
         keystream.set(counter, offset);
@@ -234,14 +221,8 @@ function createCounterXor(cipher: BlockCipher, counter: Uint8Array): (input: Uin
       }
 
       cipher.encrypt(keystream, keystream);
-      for (let i = 0; i < remaining; i++) {
-        output[inputOffset + i] = input[inputOffset + i] ^ keystream[i];
-      }
-
-      const used = remaining % BLOCK_SIZE;
-      if (used !== 0) {
-        pendingKeystream = keystream.slice(remaining - used, remaining - used + BLOCK_SIZE);
-        pendingOffset = used;
+      for (let i = 0; i < input.length; i++) {
+        output[i] = input[i] ^ keystream[i];
       }
     }
 
