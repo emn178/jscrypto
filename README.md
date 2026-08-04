@@ -14,6 +14,7 @@ This project is not affiliated with Node.js `crypto`, the Web Crypto API, or npm
 | --- | --- |
 | [`@jscrypto/core`](https://github.com/emn178/jscrypto/tree/main/packages/core) | Registry, component contracts, transform helpers, byte helpers, and shared errors. |
 | [`@jscrypto/classic`](https://github.com/emn178/jscrypto/tree/main/packages/classic) | AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, OFB, ECB, GCM, classic paddings, PBKDF2, EvpKDF, hashes, and OpenSSL `Salted__` formatting. |
+| [`@jscrypto/chacha20`](https://github.com/emn178/jscrypto-chacha20) | ChaCha20 block cipher components for `@jscrypto/core` registries. |
 | [`@jscrypto/speck`](https://github.com/emn178/jscrypto-speck) | SPECK block cipher components for `@jscrypto/core` registries. |
 | [`@jscrypto/hkdf`](https://github.com/emn178/jscrypto-hkdf) | RFC 5869 HKDF, HKDF-Extract, and HKDF-Expand KDF components. |
 
