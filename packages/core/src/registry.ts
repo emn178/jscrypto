@@ -6,8 +6,6 @@ import type {
   DerivedKeyCipherFacade,
 } from './derived-key.js';
 import { createDerivedKeyCipher, derive } from './derived-key.js';
-import type { CreatePassphraseCipherOptions, PassphraseCipherFacade } from './passphrase.js';
-import { createPassphraseCipher } from './passphrase.js';
 import type { CipherOperationOptions } from './operation-options.js';
 import { assertNoReservedOperationOptions } from './operation-options.js';
 import type { CreateTransformOptions } from './transform.js';
@@ -35,10 +33,6 @@ export interface Registry {
   createCipher(options: CreateTransformOptions): CipherFacade;
   derive(options: DeriveOptions): Uint8Array;
   createDerivedKeyCipher(options: CreateDerivedKeyCipherOptions): DerivedKeyCipherFacade;
-  /**
-   * @deprecated Use createDerivedKeyCipher({ ..., kdf: { ..., input } }) instead.
-   */
-  createPassphraseCipher(options: CreatePassphraseCipherOptions): PassphraseCipherFacade;
   encrypt(options: CreateTransformOptions & { plaintext: Uint8Array }): Uint8Array;
   decrypt(options: CreateTransformOptions & { ciphertext: Uint8Array }): Uint8Array;
   createEncryptor(options: CreateTransformOptions): Transform;
@@ -132,10 +126,6 @@ export function createRegistry(components: Iterable<AnyComponent> = []): Registr
 
     createDerivedKeyCipher(options) {
       return createDerivedKeyCipher(registry, options);
-    },
-
-    createPassphraseCipher(options) {
-      return createPassphraseCipher(registry, options);
     },
 
     encrypt(options) {

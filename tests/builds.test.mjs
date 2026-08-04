@@ -18,7 +18,7 @@ test('CommonJS builds can be required', () => {
   assert.equal(typeof core.createRegistry, 'function');
   assert.equal(typeof classic.registry.createCipher, 'function');
   assert.equal(hashes.classicHashesPreset.kind, 'preset');
-  assert.equal(typeof hashes.registerClassicHashes, 'function');
+  assert.equal(typeof hashes.registerClassicHashes, 'undefined');
 });
 
 test('package exports route Node imports to the native classic build', async () => {
@@ -48,7 +48,7 @@ test('browser IIFE builds expose globals', async () => {
   assert.equal(typeof context.jscryptoClassic.createClassicRegistry, 'function');
   assert.equal(typeof context.jscryptoClassic.registry.createCipher, 'function');
   assert.equal(context.jscryptoClassicHashes.classicHashesPreset.kind, 'preset');
-  assert.equal(typeof context.jscryptoClassicHashes.registerClassicHashes, 'function');
+  assert.equal(typeof context.jscryptoClassicHashes.registerClassicHashes, 'undefined');
   context.jscryptoClassic.registry.use(context.jscryptoClassicHashes.classicHashesPreset);
   assert.equal(context.jscryptoClassic.registry.getHash('SHA256').name, 'SHA256');
 

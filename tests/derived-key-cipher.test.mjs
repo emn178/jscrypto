@@ -55,73 +55,6 @@ test('registry.derive resolves hashes and missing components', () => {
   });
 });
 
-test('createDerivedKeyCipher matches createPassphraseCipher for OpenSSL EvpKDF', () => {
-  const salt = hexToBytes('0001020304050607');
-  const passphrase = registry.createPassphraseCipher({
-    cipher: 'AES',
-    mode: 'CBC',
-    padding: 'Pkcs7',
-    passphrase: 'secret',
-    kdf: {
-      name: 'EvpKDF',
-      iterations: 1,
-      hash: 'MD5',
-    },
-    format: 'OpenSSL',
-    salt,
-  });
-  const derived = registry.createDerivedKeyCipher({
-    cipher: 'AES',
-    mode: 'CBC',
-    padding: 'Pkcs7',
-    kdf: {
-      name: 'EvpKDF',
-      iterations: 1,
-      hash: 'MD5',
-      input: 'secret',
-      salt,
-    },
-    format: 'OpenSSL',
-  });
-
-  const plaintext = textToBytes('abc');
-  assert.equal(bytesToHex(derived.encrypt(plaintext)), bytesToHex(passphrase.encrypt(plaintext)));
-  assert.equal(bytesToText(derived.decrypt(derived.encrypt(plaintext))), 'abc');
-});
-
-test('createDerivedKeyCipher matches createPassphraseCipher for PBKDF2', () => {
-  const salt = hexToBytes('0102030405060708');
-  const passphrase = registry.createPassphraseCipher({
-    cipher: 'AES',
-    mode: 'CBC',
-    padding: 'Pkcs7',
-    passphrase: 'secret',
-    kdf: {
-      name: 'PBKDF2',
-      iterations: 1000,
-      hash: 'SHA256',
-    },
-    format: 'OpenSSL',
-    salt,
-  });
-  const derived = registry.createDerivedKeyCipher({
-    cipher: 'AES',
-    mode: 'CBC',
-    padding: 'Pkcs7',
-    kdf: {
-      name: 'PBKDF2',
-      iterations: 1000,
-      hash: 'SHA256',
-      input: 'secret',
-      salt,
-    },
-    format: 'OpenSSL',
-  });
-
-  const plaintext = textToBytes('hello');
-  assert.equal(bytesToHex(derived.encrypt(plaintext)), bytesToHex(passphrase.encrypt(plaintext)));
-});
-
 test('createDerivedKeyCipher accepts OpenSSL format with explicit salt', () => {
   const salt = hexToBytes('0001020304050607');
   const cipher = registry.createDerivedKeyCipher({
@@ -605,54 +538,6 @@ test('createDerivedKeyCipher validates options and salt shapes', () => {
       hash: 'MD5',
     },
   }).createDecryptor().finalize(textToBytes('a')), /requires salt/);
-});
-
-test('createPassphraseCipher prefers kdf.input and kdf.salt when present', () => {
-  const salt = hexToBytes('0001020304050607');
-  const cipher = registry.createPassphraseCipher({
-    cipher: 'AES',
-    mode: 'CBC',
-    padding: 'Pkcs7',
-    passphrase: 'ignored',
-    salt: hexToBytes('ffffffffffffffff'),
-    kdf: {
-      name: 'EvpKDF',
-      input: 'secret',
-      salt,
-      iterations: 1,
-      hash: 'MD5',
-    },
-    format: 'OpenSSL',
-  });
-
-  assert.equal(
-    bytesToHex(cipher.encrypt(textToBytes('abc'))),
-    '53616c7465645f5f00010203040506074c87a9e77ccd8995cc1a9bd212d183c6',
-  );
-});
-
-test('createPassphraseCipher preserves no-format random salt encrypt and empty-salt decrypt', () => {
-  const cipher = registry.createPassphraseCipher({
-    cipher: 'AES',
-    mode: 'CBC',
-    padding: 'Pkcs7',
-    passphrase: 'secret',
-    kdf: 'EvpKDF',
-  });
-  const encrypted = cipher.encrypt(textToBytes('abc'));
-  assert.ok(encrypted.length > 0);
-  // Legacy decrypt without format uses an empty salt, matching previous behavior.
-  assert.throws(() => cipher.decrypt(encrypted));
-
-  const sized = registry.createPassphraseCipher({
-    cipher: 'AES',
-    mode: 'CBC',
-    padding: 'Pkcs7',
-    passphrase: 'secret',
-    kdf: 'EvpKDF',
-    saltSize: 8,
-  });
-  assert.ok(sized.encrypt(textToBytes('abc')).length > 0);
 });
 
 test('KDF helpers require input', async () => {

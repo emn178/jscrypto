@@ -7,19 +7,19 @@ import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/byte
 
 registry.use(classicHashesPreset);
 
-test('passphrase cipher matches CryptoJS OpenSSL AES-CBC output with fixed salt', () => {
-  const cipher = registry.createPassphraseCipher({
+test('derived-key cipher matches CryptoJS OpenSSL AES-CBC output with fixed salt', () => {
+  const cipher = registry.createDerivedKeyCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',
-    passphrase: 'secret',
     kdf: {
       name: 'EvpKDF',
+      input: 'secret',
+      salt: hexToBytes('0001020304050607'),
       iterations: 1,
       hash: 'MD5',
     },
     format: 'OpenSSL',
-    salt: hexToBytes('0001020304050607'),
   });
 
   const encrypted = cipher.encrypt(textToBytes('abc'));
@@ -31,19 +31,19 @@ test('passphrase cipher matches CryptoJS OpenSSL AES-CBC output with fixed salt'
   assert.equal(bytesToText(cipher.decrypt(encrypted)), 'abc');
 });
 
-test('passphrase cipher supports PBKDF2 options', () => {
-  const cipher = registry.createPassphraseCipher({
+test('derived-key cipher supports PBKDF2 options', () => {
+  const cipher = registry.createDerivedKeyCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',
-    passphrase: 'secret',
     kdf: {
       name: 'PBKDF2',
+      input: 'secret',
+      salt: hexToBytes('0102030405060708'),
       iterations: 1000,
       hash: 'SHA256',
     },
     format: 'OpenSSL',
-    salt: hexToBytes('0102030405060708'),
   });
 
   const encrypted = cipher.encrypt(textToBytes('hello'));
@@ -52,33 +52,35 @@ test('passphrase cipher supports PBKDF2 options', () => {
   assert.equal(bytesToText(cipher.decrypt(encrypted)), 'hello');
 });
 
-test('passphrase cipher supports format shorthand', () => {
-  const cipher = registry.createPassphraseCipher({
+test('derived-key cipher supports format shorthand', () => {
+  const cipher = registry.createDerivedKeyCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',
-    passphrase: 'secret',
-    kdf: 'EvpKDF',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      salt: hexToBytes('0001020304050607'),
+    },
     format: 'OpenSSL',
-    salt: hexToBytes('0001020304050607'),
   });
 
   assert.equal(bytesToText(cipher.decrypt(cipher.encrypt(textToBytes('abc')))), 'abc');
 });
 
-test('passphrase cipher streams OpenSSL encryption output', () => {
-  const cipher = registry.createPassphraseCipher({
+test('derived-key cipher streams OpenSSL encryption output', () => {
+  const cipher = registry.createDerivedKeyCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',
-    passphrase: 'secret',
     kdf: {
       name: 'EvpKDF',
+      input: 'secret',
+      salt: hexToBytes('0001020304050607'),
       iterations: 1,
       hash: 'MD5',
     },
     format: 'OpenSSL',
-    salt: hexToBytes('0001020304050607'),
   });
   const encryptor = cipher.createEncryptor();
 
@@ -94,13 +96,16 @@ test('passphrase cipher streams OpenSSL encryption output', () => {
   );
 });
 
-test('passphrase cipher streams OpenSSL decryption input', () => {
-  const cipher = registry.createPassphraseCipher({
+test('derived-key cipher streams OpenSSL decryption input', () => {
+  const cipher = registry.createDerivedKeyCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',
-    passphrase: 'secret',
-    kdf: 'EvpKDF',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      hash: 'MD5',
+    },
     format: 'OpenSSL',
   });
   const encrypted = hexToBytes('53616c7465645f5f00010203040506074c87a9e77ccd8995cc1a9bd212d183c6');

@@ -4,7 +4,7 @@
 
 Classic cipher, mode, padding, KDF, and format components for `@jscrypto`.
 
-This package provides classic cipher, mode, padding, KDF, and format components. It is implemented without a runtime dependency on other crypto frameworks.
+This package provides classic cipher, mode, padding, KDF, and format components for `@jscrypto`.
 
 ## Install
 
@@ -29,6 +29,12 @@ const cipher = registry.createCipher({
 
 const ciphertext = cipher.encrypt(plaintext, { iv });
 const decrypted = cipher.decrypt(ciphertext, { iv });
+```
+
+For performance-sensitive paths, `mutableInput: true` lets modes reuse caller-owned input buffers when safe. Treat input passed with this option as consumed.
+
+```ts
+const ciphertext = cipher.encrypt(mutablePlaintext, { iv, mutableInput: true });
 ```
 
 ## Derived-Key Encryption
@@ -79,7 +85,7 @@ const cipher = registry.createDerivedKeyCipher({
 });
 ```
 
-OpenSSL format stores the salt in the `Salted__` envelope, so decrypt normally reads it from the ciphertext. `createPassphraseCipher(...)` remains available as a deprecated compatibility alias that preserves passphrase/OpenSSL convenience behavior.
+OpenSSL format stores the salt in the `Salted__` envelope, so decrypt normally reads it from the ciphertext.
 
 ## AES-GCM
 
@@ -120,9 +126,9 @@ const shortTagDecrypted = cipher.decrypt(shortTagSealed, { nonce, aad, tagLength
 
 ## Hash Compatibility
 
-`registry.use(classicHashesPreset)` registers MD5, SHA1, SHA224, SHA256, SHA384, SHA512, KECCAK512, deprecated SHA3, and RIPEMD160.
+`registry.use(classicHashesPreset)` registers MD5, SHA1, SHA224, SHA256, SHA384, SHA512, KECCAK512, and RIPEMD160.
 
-`SHA3` is kept as a deprecated legacy alias for Keccak-512. New code should use `KECCAK512`; a future NIST SHA3-512 component should use a distinct name.
+`KECCAK512` is Keccak-512. NIST SHA3-512 is not included yet and should use a distinct name if added later.
 
 ## Custom Registry
 

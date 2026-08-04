@@ -19,7 +19,6 @@ export const RESERVED_OPERATION_OPTION_KEYS = [
   'format',
   'keySize',
   'ivSize',
-  'passphrase',
   'saltSize',
 ] as const;
 

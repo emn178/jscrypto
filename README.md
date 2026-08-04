@@ -4,7 +4,7 @@
 
 Composable cryptography components for JavaScript and TypeScript.
 
-`@jscrypto` is a small Uint8Array-first framework for wiring ciphers, modes, paddings, KDFs, formats, hashes, and presets through one registry. The first release focuses on classic cipher/KDF/format behavior and is implemented without a runtime dependency on other crypto frameworks.
+`@jscrypto` is a small Uint8Array-first framework for wiring ciphers, modes, paddings, KDFs, formats, hashes, and presets through one registry.
 
 This project is not affiliated with Node.js `crypto`, the Web Crypto API, or npm.
 
@@ -76,6 +76,13 @@ const plaintext = concatBytes(
   decryptor.process(ciphertext.subarray(7)),
   decryptor.finalize(),
 );
+```
+
+For performance-sensitive paths, `mutableInput: true` lets modes reuse caller-owned input buffers when safe. Treat input passed with this option as consumed.
+
+```ts
+const mutable = plaintext.slice();
+const ciphertext = cipher.encrypt(mutable, { iv, mutableInput: true });
 ```
 
 ## Derived Keys
@@ -156,8 +163,6 @@ KDF salt can be supplied per operation through `{ salt }` or fixed on the facade
 
 If `keySize` is omitted, `createDerivedKeyCipher(...)` uses the selected cipher's largest declared key size. For AES this is 32 bytes. The selected mode contributes any derived IV length. For AES-CBC this means the default derived material is 48 bytes: 32 bytes of key plus 16 bytes of IV. AES-GCM derives key material only; pass a fresh nonce per operation.
 
-The older `createPassphraseCipher(...)` API remains available as a deprecated compatibility wrapper. It preserves the previous passphrase/OpenSSL convenience behavior, including random salt generation when needed.
-
 The derived-key API also supports streaming:
 
 ```ts
@@ -174,9 +179,9 @@ const encrypted = concatBytes(
 
 ## Hash Compatibility
 
-Built-in hashes are opt-in through `@jscrypto/classic/hashes`. `registry.use(classicHashesPreset)` registers MD5, SHA1, SHA224, SHA256, SHA384, SHA512, KECCAK512, deprecated SHA3, and RIPEMD160.
+Built-in hashes are opt-in through `@jscrypto/classic/hashes`. `registry.use(classicHashesPreset)` registers MD5, SHA1, SHA224, SHA256, SHA384, SHA512, KECCAK512, and RIPEMD160.
 
-`SHA3` is kept as a deprecated legacy alias for Keccak-512. New code should use `KECCAK512`. If NIST SHA3-512 is added later, it should be registered under a separate explicit name.
+`KECCAK512` is Keccak-512. NIST SHA3-512 is not included yet and should use a distinct name if added later.
 
 ## Stream Ciphers
 

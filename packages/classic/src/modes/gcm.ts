@@ -69,7 +69,7 @@ function createGcmEncryptor(
       if (!fullLength) {
         return new Uint8Array(0);
       }
-      const fullInput = input.subarray(0, fullLength);
+      const fullInput = pendingPlaintext.length ? input.subarray(0, fullLength) : input;
       return encryptPlaintext(fullInput, false, mutableInput ? fullInput : undefined);
     },
 
@@ -95,11 +95,11 @@ function createGcmDecryptor(
   const h = encryptRawBlock(cipher, new Uint8Array(BLOCK_SIZE));
   const j0 = createInitialCounter(h, nonce);
   const tagMask = encryptRawBlock(cipher, j0);
-  let pending: Uint8Array<ArrayBufferLike> = new Uint8Array(0);
+  let pendings: Uint8Array<ArrayBufferLike>[] = [];
 
   return {
     process(input) {
-      pending = pending.length === 0 ? input : concatBytes(pending, input);
+      pendings.push(input);
       return new Uint8Array(0);
     },
 
@@ -108,6 +108,11 @@ function createGcmDecryptor(
         this.process(input);
       }
 
+      const pending = pendings.length === 0
+        ? new Uint8Array(0)
+        : pendings.length === 1
+          ? pendings[0]
+          : concatBytes(...pendings);
       let ciphertext = pending;
       let tag = detachedTag;
       if (!tag) {
@@ -129,7 +134,7 @@ function createGcmDecryptor(
       const counter = j0.slice();
       incrementCounter(counter);
       const plaintext = createCounterXor(cipher, counter)(ciphertext, mutableInput ? ciphertext : undefined);
-      pending = new Uint8Array(0);
+      pendings = [];
       return plaintext;
     },
   };

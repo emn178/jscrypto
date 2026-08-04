@@ -27,10 +27,6 @@ export type {
   FormatOptions,
   KdfOptions,
 } from './derived-key.js';
-export type {
-  CreatePassphraseCipherOptions,
-  PassphraseCipherFacade,
-} from './passphrase.js';
 export type { CipherFacade, Registry } from './registry.js';
 export { createRegistry } from './registry.js';
 export type {

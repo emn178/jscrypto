@@ -45,10 +45,10 @@ Compatibility details:
 - Strict unpad validation.
 - CryptoJS-compatible OpenSSL salt envelope.
 - KDF hashes are registry components. `@jscrypto/classic` does not register or bundle them by
-  default; consumers can call `registerClassicHashes(registry)` from
+  default; consumers can call `registry.use(classicHashesPreset)` from
   `@jscrypto/classic/hashes`, or register a custom `HashComponent` with `registry.useHash(...)`.
-- CryptoJS-compatible `SHA3` is Keccak-512. `@jscrypto/classic/hashes` registers `KECCAK512`
-  as the accurate name and keeps `SHA3` as a deprecated compatibility alias.
+- CryptoJS-compatible `SHA3` is Keccak-512. `@jscrypto/classic/hashes` registers it as
+  `KECCAK512`.
 - Text and file chunk flows should be supported through the streaming transform APIs.
 
 ## Out of Scope First
@@ -64,7 +64,7 @@ Implemented as standalone packages:
 - `@jscrypto/core`
 - `@jscrypto/classic`
 
-`@jscrypto/classic` contains internal modules for AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, ECB, OFB, GCM, NoPadding, Pkcs7, AnsiX923, Iso10126, Iso97971, ZeroPadding, PBKDF2, EvpKDF, and OpenSSL `Salted__` format. The optional `@jscrypto/classic/hashes` entry provides MD5, SHA-1/2, KECCAK512, deprecated SHA3 compatibility alias, and RIPEMD160 components without adding them to the main classic entry. RIPEMD160 is implemented locally, and `@jscrypto/classic` no longer depends on CryptoJS.
+`@jscrypto/classic` contains internal modules for AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, ECB, OFB, GCM, NoPadding, Pkcs7, AnsiX923, Iso10126, Iso97971, ZeroPadding, PBKDF2, EvpKDF, and OpenSSL `Salted__` format. The optional `@jscrypto/classic/hashes` entry provides MD5, SHA-1/2, KECCAK512, and RIPEMD160 components without adding them to the main classic entry. RIPEMD160 is implemented locally, and `@jscrypto/classic` no longer depends on CryptoJS.
 
 Current working API:
 
@@ -75,7 +75,6 @@ Current working API:
 - `registry.createCipher({ cipher, mode, padding, key, iv })`
 - `registry.createDerivedKeyCipher({ cipher, mode, padding, kdf, format })`
 - `registry.derive({ name, input, length, ...kdfParams })`
-- `registry.createPassphraseCipher({ cipher, mode, padding, passphrase, kdf, format })` (deprecated compatibility alias)
 - `registry.createDerivedKeyCipher(...).createEncryptor()` for streaming derived-key encryption
 - `registry.createDerivedKeyCipher(...).createDecryptor()` for streaming derived-key decryption
 - `registry.useHash(hash)` / `registry.getHash(name)` for KDF hash registration and lookup

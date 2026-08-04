@@ -44,7 +44,7 @@ import {
   deriveEvpKdf,
   derivePbkdf2,
 } from '@jscrypto/classic';
-import { md5, registerClassicHashes, sha256 } from '@jscrypto/classic/hashes';
+import { classicHashesPreset, md5, sha256 } from '@jscrypto/classic/hashes';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 const key = hexToBytes('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
@@ -280,54 +280,35 @@ test('RC4 option validation and defaults cover stream branches', () => {
   assert.equal(registry.createCipher({ cipher: 'RC4Drop', key: textToBytes('secret') }).decrypt(textToBytes('x')).length, 1);
 });
 
-test('passphrase ciphers cover no-format and random salt branches', () => {
-  const registry = registerClassicHashes(createRegistry([aes, cbc, pkcs7, evpKdf, opensslFormat]));
-  const cipher = registry.createPassphraseCipher({
+test('derived-key ciphers cover no-format and OpenSSL salt branches', () => {
+  const registry = createRegistry([aes, cbc, pkcs7, evpKdf, opensslFormat]).use(classicHashesPreset);
+  const cipher = registry.createDerivedKeyCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',
-    passphrase: 'secret',
-    kdf: 'EvpKDF',
-    salt: new Uint8Array(),
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      salt: new Uint8Array(),
+    },
   });
   const encrypted = cipher.encrypt(textToBytes('abc'));
   assert.equal(bytesToText(cipher.decrypt(encrypted)), 'abc');
 
-  withDeterministicRandom(() => {
-    const randomSaltCipher = registry.createPassphraseCipher({
-      cipher: 'AES',
-      mode: 'CBC',
-      padding: 'Pkcs7',
-      passphrase: 'secret',
-      kdf: 'EvpKDF',
-      format: 'OpenSSL',
-    });
-    assert.equal(bytesToHex(randomSaltCipher.encrypt(textToBytes('abc')).subarray(0, 16)), '53616c7465645f5f0000000000000000');
-  });
-  withNoCryptoRandom(() => {
-    const randomSaltCipher = registry.createPassphraseCipher({
-      cipher: 'AES',
-      mode: 'CBC',
-      padding: 'Pkcs7',
-      passphrase: 'secret',
-      kdf: 'EvpKDF',
-      format: 'OpenSSL',
-    });
-    assert.equal(bytesToHex(randomSaltCipher.encrypt(textToBytes('abc')).subarray(0, 16)), '53616c7465645f5fffffffffffffffff');
-  });
-
-  assert.throws(() => registry.createPassphraseCipher({
+  assert.throws(() => registry.createDerivedKeyCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',
-    passphrase: 'secret',
-    kdf: 'EvpKDF',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      salt: new Uint8Array(7),
+    },
     format: 'OpenSSL',
-    saltSize: 0,
   }).encrypt(textToBytes('abc')), /salt must be 64 bits/);
 });
 
-test('passphrase ciphers cover buffered formats and short OpenSSL decrypt', () => {
+test('derived-key ciphers cover buffered formats and short OpenSSL decrypt', () => {
   const bufferedFormat = {
     kind: 'format',
     name: 'Buffered',
@@ -352,15 +333,17 @@ test('passphrase ciphers cover buffered formats and short OpenSSL decrypt', () =
       return { ciphertext: input };
     },
   };
-  const registry = registerClassicHashes(createRegistry([aes, rc4, cbc, pkcs7, evpKdf, opensslFormat, bufferedFormat, noSaltFormat]));
-  const cipher = registry.createPassphraseCipher({
+  const registry = createRegistry([aes, rc4, cbc, pkcs7, evpKdf, opensslFormat, bufferedFormat, noSaltFormat]).use(classicHashesPreset);
+  const cipher = registry.createDerivedKeyCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',
-    passphrase: 'secret',
-    kdf: 'EvpKDF',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      salt: hexToBytes('0001020304050607'),
+    },
     format: { name: 'Buffered' },
-    salt: hexToBytes('0001020304050607'),
   });
   const encryptor = cipher.createEncryptor();
   assert.equal(encryptor.process(textToBytes('a')).length, 0);
@@ -371,51 +354,59 @@ test('passphrase ciphers cover buffered formats and short OpenSSL decrypt', () =
   assert.equal(decryptor.process(encrypted.subarray(0, 3)).length, 0);
   assert.equal(bytesToText(decryptor.finalize(encrypted.subarray(3))), 'abc');
 
-  const shortOpenSsl = registry.createPassphraseCipher({
+  const shortOpenSsl = registry.createDerivedKeyCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',
-    passphrase: 'secret',
-    kdf: 'EvpKDF',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+    },
     format: 'OpenSSL',
   });
   assert.throws(() => shortOpenSsl.createDecryptor().finalize(new Uint8Array([1, 2, 3])), /Invalid PKCS#7/);
 
-  const rawCipher = registry.createPassphraseCipher({
+  const rawCipher = registry.createDerivedKeyCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',
-    passphrase: 'secret',
-    kdf: 'EvpKDF',
-    salt: new Uint8Array(),
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      salt: new Uint8Array(),
+    },
   });
   assert.equal(bytesToText(shortOpenSsl.decrypt(rawCipher.encrypt(textToBytes('abc')))), 'abc');
 
-  const streamBufferedCipher = registry.createPassphraseCipher({
+  const streamBufferedCipher = registry.createDerivedKeyCipher({
     cipher: 'RC4',
-    passphrase: 'secret',
-    kdf: 'EvpKDF',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      salt: new Uint8Array(),
+    },
     format: { name: 'Buffered' },
     keySize: 16,
-    salt: new Uint8Array(),
   });
   const streamBufferedEncryptor = streamBufferedCipher.createEncryptor();
   assert.equal(streamBufferedEncryptor.process(textToBytes('a')).length, 0);
   assert.equal(bytesToText(streamBufferedCipher.decrypt(streamBufferedEncryptor.finalize(textToBytes('bc')))), 'abc');
 
-  const noSaltCipher = registry.createPassphraseCipher({
+  const noSaltCipher = registry.createDerivedKeyCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',
-    passphrase: 'secret',
-    kdf: 'EvpKDF',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      salt: new Uint8Array(),
+    },
     format: { name: 'NoSalt' },
-    salt: new Uint8Array(),
   });
   assert.equal(bytesToText(noSaltCipher.decrypt(noSaltCipher.encrypt(textToBytes('abc')))), 'abc');
 });
 
-test('passphrase ciphers validate sizing and invalid kdf outputs', () => {
+test('derived-key ciphers validate sizing and invalid kdf outputs', () => {
   const invalidKdf = {
     kind: 'kdf',
     name: 'Invalid',
@@ -434,45 +425,57 @@ test('passphrase ciphers validate sizing and invalid kdf outputs', () => {
       return identityTransform();
     },
   };
-  const registry = registerClassicHashes(createRegistry([aes, rc4, cbc, pkcs7, evpKdf, invalidKdf, noKeySizeCipher]));
+  const registry = createRegistry([aes, rc4, cbc, pkcs7, evpKdf, invalidKdf, noKeySizeCipher]).use(classicHashesPreset);
 
-  assert.throws(() => registry.createPassphraseCipher({
+  assert.throws(() => registry.createDerivedKeyCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',
-    passphrase: 'secret',
-    kdf: 'EvpKDF',
-    keySize: 0,
-  }).encrypt(textToBytes('a')), /keySize/);
-  assert.throws(() => registry.createPassphraseCipher({
-    cipher: 'AES',
-    mode: 'CBC',
-    padding: 'Pkcs7',
-    passphrase: 'secret',
     kdf: {
       name: 'EvpKDF',
+      input: 'secret',
+      salt: new Uint8Array(),
+    },
+    keySize: 0,
+  }).encrypt(textToBytes('a')), /keySize/);
+  assert.throws(() => registry.createDerivedKeyCipher({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs7',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      salt: new Uint8Array(),
       length: 1,
     },
   }).encrypt(textToBytes('a')), /kdf.length/);
-  assert.throws(() => registry.createPassphraseCipher({
+  assert.throws(() => registry.createDerivedKeyCipher({
     cipher: 'NoKeySize',
-    passphrase: 'secret',
-    kdf: 'EvpKDF',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      salt: new Uint8Array(),
+    },
   }).encrypt(textToBytes('a')), /requires keySize/);
-  assert.throws(() => registry.createPassphraseCipher({
+  assert.throws(() => registry.createDerivedKeyCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',
-    passphrase: 'secret',
-    kdf: 'Invalid',
+    kdf: {
+      name: 'Invalid',
+      input: 'secret',
+      salt: new Uint8Array(),
+    },
   }).encrypt(textToBytes('a')), /must return a Uint8Array/);
 
-  const streamCipher = registry.createPassphraseCipher({
+  const streamCipher = registry.createDerivedKeyCipher({
     cipher: 'RC4',
-    passphrase: 'secret',
-    kdf: 'EvpKDF',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      salt: new Uint8Array(),
+    },
     keySize: 16,
-    salt: new Uint8Array(),
   });
   assert.equal(bytesToText(streamCipher.decrypt(streamCipher.encrypt(textToBytes('abc')))), 'abc');
 });

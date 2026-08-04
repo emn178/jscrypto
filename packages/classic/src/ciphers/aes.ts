@@ -54,17 +54,7 @@ function transformBlocks(
   transform: NobleAesTransform,
 ): Uint8Array {
   for (let offset = 0; offset < input.length; offset += BLOCK_SIZE) {
-    const { s0, s1, s2, s3 } = transform(
-      expandedKey,
-      readUint32LE(input, offset),
-      readUint32LE(input, offset + 4),
-      readUint32LE(input, offset + 8),
-      readUint32LE(input, offset + 12),
-    );
-    writeUint32LE(output, offset, s0);
-    writeUint32LE(output, offset + 4, s1);
-    writeUint32LE(output, offset + 8, s2);
-    writeUint32LE(output, offset + 12, s3);
+    transformBlock(expandedKey, input, offset, output, offset, transform);
   }
 
   return output;

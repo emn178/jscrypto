@@ -15,8 +15,7 @@ First-class component kinds:
 KDF components resolve hash implementations through the core registry. Applications register a
 `HashComponent` with `registry.useHash(hash)` and KDFs access it through their derive context.
 Hash names are normalized, so `sha-256`, `SHA256`, and `sha256` address the same component.
-CryptoJS-compatible `SHA3` is Keccak-512; the classic hashes entry registers `KECCAK512` as the
-accurate name and keeps `SHA3` as a deprecated compatibility alias.
+CryptoJS-compatible `SHA3` is Keccak-512; the classic hashes entry registers it as `KECCAK512`.
 
 ## Non-goals for core
 
@@ -37,7 +36,7 @@ The public npm surface is currently two packages plus one opt-in subpath:
 - `@jscrypto/classic`: classic ciphers, modes, paddings, KDFs, and formats with CryptoJS-compatible outputs where compatibility is intentional.
 - `@jscrypto/classic/hashes`: opt-in CryptoJS-compatible hash components for KDF/derived-key use.
 
-Inside `@jscrypto/classic`, code remains split by concern under `src/ciphers`, `src/modes`, `src/paddings`, `src/kdfs`, `src/formats`, `src/hashes`, and `src/preset`. Concrete hashes are deliberately excluded from the main classic entry and browser bundle; consumers opt in through the hashes subpath and call `registerClassicHashes(registry)`.
+Inside `@jscrypto/classic`, code remains split by concern under `src/ciphers`, `src/modes`, `src/paddings`, `src/kdfs`, `src/formats`, `src/hashes`, and `src/preset`. Concrete hashes are deliberately excluded from the main classic entry and browser bundle; consumers opt in through the hashes subpath and call `registry.use(classicHashesPreset)`.
 
 Mode components provide stateful transform factories only. One-shot encryption and decryption are registry conveniences built by creating a transform and finalizing it with the complete input.
 

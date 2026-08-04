@@ -8,7 +8,6 @@ import type {
 } from './component.js';
 import type { DerivedKeyCipherOperationOptions } from './operation-options.js';
 import { assertNoReservedOperationOptions } from './operation-options.js';
-import { randomBytes } from './random.js';
 import type { Registry } from './registry.js';
 import type { CreateTransformOptions } from './transform.js';
 import { concatBytes } from './bytes.js';
@@ -47,11 +46,6 @@ export interface DerivedKeyCipherFacade {
   createDecryptor(options?: DerivedKeyCipherOperationOptions): Transform;
 }
 
-export interface DerivedKeyCipherRuntimeOptions {
-  implicitRandomSalt?: boolean;
-  defaultSaltSize?: number;
-}
-
 export function derive(
   registry: Registry,
   options: DeriveOptions,
@@ -70,7 +64,6 @@ export function derive(
 export function createDerivedKeyCipher(
   registry: Registry,
   options: CreateDerivedKeyCipherOptions,
-  runtime: DerivedKeyCipherRuntimeOptions = {},
 ): DerivedKeyCipherFacade {
   assertDerivedKeyOptions(options);
 
@@ -84,11 +77,11 @@ export function createDerivedKeyCipher(
     },
 
     createEncryptor(operationOptions) {
-      return createDerivedKeyEncryptor(registry, options, runtime, operationOptions);
+      return createDerivedKeyEncryptor(registry, options, operationOptions);
     },
 
     createDecryptor(operationOptions) {
-      return createDerivedKeyDecryptor(registry, options, runtime, operationOptions);
+      return createDerivedKeyDecryptor(registry, options, operationOptions);
     },
   };
 }
@@ -96,12 +89,11 @@ export function createDerivedKeyCipher(
 function createDerivedKeyEncryptor(
   registry: Registry,
   options: CreateDerivedKeyCipherOptions,
-  runtime: DerivedKeyCipherRuntimeOptions,
   operationOptions?: DerivedKeyCipherOperationOptions,
 ): Transform {
   const formatOptions = resolveFormatOptions(options.format);
   const format = resolveFormat(registry, formatOptions);
-  const salt = resolveEncryptSalt(registry, options, operationOptions, runtime);
+  const salt = resolveSalt(options, operationOptions);
   const { key, iv } = deriveKeyIv(registry, options, salt);
   const encryptor = registry.createCipher(toTransformOptions(options, key, iv, operationOptions)).createEncryptor();
 
@@ -136,14 +128,13 @@ function createDerivedKeyEncryptor(
 function createDerivedKeyDecryptor(
   registry: Registry,
   options: CreateDerivedKeyCipherOptions,
-  runtime: DerivedKeyCipherRuntimeOptions,
   operationOptions?: DerivedKeyCipherOperationOptions,
 ): Transform {
   const formatOptions = resolveFormatOptions(options.format);
   const format = resolveFormat(registry, formatOptions);
 
   if (!format) {
-    const salt = resolveDecryptSaltWithoutFormat(registry, options, operationOptions, runtime);
+    const salt = resolveSalt(options, operationOptions);
     const { key, iv } = deriveKeyIv(registry, options, salt);
     return registry.createCipher(toTransformOptions(options, key, iv, operationOptions)).createDecryptor();
   }
@@ -167,9 +158,7 @@ function createDerivedKeyDecryptor(
 
     const parsed = format.parse(header.slice(0, 16));
     const hasSalt = parsed.salt !== undefined;
-    const salt = hasSalt
-      ? parsed.salt!
-      : resolveOpenSslDecryptSaltWithoutHeader(options, operationOptions, runtime);
+    const salt = hasSalt ? parsed.salt! : resolveOpenSslDecryptSaltWithoutHeader(options, operationOptions);
     const ciphertext = hasSalt ? concatBytes(parsed.ciphertext, header.slice(16)) : header;
     const { key, iv } = deriveKeyIv(registry, options, salt);
     decryptor = registry.createCipher(toTransformOptions(options, key, iv, operationOptions)).createDecryptor();
@@ -186,7 +175,7 @@ function createDerivedKeyDecryptor(
     finalize(input = new Uint8Array(0)) {
       const ciphertext = initDecryptor(input);
       if (!decryptor) {
-        const salt = resolveOpenSslDecryptSaltWithoutHeader(options, operationOptions, runtime);
+        const salt = resolveOpenSslDecryptSaltWithoutHeader(options, operationOptions);
         const { key, iv } = deriveKeyIv(registry, options, salt);
         decryptor = registry.createCipher(toTransformOptions(options, key, iv, operationOptions)).createDecryptor();
         const buffered = header;
@@ -245,7 +234,7 @@ function createBufferedFormatDecryptor(
         chunks.push(input);
       }
       const parsed = format.parse(concatBytes(...chunks));
-      const salt = resolveDecryptSaltWithFormat(registry, options, operationOptions, parsed.salt);
+      const salt = parsed.salt ?? resolveSalt(options, operationOptions);
       const { key, iv } = deriveKeyIv(registry, options, salt);
       return registry.createCipher(toTransformOptions(options, key, iv, operationOptions)).decrypt(parsed.ciphertext);
     },
@@ -297,7 +286,6 @@ function toTransformOptions(
     format,
     keySize,
     ivSize,
-    passphrase,
     salt,
     saltSize,
     ...transformOptions
@@ -321,11 +309,9 @@ function stripSalt(operationOptions: DerivedKeyCipherOperationOptions): CipherOp
 
 type CipherOperationWithoutSalt = Omit<DerivedKeyCipherOperationOptions, 'salt'>;
 
-function resolveEncryptSalt(
-  registry: Registry,
+function resolveSalt(
   options: CreateDerivedKeyCipherOptions,
   operationOptions: DerivedKeyCipherOperationOptions | undefined,
-  runtime: DerivedKeyCipherRuntimeOptions,
 ): Uint8Array | undefined {
   const operationSalt = resolveOperationSalt(operationOptions);
   if (operationSalt !== undefined) {
@@ -335,46 +321,6 @@ function resolveEncryptSalt(
   const creationSalt = resolveCreationSalt(options);
   if (creationSalt !== undefined) {
     return creationSalt;
-  }
-
-  if (runtime.implicitRandomSalt) {
-    return randomBytes(runtime.defaultSaltSize ?? 8);
-  }
-
-  return undefined;
-}
-
-function resolveDecryptSaltWithFormat(
-  registry: Registry,
-  options: CreateDerivedKeyCipherOptions,
-  operationOptions: DerivedKeyCipherOperationOptions | undefined,
-  parsedSalt: Uint8Array | undefined,
-): Uint8Array | undefined {
-  if (parsedSalt !== undefined) {
-    return parsedSalt;
-  }
-
-  return resolveDecryptSaltWithoutFormat(registry, options, operationOptions, { implicitRandomSalt: false });
-}
-
-function resolveDecryptSaltWithoutFormat(
-  registry: Registry,
-  options: CreateDerivedKeyCipherOptions,
-  operationOptions: DerivedKeyCipherOperationOptions | undefined,
-  runtime: DerivedKeyCipherRuntimeOptions,
-): Uint8Array | undefined {
-  const operationSalt = resolveOperationSalt(operationOptions);
-  if (operationSalt !== undefined) {
-    return operationSalt;
-  }
-
-  const creationSalt = resolveCreationSalt(options);
-  if (creationSalt !== undefined) {
-    return creationSalt;
-  }
-
-  if (runtime.implicitRandomSalt) {
-    return new Uint8Array(0);
   }
 
   return undefined;
@@ -383,12 +329,7 @@ function resolveDecryptSaltWithoutFormat(
 function resolveOpenSslDecryptSaltWithoutHeader(
   options: CreateDerivedKeyCipherOptions,
   operationOptions: DerivedKeyCipherOperationOptions | undefined,
-  runtime: DerivedKeyCipherRuntimeOptions,
 ): Uint8Array | undefined {
-  if (runtime.implicitRandomSalt) {
-    return new Uint8Array(0);
-  }
-
   const operationSalt = resolveOperationSalt(operationOptions);
   if (operationSalt !== undefined) {
     return operationSalt;
