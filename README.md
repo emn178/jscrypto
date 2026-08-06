@@ -20,6 +20,18 @@ This project is not affiliated with Node.js `crypto`, the Web Crypto API, or npm
 
 The public package count is intentionally small. `@jscrypto/classic` still keeps internal modules split by cipher, mode, padding, KDF, format, hash, and preset so those boundaries stay testable and can be split later if the need becomes real.
 
+## Demo
+[AES Encrypt Online](https://emn178.github.io/online-tools/aes/encrypt/)  
+[AES Decrypt Online](https://emn178.github.io/online-tools/aes/decrypt/)  
+[DES Encrypt Online](https://emn178.github.io/online-tools/des/encrypt/)  
+[DES Decrypt Online](https://emn178.github.io/online-tools/des/decrypt/)  
+[3DES Encrypt Online](https://emn178.github.io/online-tools/triple-des/encrypt/)  
+[3DES Decrypt Online](https://emn178.github.io/online-tools/triple-des/decrypt/)  
+[RC4 Encrypt Online](https://emn178.github.io/online-tools/rc4/encrypt/)  
+[RC4 Decrypt Online](https://emn178.github.io/online-tools/rc4/decrypt/)  
+[PBKDF2 Online](https://emn178.github.io/online-tools/kdf/pbkdf2/)  
+[EvpKDF Online](https://emn178.github.io/online-tools/kdf/evpkdf/)
+
 ## Install
 
 ```sh
