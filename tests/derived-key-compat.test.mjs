@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { concatBytes } from '@jscrypto/core';
-import { registry } from '@jscrypto/classic';
-import { classicHashesPreset } from '@jscrypto/classic/hashes';
+import { registry } from './helpers/classic-registry.mjs';
+import { classicHashesPreset } from '@jscrypto/hashes';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 registry.use(classicHashesPreset);

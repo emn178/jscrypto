@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { concatBytes } from '@jscrypto/core';
-import { createClassicRegistry, registry } from '@jscrypto/classic';
-import { classicHashesPreset } from '@jscrypto/classic/hashes';
+import { createClassicRegistry, registry } from './helpers/classic-registry.mjs';
+import { classicHashesPreset } from '@jscrypto/hashes';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 registry.use(classicHashesPreset);
@@ -541,8 +541,8 @@ test('createDerivedKeyCipher validates options and salt shapes', () => {
 });
 
 test('KDF helpers require input', async () => {
-  const { deriveEvpKdf, derivePbkdf2 } = await import('@jscrypto/classic');
-  const { md5, sha256 } = await import('@jscrypto/classic/hashes');
+  const { deriveEvpKdf, derivePbkdf2 } = await import('@jscrypto/suite');
+  const { md5, sha256 } = await import('@jscrypto/hashes');
 
   assert.equal(bytesToHex(deriveEvpKdf({
     input: 'password',

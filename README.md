@@ -16,14 +16,14 @@ This project is not affiliated with Node.js `crypto`, the Web Crypto API, or npm
 | [`@jscrypto/ciphers`](https://github.com/emn178/jscrypto/tree/main/packages/ciphers) | AES, DES, Triple DES, RC4, RC4Drop, SPECK, ChaCha20, XChaCha20, ChaCha20-Poly1305, and XChaCha20-Poly1305 cipher components. |
 | [`@jscrypto/modes`](https://github.com/emn178/jscrypto/tree/main/packages/modes) | CBC, CFB, CTR, OFB, ECB, and GCM mode components. |
 | [`@jscrypto/paddings`](https://github.com/emn178/jscrypto/tree/main/packages/paddings) | Pkcs7, Iso97971, AnsiX923, Iso10126, ZeroPadding, and NoPadding components. |
-| [`@jscrypto/kdfs`](https://github.com/emn178/jscrypto/tree/main/packages/kdfs) | PBKDF2, EvpKDF, HKDF, HKDF-Extract, and HKDF-Expand KDF components. |
+| [`@jscrypto/kdfs`](https://github.com/emn178/jscrypto/tree/main/packages/kdfs) | PBKDF2, EvpKDF, HKDF, HKDF-Extract, HKDF-Expand, Scrypt, and Argon2 KDF components. |
 | [`@jscrypto/formats`](https://github.com/emn178/jscrypto/tree/main/packages/formats) | OpenSSL `Salted__` format components. |
 | [`@jscrypto/hashes`](https://github.com/emn178/jscrypto/tree/main/packages/hashes) | MD5, SHA1, SHA224, SHA256, SHA384, SHA512, KECCAK512, and RIPEMD160 hash components. |
 | [`@jscrypto/suite`](https://github.com/emn178/jscrypto/tree/main/packages/suite) | Convenience basic and all registries for official component packages. |
 
 The main repository is organized by component type. Use `@jscrypto/suite` for a ready-to-use basic registry, `@jscrypto/suite/all` for all built-in compatibility components, or import individual components from packages such as `@jscrypto/ciphers/aes` and `@jscrypto/modes/cbc`.
 
-`@jscrypto/classic` remains available as a compatibility aggregate for the original classic package surface, but new code should prefer `@jscrypto/suite` or component packages.
+`@jscrypto/classic` was removed in v0.10.0. Use `@jscrypto/suite` for convenience registries or component packages for focused imports.
 
 ## Install
 

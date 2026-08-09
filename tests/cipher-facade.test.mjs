@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { concatBytes } from '@jscrypto/core';
-import { createClassicRegistry, registry } from '@jscrypto/classic';
+import { createClassicRegistry, registry } from './helpers/classic-registry.mjs';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 test('cipher facade accepts per-operation iv options', () => {

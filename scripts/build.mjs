@@ -119,7 +119,7 @@ const packages = [
     packageJson: 'packages/kdfs/package.json',
     distDir: 'packages/kdfs/dist',
     externals: ['@jscrypto/core'],
-    subEntries: ['evpkdf', 'hkdf', 'pbkdf2'].map((name) => ({
+    subEntries: ['argon2', 'evpkdf', 'hkdf', 'pbkdf2', 'scrypt'].map((name) => ({
       name,
       displayName: `jscrypto-kdfs-${name}`,
       globalName: `jscryptoKdfs${toPascalCase(name)}`,
@@ -208,26 +208,6 @@ const packages = [
       },
     ],
   },
-  {
-    name: '@jscrypto/classic',
-    displayName: 'jscrypto-classic',
-    globalName: 'jscryptoClassic',
-    entryPoint: 'packages/classic/src/index.ts',
-    nodeEntryPoint: 'packages/classic/src/index-node.ts',
-    packageJson: 'packages/classic/package.json',
-    distDir: 'packages/classic/dist',
-    externals: [
-      '@jscrypto/core',
-      '@jscrypto/ciphers',
-      '@jscrypto/formats',
-      '@jscrypto/hashes',
-      '@jscrypto/kdfs',
-      '@jscrypto/modes',
-      '@jscrypto/paddings',
-    ],
-    browserExternals: ['@jscrypto/core'],
-    nodeExternals: ['node:crypto'],
-  },
 ];
 
 for (const pkg of packages) {
@@ -246,8 +226,6 @@ for (const pkg of packages) {
   rmSync('tsconfig.tsbuildinfo', { force: true });
   await buildPackage(pkg);
 }
-
-await buildHashesPackage();
 
 /**
  * @param {{
@@ -439,47 +417,6 @@ async function buildPackage(pkg) {
       }, banner);
     }
   }
-}
-
-async function buildHashesPackage() {
-  const entryPoint = 'packages/classic/src/hashes-entry.ts';
-  const distDir = 'packages/classic/dist';
-  const banner = licenseBanner('@jscrypto/classic hashes', 'packages/classic/package.json');
-  const nodeExternals = [
-    '@jscrypto/core',
-    '@jscrypto/hashes',
-  ];
-
-  await buildEntry({
-    input: entryPoint,
-    external: nodeExternals,
-    outputs: [
-      {
-        file: `${distDir}/hashes.mjs`,
-        format: 'esm',
-      },
-      {
-        file: `${distDir}/hashes.cjs`,
-        format: 'cjs',
-        exports: 'named',
-      },
-    ],
-  }, banner);
-
-  await buildEntry({
-    input: entryPoint,
-    external: ['@jscrypto/core'],
-    browser: true,
-    globals,
-    outputs: [
-      {
-        file: `${distDir}/jscrypto-classic-hashes.iife.min.js`,
-        format: 'iife',
-        name: 'jscryptoClassicHashes',
-        minify: true,
-      },
-    ],
-  }, banner);
 }
 
 /**

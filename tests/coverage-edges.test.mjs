@@ -43,8 +43,8 @@ import {
   createRc4Transform,
   deriveEvpKdf,
   derivePbkdf2,
-} from '@jscrypto/classic';
-import { classicHashesPreset, md5, sha256 } from '@jscrypto/classic/hashes';
+} from '@jscrypto/suite';
+import { classicHashesPreset, md5, sha256 } from '@jscrypto/hashes';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 const key = hexToBytes('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');

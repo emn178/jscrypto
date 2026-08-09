@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { concatBytes, createRegistry } from '@jscrypto/core';
-import { aes, cbc, createAesCipher, noPadding } from '@jscrypto/classic';
+import { aes, cbc, createAesCipher, noPadding } from '@jscrypto/suite';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 test('AES-256-CBC encrypts and decrypts with NoPadding', () => {

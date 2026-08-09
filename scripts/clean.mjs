@@ -9,7 +9,6 @@ for (const dir of [
   'packages/formats/dist',
   'packages/hashes/dist',
   'packages/suite/dist',
-  'packages/classic/dist',
   'coverage',
 ]) {
   rmSync(dir, { recursive: true, force: true });

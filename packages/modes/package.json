@@ -1,6 +1,6 @@
 {
   "name": "@jscrypto/modes",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "Mode components for @jscrypto block ciphers.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -64,7 +64,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@jscrypto/core": "0.9.1"
+    "@jscrypto/core": "0.10.0"
   },
   "repository": {
     "type": "git",

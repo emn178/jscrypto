@@ -3,8 +3,8 @@ import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { test } from 'node:test';
 import { createRegistry } from '@jscrypto/core';
-import { createClassicRegistry } from '@jscrypto/classic';
-import { classicHashesPreset, sha1, sha256 } from '@jscrypto/classic/hashes';
+import { createClassicRegistry } from './helpers/classic-registry.mjs';
+import { classicHashesPreset, sha1, sha256 } from '@jscrypto/hashes';
 import {
   deriveHkdf,
   expandHkdf,

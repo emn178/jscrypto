@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { OPENSSL_SALTED_MAGIC, opensslFormat } from '@jscrypto/classic';
+import { OPENSSL_SALTED_MAGIC, opensslFormat } from '@jscrypto/suite';
 import { bytesToHex, hexToBytes } from './helpers/bytes.mjs';
 
 test('OpenSSL format stringifies salted bytes', () => {

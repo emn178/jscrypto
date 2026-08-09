@@ -12,8 +12,7 @@
     "packages/kdfs",
     "packages/formats",
     "packages/hashes",
-    "packages/suite",
-    "packages/classic"
+    "packages/suite"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -22,7 +21,7 @@
     "test": "npm run build && npm run test:dist",
     "test:dist": "node --test tests/*.test.mjs",
     "coverage": "npm run build && npm run coverage:dist",
-    "coverage:dist": "c8 --check-coverage --statements 100 --branches 100 --functions 100 --lines 100 --reporter=text --reporter=html --reporter=lcov --exclude-after-remap --exclude=**/node_modules/** --include=packages/core/src/** --include=packages/ciphers/src/** --include=packages/modes/src/** --include=packages/paddings/src/** --include=packages/kdfs/src/** --include=packages/formats/src/** --include=packages/hashes/src/** --include=packages/suite/src/** --include=packages/classic/src/** node --test tests/*.test.mjs",
+    "coverage:dist": "c8 --check-coverage --statements 100 --branches 100 --functions 100 --lines 100 --reporter=text --reporter=html --reporter=lcov --exclude-after-remap --exclude=**/node_modules/** --include=packages/core/src/** --include=packages/ciphers/src/** --include=packages/modes/src/** --include=packages/paddings/src/** --include=packages/kdfs/src/** --include=packages/formats/src/** --include=packages/hashes/src/** --include=packages/suite/src/** node --test tests/*.test.mjs",
     "prepack": "npm run build"
   },
   "devDependencies": {

@@ -1,5 +1,15 @@
 # Change Log
 
+## v0.10.0 / 2026-08-09
+
+### Added
+
+- added Scrypt and Argon2 components to `@jscrypto/kdfs`.
+
+### Removed
+
+- removed the deprecated `@jscrypto/classic` compatibility aggregate. Use `@jscrypto/suite` or component packages instead.
+
 ## v0.9.1 / 2026-08-09
 
 ### Fixed

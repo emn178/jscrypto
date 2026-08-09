@@ -25,8 +25,6 @@ test('CommonJS builds can be required', () => {
   const suite = require('../packages/suite/dist/index.cjs');
   const suiteBasic = require('../packages/suite/dist/basic.cjs');
   const suiteAll = require('../packages/suite/dist/all.cjs');
-  const classic = require('../packages/classic/dist/index.cjs');
-  const hashes = require('../packages/classic/dist/hashes.cjs');
 
   assert.equal(typeof core.createRegistry, 'function');
   assert.equal(ciphers.ciphersPreset().kind, 'preset');
@@ -53,17 +51,10 @@ test('CommonJS builds can be required', () => {
   assert.equal(suiteAll.allRegistry.get('cipher', 'RC4').name, 'RC4');
   assert.equal(suiteAll.allRegistry.get('cipher', 'SPECK64/128').name, 'SPECK64/128');
   assert.equal(suiteAll.allRegistry.get('cipher', 'ChaCha20').name, 'ChaCha20');
-  assert.equal(typeof classic.registry.createCipher, 'function');
-  assert.equal(typeof classic.speckPreset, 'undefined');
-  assert.equal(typeof classic.chacha20Preset, 'undefined');
-  assert.equal(typeof classic.hkdfPreset, 'undefined');
-  assert.equal(hashes.classicHashesPreset.kind, 'preset');
-  assert.equal(typeof hashes.registerClassicHashes, 'undefined');
 });
 
-test('package exports route Node imports to the native classic build', async () => {
+test('package exports route Node imports to package builds', async () => {
   if (typeof import.meta.resolve === 'function') {
-    assert.match(import.meta.resolve('@jscrypto/classic'), /packages[\\/]classic[\\/]dist[\\/]index\.node\.mjs$/);
     assert.match(import.meta.resolve('@jscrypto/ciphers'), /packages[\\/]ciphers[\\/]dist[\\/]index\.node\.mjs$/);
     assert.match(import.meta.resolve('@jscrypto/ciphers/aes'), /packages[\\/]ciphers[\\/]dist[\\/]aes\.node\.mjs$/);
     assert.match(import.meta.resolve('@jscrypto/ciphers/aes/browser'), /packages[\\/]ciphers[\\/]dist[\\/]jscrypto-ciphers-aes\.iife\.min\.js$/);
@@ -75,12 +66,15 @@ test('package exports route Node imports to the native classic build', async () 
     assert.match(import.meta.resolve('@jscrypto/paddings/pkcs7/browser'), /packages[\\/]paddings[\\/]dist[\\/]jscrypto-paddings-pkcs7\.iife\.min\.js$/);
     assert.match(import.meta.resolve('@jscrypto/kdfs/hkdf'), /packages[\\/]kdfs[\\/]dist[\\/]hkdf\.mjs$/);
     assert.match(import.meta.resolve('@jscrypto/kdfs/hkdf/browser'), /packages[\\/]kdfs[\\/]dist[\\/]jscrypto-kdfs-hkdf\.iife\.min\.js$/);
+    assert.match(import.meta.resolve('@jscrypto/kdfs/scrypt'), /packages[\\/]kdfs[\\/]dist[\\/]scrypt\.mjs$/);
+    assert.match(import.meta.resolve('@jscrypto/kdfs/scrypt/browser'), /packages[\\/]kdfs[\\/]dist[\\/]jscrypto-kdfs-scrypt\.iife\.min\.js$/);
+    assert.match(import.meta.resolve('@jscrypto/kdfs/argon2'), /packages[\\/]kdfs[\\/]dist[\\/]argon2\.mjs$/);
+    assert.match(import.meta.resolve('@jscrypto/kdfs/argon2/browser'), /packages[\\/]kdfs[\\/]dist[\\/]jscrypto-kdfs-argon2\.iife\.min\.js$/);
     assert.match(import.meta.resolve('@jscrypto/hashes/sha256/browser'), /packages[\\/]hashes[\\/]dist[\\/]jscrypto-hashes-sha256\.iife\.min\.js$/);
     assert.match(import.meta.resolve('@jscrypto/suite'), /packages[\\/]suite[\\/]dist[\\/]index\.node\.mjs$/);
     assert.match(import.meta.resolve('@jscrypto/suite/basic'), /packages[\\/]suite[\\/]dist[\\/]basic\.mjs$/);
     assert.match(import.meta.resolve('@jscrypto/suite/all'), /packages[\\/]suite[\\/]dist[\\/]all\.mjs$/);
   } else {
-    assert.match(require.resolve('@jscrypto/classic'), /packages[\\/]classic[\\/]dist[\\/]index\.node\.cjs$/);
     assert.match(require.resolve('@jscrypto/ciphers'), /packages[\\/]ciphers[\\/]dist[\\/]index\.node\.cjs$/);
     assert.match(require.resolve('@jscrypto/ciphers/aes'), /packages[\\/]ciphers[\\/]dist[\\/]aes\.node\.cjs$/);
     assert.match(require.resolve('@jscrypto/ciphers/aes/browser'), /packages[\\/]ciphers[\\/]dist[\\/]jscrypto-ciphers-aes\.iife\.min\.js$/);
@@ -92,33 +86,35 @@ test('package exports route Node imports to the native classic build', async () 
     assert.match(require.resolve('@jscrypto/paddings/pkcs7/browser'), /packages[\\/]paddings[\\/]dist[\\/]jscrypto-paddings-pkcs7\.iife\.min\.js$/);
     assert.match(require.resolve('@jscrypto/kdfs/hkdf'), /packages[\\/]kdfs[\\/]dist[\\/]hkdf\.cjs$/);
     assert.match(require.resolve('@jscrypto/kdfs/hkdf/browser'), /packages[\\/]kdfs[\\/]dist[\\/]jscrypto-kdfs-hkdf\.iife\.min\.js$/);
+    assert.match(require.resolve('@jscrypto/kdfs/scrypt'), /packages[\\/]kdfs[\\/]dist[\\/]scrypt\.cjs$/);
+    assert.match(require.resolve('@jscrypto/kdfs/scrypt/browser'), /packages[\\/]kdfs[\\/]dist[\\/]jscrypto-kdfs-scrypt\.iife\.min\.js$/);
+    assert.match(require.resolve('@jscrypto/kdfs/argon2'), /packages[\\/]kdfs[\\/]dist[\\/]argon2\.cjs$/);
+    assert.match(require.resolve('@jscrypto/kdfs/argon2/browser'), /packages[\\/]kdfs[\\/]dist[\\/]jscrypto-kdfs-argon2\.iife\.min\.js$/);
     assert.match(require.resolve('@jscrypto/hashes/sha256/browser'), /packages[\\/]hashes[\\/]dist[\\/]jscrypto-hashes-sha256\.iife\.min\.js$/);
     assert.match(require.resolve('@jscrypto/suite'), /packages[\\/]suite[\\/]dist[\\/]index\.node\.cjs$/);
     assert.match(require.resolve('@jscrypto/suite/basic'), /packages[\\/]suite[\\/]dist[\\/]basic\.cjs$/);
     assert.match(require.resolve('@jscrypto/suite/all'), /packages[\\/]suite[\\/]dist[\\/]all\.cjs$/);
   }
 
-  const classic = await import('@jscrypto/classic');
   const ciphers = await import('@jscrypto/ciphers');
   const aes = await import('@jscrypto/ciphers/aes');
   const chacha20 = await import('@jscrypto/ciphers/chacha20');
   const speck = await import('@jscrypto/ciphers/speck');
   const hkdf = await import('@jscrypto/kdfs/hkdf');
+  const scrypt = await import('@jscrypto/kdfs/scrypt');
+  const argon2 = await import('@jscrypto/kdfs/argon2');
   const suite = await import('@jscrypto/suite');
   const suiteBasic = await import('@jscrypto/suite/basic');
   const suiteAll = await import('@jscrypto/suite/all');
 
-  assert.equal(typeof classic.createAesCipher, 'function');
-  assert.equal(typeof classic.registry.createCipher, 'function');
-  assert.equal(typeof classic.speckPreset, 'undefined');
-  assert.equal(typeof classic.chacha20Preset, 'undefined');
-  assert.equal(typeof classic.hkdfPreset, 'undefined');
   assert.equal(ciphers.ciphersPreset().kind, 'preset');
   assert.equal(typeof aes.createAesCipher, 'function');
   assert.equal(aes.aesPreset.components()[0].name, 'AES');
   assert.equal(chacha20.chacha20Preset.name, 'chacha20');
   assert.equal(speck.speckPreset.name, 'speck');
   assert.equal(hkdf.hkdfPreset.name, 'hkdf');
+  assert.equal(scrypt.scryptPreset.name, 'scrypt');
+  assert.equal(argon2.argon2Preset.name, 'argon2');
   assert.equal(typeof suite.registry.createCipher, 'function');
   assert.equal(suite.registry.getHash('SHA256').name, 'SHA256');
   assert.equal(suiteBasic.registry.get('cipher', 'AES').name, 'AES');
@@ -142,15 +138,14 @@ test('browser IIFE builds expose globals', async () => {
     '../packages/suite/dist/jscrypto-suite.iife.min.js',
     '../packages/suite/dist/jscrypto-suite-basic.iife.min.js',
     '../packages/suite/dist/jscrypto-suite-all.iife.min.js',
-    '../packages/classic/dist/jscrypto-classic.iife.js',
-    '../packages/classic/dist/jscrypto-classic.iife.min.js',
-    '../packages/classic/dist/jscrypto-classic-hashes.iife.min.js',
     '../packages/ciphers/dist/jscrypto-ciphers-aes.iife.min.js',
     '../packages/ciphers/dist/jscrypto-ciphers-chacha20.iife.min.js',
     '../packages/ciphers/dist/jscrypto-ciphers-speck.iife.min.js',
     '../packages/modes/dist/jscrypto-modes-cbc.iife.min.js',
     '../packages/paddings/dist/jscrypto-paddings-pkcs7.iife.min.js',
     '../packages/kdfs/dist/jscrypto-kdfs-hkdf.iife.min.js',
+    '../packages/kdfs/dist/jscrypto-kdfs-scrypt.iife.min.js',
+    '../packages/kdfs/dist/jscrypto-kdfs-argon2.iife.min.js',
     '../packages/hashes/dist/jscrypto-hashes-sha256.iife.min.js',
   ]) {
     const code = await readFile(new URL(file, import.meta.url), 'utf8');
@@ -175,12 +170,6 @@ test('browser IIFE builds expose globals', async () => {
   assert.equal(context.jscryptoSuiteAll.allRegistry.get('cipher', 'RC4').name, 'RC4');
   assert.equal(context.jscryptoSuiteAll.allRegistry.get('cipher', 'SPECK64/128').name, 'SPECK64/128');
   assert.equal(context.jscryptoSuiteAll.allRegistry.get('cipher', 'ChaCha20').name, 'ChaCha20');
-  assert.equal(typeof context.jscryptoClassic.createClassicRegistry, 'function');
-  assert.equal(typeof context.jscryptoClassic.registry.createCipher, 'function');
-  assert.equal(context.jscryptoClassicHashes.classicHashesPreset.kind, 'preset');
-  assert.equal(typeof context.jscryptoClassicHashes.registerClassicHashes, 'undefined');
-  context.jscryptoClassic.registry.use(context.jscryptoClassicHashes.classicHashesPreset);
-  assert.equal(context.jscryptoClassic.registry.getHash('SHA256').name, 'SHA256');
   assert.equal(context.jscryptoCiphersAes.aesPreset.name, 'aes');
   assert.equal(context.jscryptoCiphersAes.aesPreset.components()[0].name, 'AES');
   assert.equal(context.jscryptoCiphersChacha20.chacha20Preset.name, 'chacha20');
@@ -189,19 +178,11 @@ test('browser IIFE builds expose globals', async () => {
   assert.equal(context.jscryptoPaddingsPkcs7.pkcs7Preset.name, 'pkcs7');
   assert.equal(context.jscryptoKdfsHkdf.hkdfPreset.name, 'hkdf');
   assert.equal(context.jscryptoHashesSha256.sha256Preset.name, 'sha256');
-
-  for (const file of [
-    '../packages/classic/dist/jscrypto-classic.iife.js',
-    '../packages/classic/dist/jscrypto-classic.iife.min.js',
-  ]) {
-    const code = await readFile(new URL(file, import.meta.url), 'utf8');
-    assert.equal(code.includes('@jscrypto/core v'), false);
-  }
 });
 
-test('main classic IIFE entry graph excludes optional component implementations', async () => {
+test('basic suite IIFE entry graph excludes optional component implementations', async () => {
   const bundle = await rollup({
-    input: 'packages/classic/src/index.ts',
+    input: 'packages/suite/src/basic.ts',
     external: ['@jscrypto/core'],
     plugins: [
       {
@@ -245,7 +226,11 @@ test('main classic IIFE entry graph excludes optional component implementations'
 
   try {
     assert.equal(
-      bundle.watchFiles.some((path) => /packages[\\/]classic[\\/]src[\\/]hashes[\\/]/.test(path)),
+      bundle.watchFiles.some((path) => /packages[\\/]ciphers[\\/]src[\\/]des\.ts$/.test(path)),
+      false,
+    );
+    assert.equal(
+      bundle.watchFiles.some((path) => /packages[\\/]ciphers[\\/]src[\\/]rc4\.ts$/.test(path)),
       false,
     );
     assert.equal(
@@ -254,6 +239,14 @@ test('main classic IIFE entry graph excludes optional component implementations'
     );
     assert.equal(
       bundle.watchFiles.some((path) => /packages[\\/]ciphers[\\/]src[\\/]chacha20\.ts$/.test(path)),
+      false,
+    );
+    assert.equal(
+      bundle.watchFiles.some((path) => /packages[\\/]kdfs[\\/]src[\\/]scrypt\.ts$/.test(path)),
+      false,
+    );
+    assert.equal(
+      bundle.watchFiles.some((path) => /packages[\\/]kdfs[\\/]src[\\/]argon2\.ts$/.test(path)),
       false,
     );
   } finally {
@@ -304,14 +297,14 @@ test('UMD builds support AMD loaders', async () => {
   assert.equal(typeof modules.get('@jscrypto/core').createRegistry, 'function');
 
   for (const file of [
-    '../packages/classic/dist/jscrypto-classic.umd.js',
-    '../packages/classic/dist/jscrypto-classic.umd.min.js',
+    '../packages/suite/dist/jscrypto-suite.umd.js',
+    '../packages/suite/dist/jscrypto-suite.umd.min.js',
   ]) {
     const code = await readFile(new URL(file, import.meta.url), 'utf8');
-    const loaded = loadAmd('@jscrypto/classic', code);
-    const classic = loaded.exports;
+    const loaded = loadAmd('@jscrypto/suite', code);
+    const suite = loaded.exports;
     assert.deepEqual(loaded.deps, ['exports', '@jscrypto/core']);
-    assert.equal(typeof classic.createClassicRegistry, 'function');
-    assert.equal(typeof classic.registry.createCipher, 'function');
+    assert.equal(typeof suite.createBasicRegistry, 'function');
+    assert.equal(typeof suite.registry.createCipher, 'function');
   }
 });

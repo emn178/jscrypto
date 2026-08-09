@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createAesCipher } from '@jscrypto/classic';
+import { createAesCipher } from '@jscrypto/suite';
 import { bytesToHex, hexToBytes } from './helpers/bytes.mjs';
 
 const plaintext = '00112233445566778899aabbccddeeff';

@@ -5,15 +5,19 @@
 KDF components for `@jscrypto/core`.
 
 ## Demo
-[PBKDF2 Online](https://emn178.github.io/online-tools/kdf/pbkdf2/)  
-[EvpKDF Online](https://emn178.github.io/online-tools/kdf/evpkdf/)  
-[HKDF Online](https://emn178.github.io/online-tools/kdf/hkdf/)
+- [PBKDF2 Online](https://emn178.github.io/online-tools/kdf/pbkdf2/)
+- [EvpKDF Online](https://emn178.github.io/online-tools/kdf/evpkdf/)
+- [HKDF Online](https://emn178.github.io/online-tools/kdf/hkdf/)
+- [Scrypt KDF Online](https://emn178.github.io/online-tools/kdf/scrypt/)
+- [Argon2 KDF Online](https://emn178.github.io/online-tools/kdf/argon2/)
 
 ## Components
 
 - [PBKDF2](./docs/pbkdf2.md)
 - [EvpKDF](./docs/evpkdf.md)
 - [HKDF](./docs/hkdf.md)
+- [Scrypt](./docs/scrypt.md)
+- [Argon2](./docs/argon2.md)
 
 ```ts
 import { createRegistry } from '@jscrypto/core';
@@ -37,7 +41,7 @@ Use `classicKdfsPreset()` to register the classic compatibility set: PBKDF2 and
 EvpKDF.
 
 Use `kdfsPreset()` to register the full KDF package set, including HKDF,
-HKDF-Extract, and HKDF-Expand.
+HKDF-Extract, HKDF-Expand, Scrypt, and Argon2.
 
 ## Browser
 

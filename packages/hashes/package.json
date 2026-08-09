@@ -1,6 +1,6 @@
 {
   "name": "@jscrypto/hashes",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "Hash components for @jscrypto KDFs.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -78,7 +78,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@jscrypto/core": "0.9.1",
+    "@jscrypto/core": "0.10.0",
     "js-md5": "^0.8.3",
     "js-sha1": "^0.7.0",
     "js-sha256": "^0.11.1",

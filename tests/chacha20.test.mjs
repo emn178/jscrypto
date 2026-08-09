@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { test } from 'node:test';
-import { createClassicRegistry } from '@jscrypto/classic';
+import { createClassicRegistry } from './helpers/classic-registry.mjs';
 import { createRegistry } from '@jscrypto/core';
 import {
   chacha20,

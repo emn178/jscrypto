@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { deriveEvpKdf, derivePbkdf2, evpKdf, pbkdf2 } from '@jscrypto/classic';
+import { deriveEvpKdf, derivePbkdf2, evpKdf, pbkdf2 } from '@jscrypto/suite';
 import {
   classicHashesPreset,
   keccak512,
@@ -11,8 +11,8 @@ import {
   sha256,
   sha384,
   sha512,
-} from '@jscrypto/classic/hashes';
-import { createClassicRegistry, registry as defaultRegistry } from '@jscrypto/classic';
+} from '@jscrypto/hashes';
+import { createClassicRegistry, registry as defaultRegistry } from './helpers/classic-registry.mjs';
 import { bytesToHex, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 test('PBKDF2 matches CryptoJS upstream vectors', () => {

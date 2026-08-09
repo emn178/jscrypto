@@ -1,6 +1,6 @@
 {
   "name": "@jscrypto/kdfs",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "KDF components for @jscrypto.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -12,6 +12,13 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
     },
+    "./argon2": {
+      "types": "./dist/argon2.d.ts",
+      "import": "./dist/argon2.mjs",
+      "require": "./dist/argon2.cjs"
+    },
+    "./argon2/browser": "./dist/jscrypto-kdfs-argon2.iife.min.js",
+    "./argon2/umd": "./dist/jscrypto-kdfs-argon2.umd.min.js",
     "./evpkdf": {
       "types": "./dist/evpkdf.d.ts",
       "import": "./dist/evpkdf.mjs",
@@ -33,6 +40,13 @@
     },
     "./pbkdf2/browser": "./dist/jscrypto-kdfs-pbkdf2.iife.min.js",
     "./pbkdf2/umd": "./dist/jscrypto-kdfs-pbkdf2.umd.min.js",
+    "./scrypt": {
+      "types": "./dist/scrypt.d.ts",
+      "import": "./dist/scrypt.mjs",
+      "require": "./dist/scrypt.cjs"
+    },
+    "./scrypt/browser": "./dist/jscrypto-kdfs-scrypt.iife.min.js",
+    "./scrypt/umd": "./dist/jscrypto-kdfs-scrypt.umd.min.js",
     "./browser": "./dist/jscrypto-kdfs.iife.min.js",
     "./umd": "./dist/jscrypto-kdfs.umd.min.js"
   },
@@ -43,7 +57,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@jscrypto/core": "0.9.1"
+    "@jscrypto/core": "0.10.0",
+    "@noble/hashes": "^2.3.0"
   },
   "repository": {
     "type": "git",

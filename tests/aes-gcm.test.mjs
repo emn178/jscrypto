@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { concatBytes, createRegistry } from '@jscrypto/core';
-import { aes, createAesCipher, gcm } from '@jscrypto/classic';
+import { aes, createAesCipher, gcm } from '@jscrypto/suite';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 function createAesGcmRegistry() {

@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { test } from 'node:test';
 import { createRegistry } from '@jscrypto/core';
-import { cbc, ecb, noPadding, pkcs7 } from '@jscrypto/classic';
+import { cbc, ecb, noPadding, pkcs7 } from '@jscrypto/suite';
 import {
   allSpeckComponents,
   createSpeckCipher,
