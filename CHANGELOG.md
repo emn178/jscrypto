@@ -1,5 +1,11 @@
 # Change Log
 
+## v0.9.1 / 2026-08-09
+
+### Fixed
+
+- classic build incorrectly included all ciphers.
+
 ## v0.9.0 / 2026-08-09
 
 ### Added

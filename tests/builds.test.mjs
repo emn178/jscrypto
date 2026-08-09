@@ -199,7 +199,7 @@ test('browser IIFE builds expose globals', async () => {
   }
 });
 
-test('main classic IIFE entry graph excludes hashes implementations', async () => {
+test('main classic IIFE entry graph excludes optional component implementations', async () => {
   const bundle = await rollup({
     input: 'packages/classic/src/index.ts',
     external: ['@jscrypto/core'],
@@ -246,6 +246,14 @@ test('main classic IIFE entry graph excludes hashes implementations', async () =
   try {
     assert.equal(
       bundle.watchFiles.some((path) => /packages[\\/]classic[\\/]src[\\/]hashes[\\/]/.test(path)),
+      false,
+    );
+    assert.equal(
+      bundle.watchFiles.some((path) => /packages[\\/]ciphers[\\/]src[\\/]speck\.ts$/.test(path)),
+      false,
+    );
+    assert.equal(
+      bundle.watchFiles.some((path) => /packages[\\/]ciphers[\\/]src[\\/]chacha20\.ts$/.test(path)),
       false,
     );
   } finally {
