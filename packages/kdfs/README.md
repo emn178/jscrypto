@@ -1,4 +1,6 @@
 # @jscrypto/kdfs
+[![NPM](https://img.shields.io/npm/v/@jscrypto/kdfs)](https://www.npmjs.com/package/@jscrypto/kdfs)
+[![CDNJS](https://img.shields.io/jsdelivr/npm/hm/@jscrypto/kdfs)](https://www.jsdelivr.com/package/npm/@jscrypto/kdfs)
 
 KDF components for `@jscrypto/core`.
 

@@ -1,4 +1,6 @@
 # @jscrypto/modes
+[![NPM](https://img.shields.io/npm/v/@jscrypto/modes)](https://www.npmjs.com/package/@jscrypto/modes)
+[![CDNJS](https://img.shields.io/jsdelivr/npm/hm/@jscrypto/modes)](https://www.jsdelivr.com/package/npm/@jscrypto/modes)
 
 Mode components for `@jscrypto/core` block ciphers.
 

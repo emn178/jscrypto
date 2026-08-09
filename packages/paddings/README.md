@@ -1,4 +1,6 @@
 # @jscrypto/paddings
+[![NPM](https://img.shields.io/npm/v/@jscrypto/paddings)](https://www.npmjs.com/package/@jscrypto/paddings)
+[![CDNJS](https://img.shields.io/jsdelivr/npm/hm/@jscrypto/paddings)](https://www.jsdelivr.com/package/npm/@jscrypto/paddings)
 
 Padding components for `@jscrypto/core` block cipher modes.
 

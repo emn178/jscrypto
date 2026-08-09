@@ -1,4 +1,6 @@
 # @jscrypto/suite
+[![NPM](https://img.shields.io/npm/v/@jscrypto/suite)](https://www.npmjs.com/package/@jscrypto/suite)
+[![CDNJS](https://img.shields.io/jsdelivr/npm/hm/@jscrypto/suite)](https://www.jsdelivr.com/package/npm/@jscrypto/suite)
 
 Convenience registries for official `@jscrypto` component packages.
 

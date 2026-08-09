@@ -1,4 +1,6 @@
 # @jscrypto/ciphers
+[![NPM](https://img.shields.io/npm/v/@jscrypto/ciphers)](https://www.npmjs.com/package/@jscrypto/ciphers)
+[![CDNJS](https://img.shields.io/jsdelivr/npm/hm/@jscrypto/ciphers)](https://www.jsdelivr.com/package/npm/@jscrypto/ciphers)
 
 Cipher components for `@jscrypto/core`.
 

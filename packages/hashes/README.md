@@ -1,4 +1,6 @@
 # @jscrypto/hashes
+[![NPM](https://img.shields.io/npm/v/@jscrypto/hashes)](https://www.npmjs.com/package/@jscrypto/hashes)
+[![CDNJS](https://img.shields.io/jsdelivr/npm/hm/@jscrypto/hashes)](https://www.jsdelivr.com/package/npm/@jscrypto/hashes)
 
 Hash components for `@jscrypto/core` KDFs.
 
