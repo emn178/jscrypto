@@ -12,15 +12,17 @@ npm install @jscrypto/core
 
 ## Usage
 
-`@jscrypto/core` provides the framework contracts and registry. It does not ship concrete ciphers or modes by itself. Install a component package such as `@jscrypto/classic` for actual algorithms:
+`@jscrypto/core` provides the framework contracts and registry. It does not ship concrete ciphers or modes by itself. Install component packages for actual algorithms:
 
 ```sh
-npm install @jscrypto/core @jscrypto/classic
+npm install @jscrypto/core @jscrypto/ciphers @jscrypto/modes @jscrypto/paddings
 ```
 
 ```ts
 import { createRegistry, randomBytes } from '@jscrypto/core';
-import { aes, cbc, pkcs7 } from '@jscrypto/classic';
+import { aes } from '@jscrypto/ciphers/aes';
+import { cbc } from '@jscrypto/modes/cbc';
+import { pkcs7 } from '@jscrypto/paddings/pkcs7';
 
 const registry = createRegistry()
   .use(aes)
@@ -51,4 +53,4 @@ Per-operation options are passed to facade methods rather than being fixed only 
 - Block helpers: block-size, IV, and padding assertions.
 - Errors: `CryptoError`, `DuplicateComponentError`, and `MissingComponentError`.
 
-`@jscrypto/core` does not include concrete cryptographic algorithms. Use `@jscrypto/classic` or custom components for actual ciphers, modes, paddings, KDFs, and formats.
+`@jscrypto/core` does not include concrete cryptographic algorithms. Use `@jscrypto/suite`, component packages, or custom components for actual ciphers, modes, paddings, KDFs, hashes, and formats.

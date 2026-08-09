@@ -1,0 +1,58 @@
+{
+  "name": "@jscrypto/kdfs",
+  "version": "0.9.0",
+  "description": "KDF components for @jscrypto.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./evpkdf": {
+      "types": "./dist/evpkdf.d.ts",
+      "import": "./dist/evpkdf.mjs",
+      "require": "./dist/evpkdf.cjs"
+    },
+    "./evpkdf/browser": "./dist/jscrypto-kdfs-evpkdf.iife.min.js",
+    "./evpkdf/umd": "./dist/jscrypto-kdfs-evpkdf.umd.min.js",
+    "./hkdf": {
+      "types": "./dist/hkdf.d.ts",
+      "import": "./dist/hkdf.mjs",
+      "require": "./dist/hkdf.cjs"
+    },
+    "./hkdf/browser": "./dist/jscrypto-kdfs-hkdf.iife.min.js",
+    "./hkdf/umd": "./dist/jscrypto-kdfs-hkdf.umd.min.js",
+    "./pbkdf2": {
+      "types": "./dist/pbkdf2.d.ts",
+      "import": "./dist/pbkdf2.mjs",
+      "require": "./dist/pbkdf2.cjs"
+    },
+    "./pbkdf2/browser": "./dist/jscrypto-kdfs-pbkdf2.iife.min.js",
+    "./pbkdf2/umd": "./dist/jscrypto-kdfs-pbkdf2.umd.min.js",
+    "./browser": "./dist/jscrypto-kdfs.iife.min.js",
+    "./umd": "./dist/jscrypto-kdfs.umd.min.js"
+  },
+  "files": [
+    "dist",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@jscrypto/core": "0.9.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emn178/jscrypto.git",
+    "directory": "packages/kdfs"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "license": "MIT"
+}

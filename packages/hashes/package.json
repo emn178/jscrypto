@@ -1,0 +1,98 @@
+{
+  "name": "@jscrypto/hashes",
+  "version": "0.9.0",
+  "description": "Hash components for @jscrypto KDFs.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./md5": {
+      "types": "./dist/md5.d.ts",
+      "import": "./dist/md5.mjs",
+      "require": "./dist/md5.cjs"
+    },
+    "./md5/browser": "./dist/jscrypto-hashes-md5.iife.min.js",
+    "./md5/umd": "./dist/jscrypto-hashes-md5.umd.min.js",
+    "./ripemd160": {
+      "types": "./dist/ripemd160.d.ts",
+      "import": "./dist/ripemd160.mjs",
+      "require": "./dist/ripemd160.cjs"
+    },
+    "./ripemd160/browser": "./dist/jscrypto-hashes-ripemd160.iife.min.js",
+    "./ripemd160/umd": "./dist/jscrypto-hashes-ripemd160.umd.min.js",
+    "./sha1": {
+      "types": "./dist/sha1.d.ts",
+      "import": "./dist/sha1.mjs",
+      "require": "./dist/sha1.cjs"
+    },
+    "./sha1/browser": "./dist/jscrypto-hashes-sha1.iife.min.js",
+    "./sha1/umd": "./dist/jscrypto-hashes-sha1.umd.min.js",
+    "./sha224": {
+      "types": "./dist/sha224.d.ts",
+      "import": "./dist/sha224.mjs",
+      "require": "./dist/sha224.cjs"
+    },
+    "./sha224/browser": "./dist/jscrypto-hashes-sha224.iife.min.js",
+    "./sha224/umd": "./dist/jscrypto-hashes-sha224.umd.min.js",
+    "./sha256": {
+      "types": "./dist/sha256.d.ts",
+      "import": "./dist/sha256.mjs",
+      "require": "./dist/sha256.cjs"
+    },
+    "./sha256/browser": "./dist/jscrypto-hashes-sha256.iife.min.js",
+    "./sha256/umd": "./dist/jscrypto-hashes-sha256.umd.min.js",
+    "./sha384": {
+      "types": "./dist/sha384.d.ts",
+      "import": "./dist/sha384.mjs",
+      "require": "./dist/sha384.cjs"
+    },
+    "./sha384/browser": "./dist/jscrypto-hashes-sha384.iife.min.js",
+    "./sha384/umd": "./dist/jscrypto-hashes-sha384.umd.min.js",
+    "./sha512": {
+      "types": "./dist/sha512.d.ts",
+      "import": "./dist/sha512.mjs",
+      "require": "./dist/sha512.cjs"
+    },
+    "./sha512/browser": "./dist/jscrypto-hashes-sha512.iife.min.js",
+    "./sha512/umd": "./dist/jscrypto-hashes-sha512.umd.min.js",
+    "./sha3": {
+      "types": "./dist/sha3.d.ts",
+      "import": "./dist/sha3.mjs",
+      "require": "./dist/sha3.cjs"
+    },
+    "./sha3/browser": "./dist/jscrypto-hashes-sha3.iife.min.js",
+    "./sha3/umd": "./dist/jscrypto-hashes-sha3.umd.min.js",
+    "./browser": "./dist/jscrypto-hashes.iife.min.js",
+    "./umd": "./dist/jscrypto-hashes.umd.min.js"
+  },
+  "files": [
+    "dist",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@jscrypto/core": "0.9.0",
+    "js-md5": "^0.8.3",
+    "js-sha1": "^0.7.0",
+    "js-sha256": "^0.11.1",
+    "js-sha3": "^0.9.3",
+    "js-sha512": "^0.9.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emn178/jscrypto.git",
+    "directory": "packages/hashes"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "license": "MIT"
+}

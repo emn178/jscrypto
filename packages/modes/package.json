@@ -1,0 +1,79 @@
+{
+  "name": "@jscrypto/modes",
+  "version": "0.9.0",
+  "description": "Mode components for @jscrypto block ciphers.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./cbc": {
+      "types": "./dist/cbc.d.ts",
+      "import": "./dist/cbc.mjs",
+      "require": "./dist/cbc.cjs"
+    },
+    "./cbc/browser": "./dist/jscrypto-modes-cbc.iife.min.js",
+    "./cbc/umd": "./dist/jscrypto-modes-cbc.umd.min.js",
+    "./cfb": {
+      "types": "./dist/cfb.d.ts",
+      "import": "./dist/cfb.mjs",
+      "require": "./dist/cfb.cjs"
+    },
+    "./cfb/browser": "./dist/jscrypto-modes-cfb.iife.min.js",
+    "./cfb/umd": "./dist/jscrypto-modes-cfb.umd.min.js",
+    "./ctr": {
+      "types": "./dist/ctr.d.ts",
+      "import": "./dist/ctr.mjs",
+      "require": "./dist/ctr.cjs"
+    },
+    "./ctr/browser": "./dist/jscrypto-modes-ctr.iife.min.js",
+    "./ctr/umd": "./dist/jscrypto-modes-ctr.umd.min.js",
+    "./ecb": {
+      "types": "./dist/ecb.d.ts",
+      "import": "./dist/ecb.mjs",
+      "require": "./dist/ecb.cjs"
+    },
+    "./ecb/browser": "./dist/jscrypto-modes-ecb.iife.min.js",
+    "./ecb/umd": "./dist/jscrypto-modes-ecb.umd.min.js",
+    "./gcm": {
+      "types": "./dist/gcm.d.ts",
+      "import": "./dist/gcm.mjs",
+      "require": "./dist/gcm.cjs"
+    },
+    "./gcm/browser": "./dist/jscrypto-modes-gcm.iife.min.js",
+    "./gcm/umd": "./dist/jscrypto-modes-gcm.umd.min.js",
+    "./ofb": {
+      "types": "./dist/ofb.d.ts",
+      "import": "./dist/ofb.mjs",
+      "require": "./dist/ofb.cjs"
+    },
+    "./ofb/browser": "./dist/jscrypto-modes-ofb.iife.min.js",
+    "./ofb/umd": "./dist/jscrypto-modes-ofb.umd.min.js",
+    "./browser": "./dist/jscrypto-modes.iife.min.js",
+    "./umd": "./dist/jscrypto-modes.umd.min.js"
+  },
+  "files": [
+    "dist",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@jscrypto/core": "0.9.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emn178/jscrypto.git",
+    "directory": "packages/modes"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "license": "MIT"
+}

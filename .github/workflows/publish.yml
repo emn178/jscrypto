@@ -25,8 +25,10 @@ jobs:
       - name: Verify release version
         run: |
           CORE_VERSION=$(node -p "require('./packages/core/package.json').version")
-          CLASSIC_VERSION=$(node -p "require('./packages/classic/package.json').version")
-          test "$CORE_VERSION" = "$CLASSIC_VERSION"
+          for PACKAGE in ciphers modes paddings kdfs formats hashes suite classic; do
+            PACKAGE_VERSION=$(node -p "require('./packages/$PACKAGE/package.json').version")
+            test "$CORE_VERSION" = "$PACKAGE_VERSION"
+          done
           test "$GITHUB_REF_NAME" = "v$CORE_VERSION"
 
       - run: npm run build
@@ -35,6 +37,34 @@ jobs:
       - name: Publish @jscrypto/core
         run: npm publish --access public
         working-directory: packages/core
+
+      - name: Publish @jscrypto/ciphers
+        run: npm publish --access public
+        working-directory: packages/ciphers
+
+      - name: Publish @jscrypto/modes
+        run: npm publish --access public
+        working-directory: packages/modes
+
+      - name: Publish @jscrypto/paddings
+        run: npm publish --access public
+        working-directory: packages/paddings
+
+      - name: Publish @jscrypto/kdfs
+        run: npm publish --access public
+        working-directory: packages/kdfs
+
+      - name: Publish @jscrypto/formats
+        run: npm publish --access public
+        working-directory: packages/formats
+
+      - name: Publish @jscrypto/hashes
+        run: npm publish --access public
+        working-directory: packages/hashes
+
+      - name: Publish @jscrypto/suite
+        run: npm publish --access public
+        working-directory: packages/suite
 
       - name: Publish @jscrypto/classic
         run: npm publish --access public

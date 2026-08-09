@@ -5,6 +5,27 @@
       "path": "packages/core"
     },
     {
+      "path": "packages/ciphers"
+    },
+    {
+      "path": "packages/modes"
+    },
+    {
+      "path": "packages/paddings"
+    },
+    {
+      "path": "packages/kdfs"
+    },
+    {
+      "path": "packages/formats"
+    },
+    {
+      "path": "packages/hashes"
+    },
+    {
+      "path": "packages/suite"
+    },
+    {
       "path": "packages/classic"
     }
   ]

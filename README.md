@@ -13,36 +13,29 @@ This project is not affiliated with Node.js `crypto`, the Web Crypto API, or npm
 | Package | Description |
 | --- | --- |
 | [`@jscrypto/core`](https://github.com/emn178/jscrypto/tree/main/packages/core) | Registry, component contracts, transform helpers, byte helpers, and shared errors. |
-| [`@jscrypto/classic`](https://github.com/emn178/jscrypto/tree/main/packages/classic) | AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, OFB, ECB, GCM, classic paddings, PBKDF2, EvpKDF, hashes, and OpenSSL `Salted__` formatting. |
-| [`@jscrypto/chacha20`](https://github.com/emn178/jscrypto-chacha20) | ChaCha20 block cipher components for `@jscrypto/core` registries. |
-| [`@jscrypto/speck`](https://github.com/emn178/jscrypto-speck) | SPECK block cipher components for `@jscrypto/core` registries. |
-| [`@jscrypto/hkdf`](https://github.com/emn178/jscrypto-hkdf) | RFC 5869 HKDF, HKDF-Extract, and HKDF-Expand KDF components. |
+| [`@jscrypto/ciphers`](https://github.com/emn178/jscrypto/tree/main/packages/ciphers) | AES, DES, Triple DES, RC4, RC4Drop, SPECK, ChaCha20, XChaCha20, ChaCha20-Poly1305, and XChaCha20-Poly1305 cipher components. |
+| [`@jscrypto/modes`](https://github.com/emn178/jscrypto/tree/main/packages/modes) | CBC, CFB, CTR, OFB, ECB, and GCM mode components. |
+| [`@jscrypto/paddings`](https://github.com/emn178/jscrypto/tree/main/packages/paddings) | Pkcs7, Iso97971, AnsiX923, Iso10126, ZeroPadding, and NoPadding components. |
+| [`@jscrypto/kdfs`](https://github.com/emn178/jscrypto/tree/main/packages/kdfs) | PBKDF2, EvpKDF, HKDF, HKDF-Extract, and HKDF-Expand KDF components. |
+| [`@jscrypto/formats`](https://github.com/emn178/jscrypto/tree/main/packages/formats) | OpenSSL `Salted__` format components. |
+| [`@jscrypto/hashes`](https://github.com/emn178/jscrypto/tree/main/packages/hashes) | MD5, SHA1, SHA224, SHA256, SHA384, SHA512, KECCAK512, and RIPEMD160 hash components. |
+| [`@jscrypto/suite`](https://github.com/emn178/jscrypto/tree/main/packages/suite) | Convenience basic and all registries for official component packages. |
 
-The public package count is intentionally small. `@jscrypto/classic` still keeps internal modules split by cipher, mode, padding, KDF, format, hash, and preset so those boundaries stay testable and can be split later if the need becomes real.
+The main repository is organized by component type. Use `@jscrypto/suite` for a ready-to-use basic registry, `@jscrypto/suite/all` for all built-in compatibility components, or import individual components from packages such as `@jscrypto/ciphers/aes` and `@jscrypto/modes/cbc`.
 
-## Demo
-[AES Encrypt Online](https://emn178.github.io/online-tools/aes/encrypt/)  
-[AES Decrypt Online](https://emn178.github.io/online-tools/aes/decrypt/)  
-[DES Encrypt Online](https://emn178.github.io/online-tools/des/encrypt/)  
-[DES Decrypt Online](https://emn178.github.io/online-tools/des/decrypt/)  
-[Triple DES Encrypt Online](https://emn178.github.io/online-tools/triple-des/encrypt/)  
-[Triple DES Decrypt Online](https://emn178.github.io/online-tools/triple-des/decrypt/)  
-[RC4 Encrypt Online](https://emn178.github.io/online-tools/rc4/encrypt/)  
-[RC4 Decrypt Online](https://emn178.github.io/online-tools/rc4/decrypt/)  
-[PBKDF2 Online](https://emn178.github.io/online-tools/kdf/pbkdf2/)  
-[EvpKDF Online](https://emn178.github.io/online-tools/kdf/evpkdf/)
+`@jscrypto/classic` remains available as a compatibility aggregate for the original classic package surface, but new code should prefer `@jscrypto/suite` or component packages.
 
 ## Install
 
 ```sh
-npm install @jscrypto/core @jscrypto/classic
+npm install @jscrypto/core @jscrypto/suite
 ```
 
 ## Quick Start
 
 ```ts
 import { randomBytes } from '@jscrypto/core';
-import { registry } from '@jscrypto/classic';
+import { registry } from '@jscrypto/suite';
 
 const key = randomBytes(32);
 const iv = randomBytes(16);
@@ -64,7 +57,7 @@ const decrypted = cipher.decrypt(ciphertext, { iv });
 
 ```ts
 import { concatBytes, randomBytes } from '@jscrypto/core';
-import { registry } from '@jscrypto/classic';
+import { registry } from '@jscrypto/suite';
 
 const key = randomBytes(32);
 const iv = randomBytes(16);
@@ -100,16 +93,13 @@ const ciphertext = cipher.encrypt(mutable, { iv, mutableInput: true });
 
 ## Derived Keys
 
-Derived-key ciphers derive key material through a KDF, then optionally split it into `key || iv` and wrap salt/ciphertext through a format component. `kdf.input` is the KDF input material: a password/passphrase for PBKDF2 and EvpKDF, IKM for future HKDF, or a shared secret for future X9.63 / ConcatKDF flows.
+Derived-key ciphers derive key material through a KDF, then optionally split it into `key || iv` and wrap salt/ciphertext through a format component. `kdf.input` is the KDF input material: a password/passphrase for PBKDF2 and EvpKDF, IKM for HKDF, or a shared secret for future X9.63 / ConcatKDF flows.
 
 `registry.derive(...)` returns derived bytes only. It does not split key/IV.
 
 ```ts
 import { randomBytes } from '@jscrypto/core';
-import { registry } from '@jscrypto/classic';
-import { classicHashesPreset } from '@jscrypto/classic/hashes';
-
-registry.use(classicHashesPreset);
+import { registry } from '@jscrypto/suite';
 
 const salt = randomBytes(8);
 const keyMaterial = registry.derive({
@@ -128,10 +118,7 @@ Explicit key size, for example AES-128-CBC:
 
 ```ts
 import { randomBytes } from '@jscrypto/core';
-import { registry } from '@jscrypto/classic';
-import { classicHashesPreset } from '@jscrypto/classic/hashes';
-
-registry.use(classicHashesPreset);
+import { registry } from '@jscrypto/suite';
 
 const salt = randomBytes(8);
 const cipher = registry.createDerivedKeyCipher({
@@ -192,7 +179,7 @@ const encrypted = concatBytes(
 
 ## Hash Compatibility
 
-Built-in hashes are opt-in through `@jscrypto/classic/hashes`. `registry.use(classicHashesPreset)` registers MD5, SHA1, SHA224, SHA256, SHA384, SHA512, KECCAK512, and RIPEMD160.
+Built-in hashes are provided by `@jscrypto/hashes`. `registry.use(hashesPreset)` registers MD5, SHA1, SHA224, SHA256, SHA384, SHA512, KECCAK512, and RIPEMD160. `@jscrypto/suite` registers these hashes for you.
 
 `KECCAK512` is Keccak-512. NIST SHA3-512 is not included yet and should use a distinct name if added later.
 
@@ -201,7 +188,7 @@ Built-in hashes are opt-in through `@jscrypto/classic/hashes`. `registry.use(cla
 Stream ciphers do not use mode, padding, or IV.
 
 ```ts
-import { registry } from '@jscrypto/classic';
+import { registry } from '@jscrypto/suite';
 
 const key = new TextEncoder().encode('secret');
 const cipher = registry.createCipher({
@@ -219,7 +206,7 @@ GCM is an AEAD mode. It does not use padding, and encrypted output is `ciphertex
 
 ```ts
 import { randomBytes } from '@jscrypto/core';
-import { registry } from '@jscrypto/classic';
+import { registry } from '@jscrypto/suite';
 
 const key = randomBytes(32);
 const nonce = randomBytes(12);
@@ -246,11 +233,13 @@ const shortTagDecrypted = cipher.decrypt(shortTagSealed, { nonce, aad, tagLength
 
 ## Custom Registry
 
-The classic package exports a singleton `registry` for normal use and a factory when isolation is useful.
+`@jscrypto/suite` exports a singleton `registry` using the basic preset for normal use. Use `@jscrypto/suite/all` when DES, Triple DES, RC4, EvpKDF, or the full classic padding set is needed. Use `@jscrypto/core` and component packages when isolation or a smaller component set is useful.
 
 ```ts
 import { createRegistry } from '@jscrypto/core';
-import { aes, cbc, pkcs7 } from '@jscrypto/classic';
+import { aes } from '@jscrypto/ciphers/aes';
+import { cbc } from '@jscrypto/modes/cbc';
+import { pkcs7 } from '@jscrypto/paddings/pkcs7';
 
 const registry = createRegistry()
   .use(aes)
@@ -260,16 +249,16 @@ const registry = createRegistry()
 
 ## Browser Builds
 
-Both packages ship ESM, CommonJS, IIFE, and UMD outputs.
-The classic browser bundle is not standalone; load `@jscrypto/core` first so extensions share the same registry contracts.
+Packages ship ESM, CommonJS, IIFE, and UMD outputs.
+Browser bundles are not standalone; load `@jscrypto/core` first so extensions share the same registry contracts.
 
 ```html
 <script src="node_modules/@jscrypto/core/dist/jscrypto-core.iife.min.js"></script>
-<script src="node_modules/@jscrypto/classic/dist/jscrypto-classic.iife.min.js"></script>
+<script src="node_modules/@jscrypto/suite/dist/jscrypto-suite.iife.min.js"></script>
 <script>
   const key = jscryptoCore.randomBytes(32);
   const iv = jscryptoCore.randomBytes(16);
-  const cipher = jscryptoClassic.registry.createCipher({
+  const cipher = jscryptoSuite.registry.createCipher({
     cipher: 'AES',
     mode: 'CBC',
     padding: 'Pkcs7',
@@ -279,14 +268,42 @@ The classic browser bundle is not standalone; load `@jscrypto/core` first so ext
 </script>
 ```
 
-Load `@jscrypto/classic/dist/jscrypto-classic-hashes.iife.min.js` only when browser code uses KDFs that resolve classic hash components.
+The default suite bundle follows `basicPreset`. For explicit browser bundle sizes, use:
 
-## Supported Classic Components
+```html
+<script src="node_modules/@jscrypto/core/dist/jscrypto-core.iife.min.js"></script>
+<script src="node_modules/@jscrypto/suite/dist/jscrypto-suite-basic.iife.min.js"></script>
+```
 
-- Ciphers: AES, DES, Triple DES, RC4, RC4Drop.
+or load all bundled compatibility components:
+
+```html
+<script src="node_modules/@jscrypto/core/dist/jscrypto-core.iife.min.js"></script>
+<script src="node_modules/@jscrypto/suite/dist/jscrypto-suite-all.iife.min.js"></script>
+```
+
+Load `@jscrypto/hashes/dist/jscrypto-hashes.iife.min.js` only when browser code uses KDFs that resolve hash components outside `@jscrypto/suite`.
+
+Size-sensitive browser pages can combine the basic suite with focused component
+bundles instead of loading a whole component package:
+
+```html
+<script src="node_modules/@jscrypto/core/dist/jscrypto-core.iife.min.js"></script>
+<script src="node_modules/@jscrypto/suite/dist/jscrypto-suite-basic.iife.min.js"></script>
+<script src="node_modules/@jscrypto/ciphers/dist/jscrypto-ciphers-chacha20.iife.min.js"></script>
+<script>
+  jscryptoSuiteBasic.registry.use(jscryptoCiphersChacha20.chacha20Preset);
+</script>
+```
+
+## Supported Components
+
+- Basic suite: AES; CBC, CFB, CTR, OFB, ECB, GCM; Pkcs7 and NoPadding; PBKDF2 and HKDF; OpenSSL `Salted__`; bundled hashes.
+- All suite: all component-package presets below.
+- Ciphers: AES, DES, Triple DES, RC4, RC4Drop, SPECK, ChaCha20, XChaCha20, ChaCha20-Poly1305, XChaCha20-Poly1305.
 - Modes: CBC, CFB, CTR, OFB, ECB, GCM.
 - Paddings: Pkcs7, Iso97971, AnsiX923, Iso10126, ZeroPadding, NoPadding.
-- KDFs: PBKDF2, EvpKDF.
+- KDFs: PBKDF2, EvpKDF, HKDF, HKDF-Extract, HKDF-Expand.
 - Formats: OpenSSL `Salted__`.
 
 ## Development

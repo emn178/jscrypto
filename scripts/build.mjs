@@ -10,6 +10,14 @@ const year = '2026';
 const owner = 'Chen, Yi-Cyuan';
 const globals = {
   '@jscrypto/core': 'jscryptoCore',
+  '@jscrypto/ciphers': 'jscryptoCiphers',
+  '@jscrypto/formats': 'jscryptoFormats',
+  '@jscrypto/hashes': 'jscryptoHashes',
+  '@jscrypto/kdfs': 'jscryptoKdfs',
+  '@jscrypto/modes': 'jscryptoModes',
+  '@jscrypto/paddings': 'jscryptoPaddings',
+  '@jscrypto/suite/basic': 'jscryptoSuiteBasic',
+  '@jscrypto/suite/all': 'jscryptoSuiteAll',
 };
 
 const packages = [
@@ -23,6 +31,184 @@ const packages = [
     externals: [],
   },
   {
+    name: '@jscrypto/ciphers',
+    displayName: 'jscrypto-ciphers',
+    globalName: 'jscryptoCiphers',
+    entryPoint: 'packages/ciphers/src/index.ts',
+    nodeEntryPoint: 'packages/ciphers/src/index-node.ts',
+    packageJson: 'packages/ciphers/package.json',
+    distDir: 'packages/ciphers/dist',
+    externals: ['@jscrypto/core'],
+    browserExternals: ['@jscrypto/core'],
+    nodeExternals: ['node:crypto'],
+    subEntries: [
+      {
+        name: 'aes',
+        displayName: 'jscrypto-ciphers-aes',
+        globalName: 'jscryptoCiphersAes',
+        entryPoint: 'packages/ciphers/src/aes.ts',
+        nodeEntryPoint: 'packages/ciphers/src/aes-node.ts',
+      },
+      {
+        name: 'des',
+        displayName: 'jscrypto-ciphers-des',
+        globalName: 'jscryptoCiphersDes',
+        entryPoint: 'packages/ciphers/src/des.ts',
+      },
+      {
+        name: 'chacha20',
+        displayName: 'jscrypto-ciphers-chacha20',
+        globalName: 'jscryptoCiphersChacha20',
+        entryPoint: 'packages/ciphers/src/chacha20.ts',
+      },
+      {
+        name: 'rc4',
+        displayName: 'jscrypto-ciphers-rc4',
+        globalName: 'jscryptoCiphersRc4',
+        entryPoint: 'packages/ciphers/src/rc4.ts',
+      },
+      {
+        name: 'speck',
+        displayName: 'jscrypto-ciphers-speck',
+        globalName: 'jscryptoCiphersSpeck',
+        entryPoint: 'packages/ciphers/src/speck.ts',
+      },
+      {
+        name: 'triple-des',
+        displayName: 'jscrypto-ciphers-triple-des',
+        globalName: 'jscryptoCiphersTripleDes',
+        entryPoint: 'packages/ciphers/src/triple-des.ts',
+      },
+    ],
+  },
+  {
+    name: '@jscrypto/modes',
+    displayName: 'jscrypto-modes',
+    globalName: 'jscryptoModes',
+    entryPoint: 'packages/modes/src/index.ts',
+    packageJson: 'packages/modes/package.json',
+    distDir: 'packages/modes/dist',
+    externals: ['@jscrypto/core'],
+    subEntries: ['cbc', 'cfb', 'ctr', 'ecb', 'gcm', 'ofb'].map((name) => ({
+      name,
+      displayName: `jscrypto-modes-${name}`,
+      globalName: `jscryptoModes${toPascalCase(name)}`,
+      entryPoint: `packages/modes/src/${name}.ts`,
+    })),
+  },
+  {
+    name: '@jscrypto/paddings',
+    displayName: 'jscrypto-paddings',
+    globalName: 'jscryptoPaddings',
+    entryPoint: 'packages/paddings/src/index.ts',
+    packageJson: 'packages/paddings/package.json',
+    distDir: 'packages/paddings/dist',
+    externals: ['@jscrypto/core'],
+    subEntries: ['ansi-x923', 'iso10126', 'iso97971', 'none', 'pkcs7', 'zero'].map((name) => ({
+      name,
+      displayName: `jscrypto-paddings-${name}`,
+      globalName: `jscryptoPaddings${toPascalCase(name)}`,
+      entryPoint: `packages/paddings/src/${name}.ts`,
+    })),
+  },
+  {
+    name: '@jscrypto/kdfs',
+    displayName: 'jscrypto-kdfs',
+    globalName: 'jscryptoKdfs',
+    entryPoint: 'packages/kdfs/src/index.ts',
+    packageJson: 'packages/kdfs/package.json',
+    distDir: 'packages/kdfs/dist',
+    externals: ['@jscrypto/core'],
+    subEntries: ['evpkdf', 'hkdf', 'pbkdf2'].map((name) => ({
+      name,
+      displayName: `jscrypto-kdfs-${name}`,
+      globalName: `jscryptoKdfs${toPascalCase(name)}`,
+      entryPoint: `packages/kdfs/src/${name}.ts`,
+    })),
+  },
+  {
+    name: '@jscrypto/formats',
+    displayName: 'jscrypto-formats',
+    globalName: 'jscryptoFormats',
+    entryPoint: 'packages/formats/src/index.ts',
+    packageJson: 'packages/formats/package.json',
+    distDir: 'packages/formats/dist',
+    externals: ['@jscrypto/core'],
+    subEntries: ['openssl'].map((name) => ({
+      name,
+      displayName: `jscrypto-formats-${name}`,
+      globalName: `jscryptoFormats${toPascalCase(name)}`,
+      entryPoint: `packages/formats/src/${name}.ts`,
+    })),
+  },
+  {
+    name: '@jscrypto/hashes',
+    displayName: 'jscrypto-hashes',
+    globalName: 'jscryptoHashes',
+    entryPoint: 'packages/hashes/src/index.ts',
+    packageJson: 'packages/hashes/package.json',
+    distDir: 'packages/hashes/dist',
+    externals: [
+      '@jscrypto/core',
+      'js-md5',
+      'js-sha1',
+      'js-sha256',
+      'js-sha3',
+      'js-sha512',
+    ],
+    browserExternals: ['@jscrypto/core'],
+    subEntries: ['md5', 'ripemd160', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'sha3'].map((name) => ({
+      name,
+      displayName: `jscrypto-hashes-${name}`,
+      globalName: `jscryptoHashes${toPascalCase(name)}`,
+      entryPoint: `packages/hashes/src/${name}.ts`,
+    })),
+  },
+  {
+    name: '@jscrypto/suite',
+    displayName: 'jscrypto-suite',
+    globalName: 'jscryptoSuite',
+    entryPoint: 'packages/suite/src/index.ts',
+    nodeEntryPoint: 'packages/suite/src/index.ts',
+    browserEntryPoint: 'packages/suite/src/basic.ts',
+    packageJson: 'packages/suite/package.json',
+    distDir: 'packages/suite/dist',
+    externals: [
+      '@jscrypto/core',
+      '@jscrypto/ciphers',
+      '@jscrypto/formats',
+      '@jscrypto/hashes',
+      '@jscrypto/kdfs',
+      '@jscrypto/modes',
+      '@jscrypto/paddings',
+    ],
+    browserExternals: ['@jscrypto/core'],
+    subEntries: [
+      {
+        name: 'basic',
+        entryPoint: 'packages/suite/src/basic.ts',
+      },
+      {
+        name: 'all',
+        entryPoint: 'packages/suite/src/all.ts',
+      },
+    ],
+    browserEntries: [
+      {
+        name: 'basic',
+        displayName: 'jscrypto-suite-basic',
+        globalName: 'jscryptoSuiteBasic',
+        entryPoint: 'packages/suite/src/basic.ts',
+      },
+      {
+        name: 'all',
+        displayName: 'jscrypto-suite-all',
+        globalName: 'jscryptoSuiteAll',
+        entryPoint: 'packages/suite/src/all.ts',
+      },
+    ],
+  },
+  {
     name: '@jscrypto/classic',
     displayName: 'jscrypto-classic',
     globalName: 'jscryptoClassic',
@@ -30,7 +216,16 @@ const packages = [
     nodeEntryPoint: 'packages/classic/src/index-node.ts',
     packageJson: 'packages/classic/package.json',
     distDir: 'packages/classic/dist',
-    externals: ['@jscrypto/core'],
+    externals: [
+      '@jscrypto/core',
+      '@jscrypto/ciphers',
+      '@jscrypto/formats',
+      '@jscrypto/hashes',
+      '@jscrypto/kdfs',
+      '@jscrypto/modes',
+      '@jscrypto/paddings',
+    ],
+    browserExternals: ['@jscrypto/core'],
     nodeExternals: ['node:crypto'],
   },
 ];
@@ -61,10 +256,14 @@ await buildHashesPackage();
  *   globalName: string,
  *   entryPoint: string,
  *   nodeEntryPoint?: string,
+ *   browserEntryPoint?: string,
  *   packageJson: string,
  *   distDir: string,
  *   externals: string[],
+ *   browserExternals?: string[],
  *   nodeExternals?: string[],
+ *   subEntries?: Array<{ name: string, entryPoint: string, nodeEntryPoint?: string, displayName?: string, globalName?: string }>,
+ *   browserEntries?: Array<{ name: string, displayName: string, globalName: string, entryPoint: string }>,
  * }} pkg
  */
 async function buildPackage(pkg) {
@@ -104,9 +303,80 @@ async function buildPackage(pkg) {
     }, banner);
   }
 
+  if (pkg.subEntries) {
+    for (const entry of pkg.subEntries) {
+      await buildEntry({
+        input: entry.entryPoint,
+        external: pkg.externals,
+        outputs: [
+          {
+            file: `${pkg.distDir}/${entry.name}.mjs`,
+            format: 'esm',
+          },
+          {
+            file: `${pkg.distDir}/${entry.name}.cjs`,
+            format: 'cjs',
+            exports: 'named',
+          },
+        ],
+      }, banner);
+
+      if (entry.nodeEntryPoint) {
+        await buildEntry({
+          input: entry.nodeEntryPoint,
+          external: [...pkg.externals, ...(pkg.nodeExternals || [])],
+          outputs: [
+            {
+              file: `${pkg.distDir}/${entry.name}.node.mjs`,
+              format: 'esm',
+            },
+            {
+              file: `${pkg.distDir}/${entry.name}.node.cjs`,
+              format: 'cjs',
+              exports: 'named',
+            },
+          ],
+        }, banner);
+      }
+
+      if (entry.displayName && entry.globalName) {
+        await buildEntry({
+          input: entry.entryPoint,
+          external: pkg.browserExternals || pkg.externals,
+          browser: true,
+          globals,
+          outputs: [
+            {
+              file: `${pkg.distDir}/${entry.displayName}.iife.js`,
+              format: 'iife',
+              name: entry.globalName,
+            },
+            {
+              file: `${pkg.distDir}/${entry.displayName}.iife.min.js`,
+              format: 'iife',
+              name: entry.globalName,
+              minify: true,
+            },
+            {
+              file: `${pkg.distDir}/${entry.displayName}.umd.js`,
+              format: 'umd',
+              name: entry.globalName,
+            },
+            {
+              file: `${pkg.distDir}/${entry.displayName}.umd.min.js`,
+              format: 'umd',
+              name: entry.globalName,
+              minify: true,
+            },
+          ],
+        }, banner);
+      }
+    }
+  }
+
   await buildEntry({
-    input: pkg.entryPoint,
-    external: pkg.externals,
+    input: pkg.browserEntryPoint || pkg.entryPoint,
+    external: pkg.browserExternals || pkg.externals,
     browser: true,
     globals,
     outputs: [
@@ -134,6 +404,41 @@ async function buildPackage(pkg) {
       },
     ],
   }, banner);
+
+  if (pkg.browserEntries) {
+    for (const entry of pkg.browserEntries) {
+      await buildEntry({
+        input: entry.entryPoint,
+        external: pkg.browserExternals || pkg.externals,
+        browser: true,
+        globals,
+        outputs: [
+          {
+            file: `${pkg.distDir}/${entry.displayName}.iife.js`,
+            format: 'iife',
+            name: entry.globalName,
+          },
+          {
+            file: `${pkg.distDir}/${entry.displayName}.iife.min.js`,
+            format: 'iife',
+            name: entry.globalName,
+            minify: true,
+          },
+          {
+            file: `${pkg.distDir}/${entry.displayName}.umd.js`,
+            format: 'umd',
+            name: entry.globalName,
+          },
+          {
+            file: `${pkg.distDir}/${entry.displayName}.umd.min.js`,
+            format: 'umd',
+            name: entry.globalName,
+            minify: true,
+          },
+        ],
+      }, banner);
+    }
+  }
 }
 
 async function buildHashesPackage() {
@@ -142,11 +447,7 @@ async function buildHashesPackage() {
   const banner = licenseBanner('@jscrypto/classic hashes', 'packages/classic/package.json');
   const nodeExternals = [
     '@jscrypto/core',
-    'js-md5',
-    'js-sha1',
-    'js-sha256',
-    'js-sha3',
-    'js-sha512',
+    '@jscrypto/hashes',
   ];
 
   await buildEntry({
@@ -252,6 +553,13 @@ function licenseBanner(name, packageJsonPath) {
  * Copyright ${year} ${owner}
  * Released under the MIT license
  */`;
+}
+
+function toPascalCase(value) {
+  return value
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('');
 }
 
 function resolveTypeScriptExtensions() {

@@ -1,0 +1,79 @@
+{
+  "name": "@jscrypto/paddings",
+  "version": "0.9.0",
+  "description": "Padding components for @jscrypto block ciphers.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./ansi-x923": {
+      "types": "./dist/ansi-x923.d.ts",
+      "import": "./dist/ansi-x923.mjs",
+      "require": "./dist/ansi-x923.cjs"
+    },
+    "./ansi-x923/browser": "./dist/jscrypto-paddings-ansi-x923.iife.min.js",
+    "./ansi-x923/umd": "./dist/jscrypto-paddings-ansi-x923.umd.min.js",
+    "./iso10126": {
+      "types": "./dist/iso10126.d.ts",
+      "import": "./dist/iso10126.mjs",
+      "require": "./dist/iso10126.cjs"
+    },
+    "./iso10126/browser": "./dist/jscrypto-paddings-iso10126.iife.min.js",
+    "./iso10126/umd": "./dist/jscrypto-paddings-iso10126.umd.min.js",
+    "./iso97971": {
+      "types": "./dist/iso97971.d.ts",
+      "import": "./dist/iso97971.mjs",
+      "require": "./dist/iso97971.cjs"
+    },
+    "./iso97971/browser": "./dist/jscrypto-paddings-iso97971.iife.min.js",
+    "./iso97971/umd": "./dist/jscrypto-paddings-iso97971.umd.min.js",
+    "./none": {
+      "types": "./dist/none.d.ts",
+      "import": "./dist/none.mjs",
+      "require": "./dist/none.cjs"
+    },
+    "./none/browser": "./dist/jscrypto-paddings-none.iife.min.js",
+    "./none/umd": "./dist/jscrypto-paddings-none.umd.min.js",
+    "./pkcs7": {
+      "types": "./dist/pkcs7.d.ts",
+      "import": "./dist/pkcs7.mjs",
+      "require": "./dist/pkcs7.cjs"
+    },
+    "./pkcs7/browser": "./dist/jscrypto-paddings-pkcs7.iife.min.js",
+    "./pkcs7/umd": "./dist/jscrypto-paddings-pkcs7.umd.min.js",
+    "./zero": {
+      "types": "./dist/zero.d.ts",
+      "import": "./dist/zero.mjs",
+      "require": "./dist/zero.cjs"
+    },
+    "./zero/browser": "./dist/jscrypto-paddings-zero.iife.min.js",
+    "./zero/umd": "./dist/jscrypto-paddings-zero.umd.min.js",
+    "./browser": "./dist/jscrypto-paddings.iife.min.js",
+    "./umd": "./dist/jscrypto-paddings.umd.min.js"
+  },
+  "files": [
+    "dist",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@jscrypto/core": "0.9.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emn178/jscrypto.git",
+    "directory": "packages/paddings"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "license": "MIT"
+}

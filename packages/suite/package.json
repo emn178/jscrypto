@@ -1,0 +1,60 @@
+{
+  "name": "@jscrypto/suite",
+  "version": "0.9.0",
+  "description": "Convenience suite registry for @jscrypto components.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "node": {
+        "import": "./dist/index.node.mjs",
+        "require": "./dist/index.node.cjs"
+      },
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./basic": {
+      "types": "./dist/basic.d.ts",
+      "import": "./dist/basic.mjs",
+      "require": "./dist/basic.cjs"
+    },
+    "./basic/browser": "./dist/jscrypto-suite-basic.iife.min.js",
+    "./basic/umd": "./dist/jscrypto-suite-basic.umd.min.js",
+    "./all": {
+      "types": "./dist/all.d.ts",
+      "import": "./dist/all.mjs",
+      "require": "./dist/all.cjs"
+    },
+    "./all/browser": "./dist/jscrypto-suite-all.iife.min.js",
+    "./all/umd": "./dist/jscrypto-suite-all.umd.min.js",
+    "./browser": "./dist/jscrypto-suite.iife.min.js",
+    "./umd": "./dist/jscrypto-suite.umd.min.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@jscrypto/core": "0.9.0",
+    "@jscrypto/ciphers": "0.9.0",
+    "@jscrypto/formats": "0.9.0",
+    "@jscrypto/hashes": "0.9.0",
+    "@jscrypto/kdfs": "0.9.0",
+    "@jscrypto/modes": "0.9.0",
+    "@jscrypto/paddings": "0.9.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emn178/jscrypto.git",
+    "directory": "packages/suite"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "license": "MIT"
+}

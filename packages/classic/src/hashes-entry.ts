@@ -1,1 +1,1 @@
-export * from './hashes/index.js';
+export * from '@jscrypto/hashes';

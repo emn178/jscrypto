@@ -1,5 +1,28 @@
 # Change Log
 
+## v0.9.0 / 2026-08-09
+
+### Added
+
+- added component packages: `@jscrypto/ciphers`, `@jscrypto/modes`, `@jscrypto/paddings`, `@jscrypto/kdfs`, `@jscrypto/formats`, and `@jscrypto/hashes`.
+- added SPECK and ChaCha20 family components to `@jscrypto/ciphers`.
+- added HKDF, HKDF-Extract, and HKDF-Expand components to `@jscrypto/kdfs`.
+- added `@jscrypto/suite` as a convenience registry that registers the official component packages together.
+- added `basicPreset` / `createBasicRegistry` and `allPreset` / `createAllRegistry` to `@jscrypto/suite`.
+- added `@jscrypto/suite/basic` and `@jscrypto/suite/all` subpath exports plus matching browser bundles.
+- added subpath exports such as `@jscrypto/ciphers/aes`, `@jscrypto/modes/cbc`, `@jscrypto/paddings/pkcs7`, and `@jscrypto/kdfs/pbkdf2`.
+- added individual browser IIFE/UMD bundles for component subpaths such as `@jscrypto/ciphers/chacha20/browser`, `@jscrypto/ciphers/speck/browser`, and `@jscrypto/kdfs/hkdf/browser`.
+- added per-component or per-family presets such as `aesPreset`, `speckPreset`, `chacha20Preset`, `pbkdf2Preset`, and `hkdfPreset`.
+- added component documentation pages under `@jscrypto/ciphers/docs` and `@jscrypto/kdfs/docs`.
+
+### Changed
+
+- changed `@jscrypto/classic` into a compatibility aggregate that re-exports the new component packages.
+- changed SPECK, ChaCha20, and HKDF from separate package repos into component subpaths of `@jscrypto/ciphers` and `@jscrypto/kdfs`.
+- changed the default `@jscrypto/suite` singleton registry and `suitePreset` compatibility alias to use the basic preset.
+- changed documentation to recommend `@jscrypto/suite` for a ready-to-use registry and component packages for focused imports.
+- changed aggregate presets to compose smaller component presets.
+
 ## v0.8.0 / 2026-08-03
 
 ### Added

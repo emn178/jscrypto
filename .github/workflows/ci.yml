@@ -33,6 +33,13 @@ jobs:
         run: |
           mkdir -p package-artifact
           npm pack --workspace=@jscrypto/core --pack-destination package-artifact
+          npm pack --workspace=@jscrypto/ciphers --pack-destination package-artifact
+          npm pack --workspace=@jscrypto/modes --pack-destination package-artifact
+          npm pack --workspace=@jscrypto/paddings --pack-destination package-artifact
+          npm pack --workspace=@jscrypto/kdfs --pack-destination package-artifact
+          npm pack --workspace=@jscrypto/formats --pack-destination package-artifact
+          npm pack --workspace=@jscrypto/hashes --pack-destination package-artifact
+          npm pack --workspace=@jscrypto/suite --pack-destination package-artifact
           npm pack --workspace=@jscrypto/classic --pack-destination package-artifact
 
       - name: Upload packed packages
@@ -67,8 +74,15 @@ jobs:
 
       - name: Extract package dist
         run: |
-          rm -rf packages/core/dist packages/classic/dist
+          rm -rf packages/core/dist packages/ciphers/dist packages/modes/dist packages/paddings/dist packages/kdfs/dist packages/formats/dist packages/hashes/dist packages/suite/dist packages/classic/dist
           tar -xzf package-artifact/jscrypto-core-*.tgz --strip-components=1 -C packages/core package/package.json package/dist
+          tar -xzf package-artifact/jscrypto-ciphers-*.tgz --strip-components=1 -C packages/ciphers package/package.json package/dist
+          tar -xzf package-artifact/jscrypto-modes-*.tgz --strip-components=1 -C packages/modes package/package.json package/dist
+          tar -xzf package-artifact/jscrypto-paddings-*.tgz --strip-components=1 -C packages/paddings package/package.json package/dist
+          tar -xzf package-artifact/jscrypto-kdfs-*.tgz --strip-components=1 -C packages/kdfs package/package.json package/dist
+          tar -xzf package-artifact/jscrypto-formats-*.tgz --strip-components=1 -C packages/formats package/package.json package/dist
+          tar -xzf package-artifact/jscrypto-hashes-*.tgz --strip-components=1 -C packages/hashes package/package.json package/dist
+          tar -xzf package-artifact/jscrypto-suite-*.tgz --strip-components=1 -C packages/suite package/package.json package/dist
           tar -xzf package-artifact/jscrypto-classic-*.tgz --strip-components=1 -C packages/classic package/package.json package/dist
 
       - name: Run tests against package dist

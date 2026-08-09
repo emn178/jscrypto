@@ -1,0 +1,89 @@
+{
+  "name": "@jscrypto/ciphers",
+  "version": "0.9.0",
+  "description": "Cipher components for @jscrypto.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "node": {
+        "import": "./dist/index.node.mjs",
+        "require": "./dist/index.node.cjs"
+      },
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./aes": {
+      "types": "./dist/aes.d.ts",
+      "node": {
+        "import": "./dist/aes.node.mjs",
+        "require": "./dist/aes.node.cjs"
+      },
+      "import": "./dist/aes.mjs",
+      "require": "./dist/aes.cjs"
+    },
+    "./aes/browser": "./dist/jscrypto-ciphers-aes.iife.min.js",
+    "./aes/umd": "./dist/jscrypto-ciphers-aes.umd.min.js",
+    "./des": {
+      "types": "./dist/des.d.ts",
+      "import": "./dist/des.mjs",
+      "require": "./dist/des.cjs"
+    },
+    "./des/browser": "./dist/jscrypto-ciphers-des.iife.min.js",
+    "./des/umd": "./dist/jscrypto-ciphers-des.umd.min.js",
+    "./chacha20": {
+      "types": "./dist/chacha20.d.ts",
+      "import": "./dist/chacha20.mjs",
+      "require": "./dist/chacha20.cjs"
+    },
+    "./chacha20/browser": "./dist/jscrypto-ciphers-chacha20.iife.min.js",
+    "./chacha20/umd": "./dist/jscrypto-ciphers-chacha20.umd.min.js",
+    "./rc4": {
+      "types": "./dist/rc4.d.ts",
+      "import": "./dist/rc4.mjs",
+      "require": "./dist/rc4.cjs"
+    },
+    "./rc4/browser": "./dist/jscrypto-ciphers-rc4.iife.min.js",
+    "./rc4/umd": "./dist/jscrypto-ciphers-rc4.umd.min.js",
+    "./speck": {
+      "types": "./dist/speck.d.ts",
+      "import": "./dist/speck.mjs",
+      "require": "./dist/speck.cjs"
+    },
+    "./speck/browser": "./dist/jscrypto-ciphers-speck.iife.min.js",
+    "./speck/umd": "./dist/jscrypto-ciphers-speck.umd.min.js",
+    "./triple-des": {
+      "types": "./dist/triple-des.d.ts",
+      "import": "./dist/triple-des.mjs",
+      "require": "./dist/triple-des.cjs"
+    },
+    "./triple-des/browser": "./dist/jscrypto-ciphers-triple-des.iife.min.js",
+    "./triple-des/umd": "./dist/jscrypto-ciphers-triple-des.umd.min.js",
+    "./browser": "./dist/jscrypto-ciphers.iife.min.js",
+    "./umd": "./dist/jscrypto-ciphers.umd.min.js"
+  },
+  "files": [
+    "dist",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@jscrypto/core": "0.9.0",
+    "@noble/ciphers": "^2.2.0",
+    "js-speck": "^0.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emn178/jscrypto.git",
+    "directory": "packages/ciphers"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "license": "MIT"
+}

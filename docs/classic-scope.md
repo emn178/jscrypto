@@ -1,6 +1,6 @@
 # Classic Package Scope
 
-This document tracks the current `@jscrypto/classic` package scope. The package is intended to stand on its own as a classic cryptography component set, with CryptoJS-compatible outputs where compatibility is intentional.
+This document tracks the compatibility scope of `@jscrypto/classic`. The package now aggregates the component packages while preserving the original classic API surface.
 
 ## In Scope First
 
@@ -44,10 +44,11 @@ Compatibility details:
 
 - Strict unpad validation.
 - CryptoJS-compatible OpenSSL salt envelope.
-- KDF hashes are registry components. `@jscrypto/classic` does not register or bundle them by
-  default; consumers can call `registry.use(classicHashesPreset)` from
-  `@jscrypto/classic/hashes`, or register a custom `HashComponent` with `registry.useHash(...)`.
-- CryptoJS-compatible `SHA3` is Keccak-512. `@jscrypto/classic/hashes` registers it as
+- KDF hashes are registry components. `@jscrypto/classic` does not register them by
+  default; consumers can call `registry.use(hashesPreset)` from `@jscrypto/hashes`,
+  `registry.use(classicHashesPreset)` from `@jscrypto/classic/hashes`, or register a
+  custom `HashComponent` with `registry.useHash(...)`.
+- CryptoJS-compatible `SHA3` is Keccak-512. `@jscrypto/hashes` registers it as
   `KECCAK512`.
 - Text and file chunk flows should be supported through the streaming transform APIs.
 
@@ -59,12 +60,20 @@ Compatibility details:
 
 ## Current Status
 
-Implemented as standalone packages:
+Implemented as component packages:
 
 - `@jscrypto/core`
-- `@jscrypto/classic`
+- `@jscrypto/ciphers`
+- `@jscrypto/modes`
+- `@jscrypto/paddings`
+- `@jscrypto/kdfs`
+- `@jscrypto/formats`
+- `@jscrypto/hashes`
+- `@jscrypto/suite`
 
-`@jscrypto/classic` contains internal modules for AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, ECB, OFB, GCM, NoPadding, Pkcs7, AnsiX923, Iso10126, Iso97971, ZeroPadding, PBKDF2, EvpKDF, and OpenSSL `Salted__` format. The optional `@jscrypto/classic/hashes` entry provides MD5, SHA-1/2, KECCAK512, and RIPEMD160 components without adding them to the main classic entry. RIPEMD160 is implemented locally, and `@jscrypto/classic` no longer depends on CryptoJS.
+`@jscrypto/classic` is a compatibility aggregate, not the place for new algorithms. SPECK and ChaCha20 live in `@jscrypto/ciphers`; HKDF lives in `@jscrypto/kdfs`; `@jscrypto/suite/all` combines them with the classic compatibility set.
+
+`@jscrypto/classic` re-exports AES, DES, Triple DES, RC4, RC4Drop, CBC, CFB, CTR, ECB, OFB, GCM, NoPadding, Pkcs7, AnsiX923, Iso10126, Iso97971, ZeroPadding, PBKDF2, EvpKDF, and OpenSSL `Salted__` format from the component packages. The optional `@jscrypto/classic/hashes` entry re-exports `@jscrypto/hashes` for compatibility. RIPEMD160 is implemented locally, and `@jscrypto/classic` no longer depends on CryptoJS.
 
 Current working API:
 

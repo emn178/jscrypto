@@ -1,0 +1,16 @@
+import type { PresetComponent } from '@jscrypto/core';
+import { createHash } from './component.js';
+import * as sha3Module from 'js-sha3';
+
+const keccak512Digest = (sha3Module as unknown as { default: typeof import('js-sha3') }).default.keccak512;
+const hashKeccak512 = (input: Uint8Array): Uint8Array => new Uint8Array(keccak512Digest.arrayBuffer(input));
+
+export const keccak512 = createHash('KECCAK512', 72, 64, hashKeccak512);
+
+export const keccak512Preset: PresetComponent<'keccak512'> = {
+  kind: 'preset',
+  name: 'keccak512',
+  components() {
+    return [keccak512];
+  },
+};

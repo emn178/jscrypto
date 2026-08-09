@@ -1,0 +1,44 @@
+{
+  "name": "@jscrypto/formats",
+  "version": "0.9.0",
+  "description": "Format components for @jscrypto.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./openssl": {
+      "types": "./dist/openssl.d.ts",
+      "import": "./dist/openssl.mjs",
+      "require": "./dist/openssl.cjs"
+    },
+    "./openssl/browser": "./dist/jscrypto-formats-openssl.iife.min.js",
+    "./openssl/umd": "./dist/jscrypto-formats-openssl.umd.min.js",
+    "./browser": "./dist/jscrypto-formats.iife.min.js",
+    "./umd": "./dist/jscrypto-formats.umd.min.js"
+  },
+  "files": [
+    "dist",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@jscrypto/core": "0.9.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emn178/jscrypto.git",
+    "directory": "packages/formats"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "license": "MIT"
+}

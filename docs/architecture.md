@@ -30,13 +30,19 @@ Core APIs are `Uint8Array`-first. String encodings, CryptoJS adapters, and OpenS
 
 ## Package Surface
 
-The public npm surface is currently two packages plus one opt-in subpath:
+The public npm surface is split by component type:
 
 - `@jscrypto/core`: framework contracts and shared helpers.
-- `@jscrypto/classic`: classic ciphers, modes, paddings, KDFs, and formats with CryptoJS-compatible outputs where compatibility is intentional.
-- `@jscrypto/classic/hashes`: opt-in CryptoJS-compatible hash components for KDF/derived-key use.
+- `@jscrypto/ciphers`: AES, DES, Triple DES, RC4, RC4Drop, SPECK, ChaCha20, XChaCha20, ChaCha20-Poly1305, and XChaCha20-Poly1305.
+- `@jscrypto/modes`: CBC, CFB, CTR, ECB, OFB, and GCM.
+- `@jscrypto/paddings`: classic block padding components.
+- `@jscrypto/kdfs`: PBKDF2, EvpKDF, HKDF, HKDF-Extract, and HKDF-Expand.
+- `@jscrypto/formats`: OpenSSL `Salted__` formatting.
+- `@jscrypto/hashes`: opt-in hash components for KDF/derived-key use.
+- `@jscrypto/suite`: ready-to-use basic and all registries that combine official components.
+- `@jscrypto/classic`: compatibility aggregate for the original classic package API.
 
-Inside `@jscrypto/classic`, code remains split by concern under `src/ciphers`, `src/modes`, `src/paddings`, `src/kdfs`, `src/formats`, `src/hashes`, and `src/preset`. Concrete hashes are deliberately excluded from the main classic entry and browser bundle; consumers opt in through the hashes subpath and call `registry.use(classicHashesPreset)`.
+Component packages expose both package-level presets and subpath exports such as `@jscrypto/ciphers/aes`, `@jscrypto/modes/cbc`, and `@jscrypto/paddings/pkcs7`. Browser bundles remain split by package, while `@jscrypto/suite` provides a convenient bundle for applications that want the official set at once.
 
 Mode components provide stateful transform factories only. One-shot encryption and decryption are registry conveniences built by creating a transform and finalizing it with the complete input.
 
@@ -51,17 +57,20 @@ Cipher components are split by `type`:
 
 ## Implementation Order
 
-The first milestone is a standalone classic compatibility package with AES-GCM and no CryptoJS runtime dependency.
+The first milestone was a standalone classic compatibility package with AES-GCM and no CryptoJS runtime dependency. The current milestone splits that implementation into component packages while keeping `@jscrypto/classic` as a compatibility aggregate.
 
-Initial parity modules inside `@jscrypto/classic`:
+Initial parity and extension modules now live in component packages:
 
 - AES, DES, Triple DES
 - RC4, RC4Drop
+- SPECK
+- ChaCha20, XChaCha20, ChaCha20-Poly1305, XChaCha20-Poly1305
 - CBC, CFB, CTR, OFB, ECB, GCM
 - Pkcs7, Iso97971, AnsiX923, Iso10126, ZeroPadding, NoPadding
 - PBKDF2, EvpKDF (with hashes registered explicitly)
+- HKDF, HKDF-Extract, HKDF-Expand
 - OpenSSL `Salted__` format
-- Opt-in `@jscrypto/classic/hashes`
+- `@jscrypto/hashes`
 
 Deferred modules:
 
