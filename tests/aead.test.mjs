@@ -7,20 +7,42 @@ import {
 } from '@jscrypto/core';
 
 function createFakeAeadComponent(name = 'Fake-AEAD') {
-  const calls = { create: [], seal: [], open: [] };
+  const calls = { create: [], createSealer: [], createOpener: [], sealProcess: [], openProcess: [] };
   const component = {
     kind: 'aead',
     name,
     create(params) {
       calls.create.push(params);
       return {
-        seal(params) {
-          calls.seal.push(params);
-          return new Uint8Array([1, 2, 3]);
+        createSealer(params) {
+          calls.createSealer.push(params);
+          return {
+            process(input) {
+              calls.sealProcess.push(input);
+              return new Uint8Array([1]);
+            },
+            finalize(input = new Uint8Array(0)) {
+              if (input.length !== 0) {
+                this.process(input);
+              }
+              return new Uint8Array([1, 2, 3]);
+            },
+          };
         },
-        open(params) {
-          calls.open.push(params);
-          return new Uint8Array([4, 5]);
+        createOpener(params) {
+          calls.createOpener.push(params);
+          return {
+            process(input) {
+              calls.openProcess.push(input);
+              return new Uint8Array(0);
+            },
+            finalize(input = new Uint8Array(0)) {
+              if (input.length !== 0) {
+                this.process(input);
+              }
+              return new Uint8Array([4, 5]);
+            },
+          };
         },
       };
     },
@@ -81,22 +103,64 @@ test('facade seal/open forward operation options to the component', () => {
   const plaintext = new Uint8Array([3, 4]);
   const sealed = aead.seal(plaintext, { nonce, aad, tagLength: 8 });
   assert.deepEqual([...sealed], [1, 2, 3]);
-  assert.equal(calls.seal.length, 1);
-  assert.equal(calls.seal[0].plaintext, plaintext);
-  assert.equal(calls.seal[0].nonce, nonce);
-  assert.equal(calls.seal[0].aad, aad);
-  assert.equal(calls.seal[0].tagLength, 8);
+  assert.equal(calls.createSealer.length, 1);
+  assert.equal(calls.sealProcess[0], plaintext);
+  assert.equal(calls.createSealer[0].nonce, nonce);
+  assert.equal(calls.createSealer[0].aad, aad);
+  assert.equal(calls.createSealer[0].tagLength, 8);
 
   const ciphertext = new Uint8Array([5, 6]);
   const tag = new Uint8Array([7]);
   const opened = aead.open(ciphertext, { nonce, aad, tag, tagLength: 8 });
   assert.deepEqual([...opened], [4, 5]);
-  assert.equal(calls.open.length, 1);
-  assert.equal(calls.open[0].ciphertext, ciphertext);
-  assert.equal(calls.open[0].nonce, nonce);
-  assert.equal(calls.open[0].aad, aad);
-  assert.equal(calls.open[0].tag, tag);
-  assert.equal(calls.open[0].tagLength, 8);
+  assert.equal(calls.createOpener.length, 1);
+  assert.equal(calls.openProcess[0], ciphertext);
+  assert.equal(calls.createOpener[0].nonce, nonce);
+  assert.equal(calls.createOpener[0].aad, aad);
+  assert.equal(calls.createOpener[0].tag, tag);
+  assert.equal(calls.createOpener[0].tagLength, 8);
+});
+
+test('facade createSealer/createOpener expose AEAD streaming transforms', () => {
+  const { component, calls } = createFakeAeadComponent();
+  const registry = createRegistry().use(component);
+  const key = new Uint8Array([9, 9, 9]);
+  const nonce = new Uint8Array([1]);
+  const aad = new Uint8Array([2]);
+  const tag = new Uint8Array([3]);
+  const aead = registry.createAead({ algorithm: 'Fake-AEAD', key, extra: 'from-create' });
+
+  const sealer = aead.createSealer({ nonce, aad, tagLength: 8, extra2: 'from-seal' });
+  assert.deepEqual([...sealer.process(new Uint8Array([4]))], [1]);
+  assert.deepEqual([...sealer.finalize(new Uint8Array([5]))], [1, 2, 3]);
+  assert.equal(calls.createSealer[0].nonce, nonce);
+  assert.equal(calls.createSealer[0].aad, aad);
+  assert.equal(calls.createSealer[0].tagLength, 8);
+  assert.equal(calls.createSealer[0].options.extra, 'from-create');
+  assert.equal(calls.createSealer[0].options.extra2, 'from-seal');
+  assert.deepEqual(calls.sealProcess, [new Uint8Array([4]), new Uint8Array([5])]);
+
+  const opener = aead.createOpener({ nonce, aad, tag, extra3: 'from-open' });
+  assert.deepEqual([...opener.process(new Uint8Array([6]))], []);
+  assert.deepEqual([...opener.finalize(new Uint8Array([7]))], [4, 5]);
+  assert.equal(calls.createOpener[0].nonce, nonce);
+  assert.equal(calls.createOpener[0].aad, aad);
+  assert.equal(calls.createOpener[0].tag, tag);
+  assert.equal(calls.createOpener[0].options.extra, 'from-create');
+  assert.equal(calls.createOpener[0].options.extra3, 'from-open');
+  assert.deepEqual(calls.openProcess, [new Uint8Array([6]), new Uint8Array([7])]);
+});
+
+test('facade methods do not depend on this binding', () => {
+  const { component } = createFakeAeadComponent();
+  const registry = createRegistry().use(component);
+  const aead = registry.createAead({ algorithm: 'Fake-AEAD', key: new Uint8Array([1]) });
+  const { seal, open, createSealer, createOpener } = aead;
+
+  assert.deepEqual([...seal(new Uint8Array([1]))], [1, 2, 3]);
+  assert.deepEqual([...open(new Uint8Array([2]))], [4, 5]);
+  assert.deepEqual([...createSealer().finalize(new Uint8Array([3]))], [1, 2, 3]);
+  assert.deepEqual([...createOpener().finalize(new Uint8Array([4]))], [4, 5]);
 });
 
 test('seal/open work with no operation options at all', () => {
@@ -107,8 +171,8 @@ test('seal/open work with no operation options at all', () => {
   aead.seal(new Uint8Array([1]));
   aead.open(new Uint8Array([1]));
 
-  assert.equal(calls.seal[0].nonce, undefined);
-  assert.equal(calls.open[0].tag, undefined);
+  assert.equal(calls.createSealer[0].nonce, undefined);
+  assert.equal(calls.createOpener[0].tag, undefined);
 });
 
 test('unknown extra fields in creation and operation options are ignored by core', () => {
@@ -134,17 +198,17 @@ test('unknown extra fields in creation and operation options are ignored by core
   // Core does not throw for unrecognized extension fields; it forwards them
   // through `options` so a component may opt in to reading them.
   // AEAD does not reuse the cipher-facade reserved list (mode/padding/...).
-  assert.equal(calls.seal[0].options.mode, 'CBC');
-  assert.equal(calls.seal[0].options.padding, 'Pkcs7');
-  assert.equal(calls.seal[0].options.cipher, 'AES');
-  assert.deepEqual(calls.seal[0].options.iv, new Uint8Array([9]));
-  assert.equal(calls.seal[0].options.extra, 'from-create');
-  assert.equal(calls.seal[0].options.extra2, 'from-seal');
+  assert.equal(calls.createSealer[0].options.mode, 'CBC');
+  assert.equal(calls.createSealer[0].options.padding, 'Pkcs7');
+  assert.equal(calls.createSealer[0].options.cipher, 'AES');
+  assert.deepEqual(calls.createSealer[0].options.iv, new Uint8Array([9]));
+  assert.equal(calls.createSealer[0].options.extra, 'from-create');
+  assert.equal(calls.createSealer[0].options.extra2, 'from-seal');
 
   aead.open(new Uint8Array(0), { padding: 'Pkcs7', extra3: 'from-open' });
-  assert.equal(calls.open[0].options.padding, 'Pkcs7');
-  assert.equal(calls.open[0].options.extra3, 'from-open');
-  assert.equal(calls.open[0].options.extra, 'from-create');
+  assert.equal(calls.createOpener[0].options.padding, 'Pkcs7');
+  assert.equal(calls.createOpener[0].options.extra3, 'from-open');
+  assert.equal(calls.createOpener[0].options.extra, 'from-create');
 });
 
 test('operation options cannot override the reserved algorithm or key fields', () => {

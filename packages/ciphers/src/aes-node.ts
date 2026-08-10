@@ -1,6 +1,6 @@
 import type { BlockCipher, CipherComponent, PresetComponent } from '@jscrypto/core';
 import { createCipheriv, createDecipheriv } from 'node:crypto';
-import { createNodeAesGcmComponent } from './aes-gcm-node.js';
+import { createAesGcmComponent } from './aes-gcm.js';
 
 const BLOCK_SIZE = 16;
 
@@ -15,7 +15,7 @@ export const aes: CipherComponent<'AES'> = {
   },
 };
 
-export const aesGcm = createNodeAesGcmComponent(createAesCipher);
+export const aesGcm = createAesGcmComponent();
 
 export const aesPreset: PresetComponent<'aes'> = {
   kind: 'preset',

@@ -2,6 +2,8 @@ import {
   assertBytes,
   concatBytes,
   type AeadComponent,
+  type AeadCreateOpenerParams,
+  type AeadCreateSealerParams,
   type AeadTransform,
   type CipherComponent,
   type PresetComponent,
@@ -162,16 +164,37 @@ function createAeadTransform(key: Uint8Array, algorithm: AeadAlgorithm): AeadTra
   assertKey(key, algorithm);
 
   return {
-    seal({ plaintext, nonce, aad, tagLength }) {
-      assertBytes(plaintext, `${algorithm} input`);
+    createSealer({ nonce, aad, tagLength }: AeadCreateSealerParams): Transform {
       const resolvedNonce = requireAeadNonce(nonce, algorithm);
       const resolvedAad = resolveAad(aad, algorithm);
       assertTagLength(tagLength, algorithm);
-      const cipher = createNobleAead(algorithm, key, resolvedNonce, resolvedAad);
-      return cipher.encrypt(plaintext);
+      let pendings: Uint8Array<ArrayBufferLike>[] = [];
+      let finalized = false;
+
+      return {
+        process(input) {
+          assertNotFinalized(finalized);
+          assertBytes(input, `${algorithm} input`);
+          pendings.push(input);
+          return new Uint8Array(0);
+        },
+
+        finalize(input = new Uint8Array(0)) {
+          assertNotFinalized(finalized);
+          if (input.length !== 0) {
+            this.process(input);
+          }
+          finalized = true;
+
+          const plaintext = collectPending(pendings);
+          pendings = [];
+          const cipher = createNobleAead(algorithm, key, resolvedNonce, resolvedAad);
+          return cipher.encrypt(plaintext);
+        },
+      };
     },
-    open({ ciphertext, nonce, aad, tag, tagLength }) {
-      assertBytes(ciphertext, `${algorithm} input`);
+
+    createOpener({ nonce, aad, tag, tagLength }: AeadCreateOpenerParams): Transform {
       const resolvedNonce = requireAeadNonce(nonce, algorithm);
       const resolvedAad = resolveAad(aad, algorithm);
       const detachedTag = resolveOptionalTag(tag, algorithm);
@@ -179,15 +202,47 @@ function createAeadTransform(key: Uint8Array, algorithm: AeadAlgorithm): AeadTra
       if (detachedTag === undefined) {
         assertTagLength(tagLength, algorithm);
       }
-      const sealed = resolveSealedInput(ciphertext, detachedTag, algorithm);
-      const cipher = createNobleAead(algorithm, key, resolvedNonce, resolvedAad);
-      try {
-        return cipher.decrypt(sealed);
-      } catch {
-        throw new Error(`${algorithm} authentication failed.`);
-      }
+      let pendings: Uint8Array<ArrayBufferLike>[] = [];
+      let finalized = false;
+
+      return {
+        process(input) {
+          assertNotFinalized(finalized);
+          assertBytes(input, `${algorithm} input`);
+          pendings.push(input);
+          return new Uint8Array(0);
+        },
+
+        finalize(input = new Uint8Array(0)) {
+          assertNotFinalized(finalized);
+          if (input.length !== 0) {
+            this.process(input);
+          }
+          finalized = true;
+
+          const ciphertext = collectPending(pendings);
+          pendings = [];
+          const sealed = resolveSealedInput(ciphertext, detachedTag, algorithm);
+          const cipher = createNobleAead(algorithm, key, resolvedNonce, resolvedAad);
+          try {
+            return cipher.decrypt(sealed);
+          } catch {
+            throw new Error(`${algorithm} authentication failed.`);
+          }
+        },
+      };
     },
   };
+}
+
+function collectPending(pendings: readonly Uint8Array[]): Uint8Array {
+  if (pendings.length === 0) {
+    return new Uint8Array(0);
+  }
+  if (pendings.length === 1) {
+    return pendings[0];
+  }
+  return concatBytes(...pendings);
 }
 
 function applyStream(

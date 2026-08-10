@@ -1,4 +1,4 @@
-import type { AeadComponent, AeadTransform } from './component.js';
+import type { AeadComponent, AeadTransform, Transform } from './component.js';
 import type { Registry } from './registry.js';
 
 export interface CreateAeadOptions {
@@ -25,6 +25,8 @@ export interface AeadOpenOperationOptions {
 export interface AeadFacade {
   seal(plaintext: Uint8Array, options?: AeadSealOperationOptions): Uint8Array;
   open(ciphertext: Uint8Array, options?: AeadOpenOperationOptions): Uint8Array;
+  createSealer(options?: AeadSealOperationOptions): Transform;
+  createOpener(options?: AeadOpenOperationOptions): Transform;
 }
 
 /**
@@ -70,31 +72,47 @@ function mergeAeadOptions(
 export function createAead(registry: Registry, options: CreateAeadOptions): AeadFacade {
   const { algorithm, key, createOptions } = splitCreateAeadOptions(options);
   const component = registry.get<'aead', AeadComponent>('aead', algorithm);
-  // create() once: AeadTransform must be reusable/stateless across seal/open calls.
-  const transform: AeadTransform = component.create({ key, options: createOptions });
+  // create() once: AeadTransform must be reusable and create fresh per-operation transforms.
+  const transform: AeadTransform = component.create({ key, options: createOptions }, {
+    createEncryptor(transformOptions) {
+      return registry.createEncryptor(transformOptions);
+    },
+    createDecryptor(transformOptions) {
+      return registry.createDecryptor(transformOptions);
+    },
+  });
+
+  function createSealer(operationOptions?: AeadSealOperationOptions): Transform {
+    const merged = mergeAeadOptions(createOptions, operationOptions);
+    return transform.createSealer({
+      nonce: merged.nonce as Uint8Array | undefined,
+      aad: merged.aad as Uint8Array | undefined,
+      tagLength: merged.tagLength as number | undefined,
+      options: merged,
+    });
+  }
+
+  function createOpener(operationOptions?: AeadOpenOperationOptions): Transform {
+    const merged = mergeAeadOptions(createOptions, operationOptions);
+    return transform.createOpener({
+      nonce: merged.nonce as Uint8Array | undefined,
+      aad: merged.aad as Uint8Array | undefined,
+      tag: merged.tag as Uint8Array | undefined,
+      tagLength: merged.tagLength as number | undefined,
+      options: merged,
+    });
+  }
 
   return {
     seal(plaintext, operationOptions) {
-      const merged = mergeAeadOptions(createOptions, operationOptions);
-      return transform.seal({
-        plaintext,
-        nonce: merged.nonce as Uint8Array | undefined,
-        aad: merged.aad as Uint8Array | undefined,
-        tagLength: merged.tagLength as number | undefined,
-        options: merged,
-      });
+      return createSealer(operationOptions).finalize(plaintext);
     },
 
     open(ciphertext, operationOptions) {
-      const merged = mergeAeadOptions(createOptions, operationOptions);
-      return transform.open({
-        ciphertext,
-        nonce: merged.nonce as Uint8Array | undefined,
-        aad: merged.aad as Uint8Array | undefined,
-        tag: merged.tag as Uint8Array | undefined,
-        tagLength: merged.tagLength as number | undefined,
-        options: merged,
-      });
+      return createOpener(operationOptions).finalize(ciphertext);
     },
+
+    createSealer,
+    createOpener,
   };
 }

@@ -15,7 +15,7 @@ export const aes: CipherComponent<'AES'> = {
   },
 };
 
-export const aesGcm = createAesGcmComponent(createAesCipher);
+export const aesGcm = createAesGcmComponent();
 
 export const aesPreset: PresetComponent<'aes'> = {
   kind: 'preset',

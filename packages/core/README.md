@@ -46,9 +46,12 @@ Use `createCipher` for traditional cipher pipelines (`cipher` + optional `mode` 
 full algorithm name:
 
 ```ts
-import { aesGcm } from '@jscrypto/ciphers/aes';
+import { aesPreset } from '@jscrypto/ciphers/aes';
+import { gcmPreset } from '@jscrypto/modes/gcm';
 
-const registry = createRegistry().use(aesGcm);
+const registry = createRegistry()
+  .use(aesPreset)
+  .use(gcmPreset);
 const aead = registry.createAead({
   algorithm: 'AES-GCM',
   key,
@@ -56,11 +59,17 @@ const aead = registry.createAead({
 
 const sealed = aead.seal(plaintext, { nonce, aad });
 const opened = aead.open(sealed, { nonce, aad });
+
+const sealer = aead.createSealer({ nonce, aad });
+const chunk = sealer.process(plaintextChunk);
+const finalChunkWithTag = sealer.finalize();
 ```
 
 AEAD has no padding. `nonce` must be unique for a given key. `aad` is
 authenticated but not encrypted. `seal()` appends the authentication tag;
-`open()` accepts that sealed byte string or a detached `tag`.
+`open()` accepts that sealed byte string or a detached `tag`. `createSealer()`
+and `createOpener()` expose primitive transforms; safe openers may withhold
+plaintext until `finalize()` verifies the authentication tag.
 
 Per-operation options are passed to facade methods rather than being fixed only at facade creation time. Core forwards mode-specific options without naming them; modes such as GCM may define options like `nonce`, `aad`, `tag`, or `tagLength`.
 
@@ -69,8 +78,8 @@ Per-operation options are passed to facade methods rather than being fixed only 
 - `createRegistry`: component registry with cipher facade, AEAD facade, and derived-key facade creation.
 - `randomBytes(length)`: caller-owned random byte helper.
 - Component contracts: cipher, mode, padding, KDF, format, hash, AEAD, and preset types.
-- Transform contract: `process(input)` plus `finalize(input?)` for streaming ciphers and modes.
-- AEAD contract: one-shot `seal` / `open`.
+- Transform contract: `process(input)` plus `finalize(input?)` for streaming ciphers, modes, and AEAD primitives.
+- AEAD contract: one-shot `seal` / `open` plus `createSealer` / `createOpener`.
 - Byte helpers: `concatBytes`, `equalBytes`, `xorBytes`, and byte assertions.
 - Block helpers: block-size, IV, and padding assertions.
 - Errors: `CryptoError`, `DuplicateComponentError`, and `MissingComponentError`.

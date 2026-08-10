@@ -1,9 +1,11 @@
 export type {
   AnyComponent,
+  AeadCipherTransformOptions,
   AeadComponent,
+  AeadCreateContext,
+  AeadCreateOpenerParams,
   AeadCreateParams,
-  AeadOpenParams,
-  AeadSealParams,
+  AeadCreateSealerParams,
   AeadTransform,
   BlockCipher,
   BlockCipherComponent,

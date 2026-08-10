@@ -674,6 +674,23 @@ test('createAead seal/open roundtrip validates tagLength, nonce, and tag', () =>
   );
 });
 
+test('createAead ChaCha20-Poly1305 exposes buffer-backed primitive transforms', () => {
+  const registry = createChaChaRegistry();
+  const aead = registry.createAead({
+    algorithm: 'ChaCha20-Poly1305',
+    key: rfcAead.key,
+  });
+
+  const sealer = aead.createSealer({ nonce: rfcAead.nonce, aad: rfcAead.aad });
+  assert.deepEqual(sealer.process(rfcAead.plaintext.subarray(0, 11)), new Uint8Array(0));
+  const sealed = sealer.finalize(rfcAead.plaintext.subarray(11));
+  assert.equal(toHex(sealed), toHex(rfcAead.sealed));
+
+  const opener = aead.createOpener({ nonce: rfcAead.nonce, aad: rfcAead.aad });
+  assert.deepEqual(opener.process(sealed.subarray(0, 17)), new Uint8Array(0));
+  assert.deepEqual(opener.finalize(sealed.subarray(17)), rfcAead.plaintext);
+});
+
 test('component metadata matches the public surface', () => {
   assert.equal(chacha20.name, 'ChaCha20');
   assert.equal(chacha20.kind, 'cipher');

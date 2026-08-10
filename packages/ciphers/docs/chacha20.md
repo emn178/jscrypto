@@ -39,6 +39,10 @@ const opened = aead.open(sealed, {
   nonce,
   aad,
 });
+
+const sealer = aead.createSealer({ nonce, aad });
+sealer.process(plaintextChunk);
+const sealedChunks = sealer.finalize(lastPlaintextChunk);
 ```
 
 Encryption returns ciphertext with a 16-byte authentication tag appended.
@@ -71,8 +75,11 @@ const cipher = registry.createCipher({
 | `chacha20Poly1305` | `ChaCha20-Poly1305` | AEAD | 32 | 12 | `nonce`, `aad?: Uint8Array`, `tag?: Uint8Array` on open |
 | `xchacha20Poly1305` | `XChaCha20-Poly1305` | AEAD | 32 | 24 | `nonce`, `aad?: Uint8Array`, `tag?: Uint8Array` on open |
 
-AEAD components use one-shot `seal` / `open`. Raw `ChaCha20` and `XChaCha20`
-remain streaming transforms with `process` / `finalize`.
+AEAD components support one-shot `seal` / `open` and primitive transform
+creation with `createSealer` / `createOpener`. The current ChaCha20-Poly1305
+implementation is backed by a one-shot primitive, so AEAD transforms buffer and
+emit from `finalize()`. Raw `ChaCha20` and `XChaCha20` remain true streaming
+transforms with `process` / `finalize`.
 
 ## Browser Files
 

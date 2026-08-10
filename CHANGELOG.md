@@ -5,11 +5,14 @@
 ### Added
 
 - added first-class `aead` component kind and `registry.createAead(...).seal/open` API to `@jscrypto/core`.
+- added `registry.createAead(...).createSealer/createOpener` primitive streaming transforms.
 - added `AES-GCM` AEAD component to `@jscrypto/ciphers` via the AES preset.
-- added a Node-native `AES-GCM` implementation for the ciphers Node entry using `node:crypto` `aes-*-gcm`.
 
 ### Changed
 
+- changed AEAD components to implement primitive transforms; one-shot `seal/open` are now facade helpers built on `createSealer/createOpener`.
+- changed AEAD component creation to receive a registry-backed context so composition components can create cipher/mode transforms at runtime.
+- changed `AES-GCM` AEAD to compose the registered `AES` cipher with the registered `GCM` mode at runtime instead of duplicating GCM internals.
 - changed ChaCha20-Poly1305 and XChaCha20-Poly1305 from stream cipher components to AEAD components selected with `createAead({ algorithm, key })`.
 - changed recommended authenticated encryption examples to use `createAead` instead of cipher + mode pipelines.
 

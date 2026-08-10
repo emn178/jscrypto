@@ -127,7 +127,7 @@ export interface AeadComponent<Name extends string = string> extends Component<'
   readonly nonceSizes?: readonly number[];
   readonly recommendedNonceSize?: number;
   readonly tagSizes?: readonly number[];
-  create(params: AeadCreateParams): AeadTransform;
+  create(params: AeadCreateParams, context: AeadCreateContext): AeadTransform;
 }
 
 export interface AeadCreateParams {
@@ -135,29 +135,32 @@ export interface AeadCreateParams {
   options?: unknown;
 }
 
-/**
- * One-shot AEAD primitive returned by `AeadComponent.create(...)`.
- *
- * Implementations must be reusable and stateless across calls: each `seal` /
- * `open` receives its full per-operation parameters and must not rely on
- * prior call state or a finalize lifecycle. Core may call `seal`/`open`
- * repeatedly on the same instance.
- */
-export interface AeadTransform {
-  seal(params: AeadSealParams): Uint8Array;
-  open(params: AeadOpenParams): Uint8Array;
+export interface AeadCipherTransformOptions {
+  cipher: string;
+  mode?: string;
+  padding?: string;
+  key: Uint8Array;
+  [option: string]: unknown;
 }
 
-export interface AeadSealParams {
-  plaintext: Uint8Array;
+export interface AeadCreateContext {
+  createEncryptor(options: AeadCipherTransformOptions): Transform;
+  createDecryptor(options: AeadCipherTransformOptions): Transform;
+}
+
+export interface AeadTransform {
+  createSealer(params: AeadCreateSealerParams): Transform;
+  createOpener(params: AeadCreateOpenerParams): Transform;
+}
+
+export interface AeadCreateSealerParams {
   nonce?: Uint8Array;
   aad?: Uint8Array;
   tagLength?: number;
   options?: unknown;
 }
 
-export interface AeadOpenParams {
-  ciphertext: Uint8Array;
+export interface AeadCreateOpenerParams {
   nonce?: Uint8Array;
   aad?: Uint8Array;
   /**

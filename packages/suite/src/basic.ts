@@ -1,5 +1,5 @@
 import { createRegistry, type PresetComponent, type Registry } from '@jscrypto/core';
-import { aes } from '@jscrypto/ciphers';
+import { aesPreset } from '@jscrypto/ciphers';
 import { opensslFormat } from '@jscrypto/formats';
 import { hashesPreset } from '@jscrypto/hashes';
 import { hkdfPreset, pbkdf2 } from '@jscrypto/kdfs';
@@ -12,7 +12,7 @@ export function basicPreset(): PresetComponent<'basic'> {
     name: 'basic',
     components() {
       return [
-        aes,
+        aesPreset,
         cbc,
         cfb,
         ctr,

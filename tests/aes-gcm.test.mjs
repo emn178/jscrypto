@@ -13,6 +13,7 @@ function createAesGcmRegistry() {
 function createAesGcmAeadRegistry() {
   return createRegistry()
     .use(aes)
+    .use(gcm)
     .use(aesGcm);
 }
 
@@ -298,6 +299,29 @@ test('createAead AES-GCM supports appended and detached tags with shorter tag le
 
   assert.equal(bytesToText(aead.open(sealed, { nonce, tagLength: 12 })), 'detached tag');
   assert.equal(bytesToText(aead.open(ciphertext, { nonce, tag })), 'detached tag');
+});
+
+test('createAead AES-GCM supports primitive streaming seal/open', () => {
+  const registry = createAesGcmAeadRegistry();
+  const key = hexToBytes('000102030405060708090a0b0c0d0e0f');
+  const nonce = hexToBytes('101112131415161718191a1b');
+  const aad = textToBytes('metadata');
+  const plaintext = textToBytes('streaming AEAD primitive encrypts chunks and verifies before opening');
+  const aead = registry.createAead({ algorithm: 'AES-GCM', key });
+  const expected = aead.seal(plaintext, { nonce, aad, tagLength: 12 });
+
+  const sealer = aead.createSealer({ nonce, aad, tagLength: 12 });
+  const sealed = concatBytes(
+    sealer.process(plaintext.subarray(0, 3)),
+    sealer.process(plaintext.subarray(3, 29)),
+    sealer.finalize(plaintext.subarray(29)),
+  );
+  assert.equal(bytesToHex(sealed), bytesToHex(expected));
+
+  const opener = aead.createOpener({ nonce, aad, tagLength: 12 });
+  assert.deepEqual(opener.process(sealed.subarray(0, 5)), new Uint8Array(0));
+  assert.deepEqual(opener.process(sealed.subarray(5, 41)), new Uint8Array(0));
+  assert.deepEqual(opener.finalize(sealed.subarray(41)), plaintext);
 });
 
 test('createAead AES-GCM throws AES-GCM authentication failed for a wrong tag', () => {
