@@ -1,5 +1,10 @@
 export type {
   AnyComponent,
+  AeadComponent,
+  AeadCreateParams,
+  AeadOpenParams,
+  AeadSealParams,
+  AeadTransform,
   BlockCipher,
   BlockCipherComponent,
   BlockModeTransformParams,
@@ -27,6 +32,12 @@ export type {
   FormatOptions,
   KdfOptions,
 } from './derived-key.js';
+export type {
+  AeadFacade,
+  AeadOpenOperationOptions,
+  AeadSealOperationOptions,
+  CreateAeadOptions,
+} from './aead.js';
 export type { CipherFacade, Registry } from './registry.js';
 export { createRegistry } from './registry.js';
 export type {

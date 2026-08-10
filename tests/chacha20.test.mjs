@@ -138,31 +138,31 @@ function decryptXChaCha20({ key, nonce, data, counter }) {
 }
 
 function sealChaCha20Poly1305({ key, nonce, plaintext, aad }) {
-  return createChaChaRegistry().createCipher({
-    cipher: 'ChaCha20-Poly1305',
+  return createChaChaRegistry().createAead({
+    algorithm: 'ChaCha20-Poly1305',
     key,
-  }).encrypt(plaintext, { nonce, aad });
+  }).seal(plaintext, { nonce, aad });
 }
 
 function openChaCha20Poly1305({ key, nonce, ciphertext, aad, tag }) {
-  return createChaChaRegistry().createCipher({
-    cipher: 'ChaCha20-Poly1305',
+  return createChaChaRegistry().createAead({
+    algorithm: 'ChaCha20-Poly1305',
     key,
-  }).decrypt(ciphertext, { nonce, aad, tag });
+  }).open(ciphertext, { nonce, aad, tag });
 }
 
 function sealXChaCha20Poly1305({ key, nonce, plaintext, aad }) {
-  return createChaChaRegistry().createCipher({
-    cipher: 'XChaCha20-Poly1305',
+  return createChaChaRegistry().createAead({
+    algorithm: 'XChaCha20-Poly1305',
     key,
-  }).encrypt(plaintext, { nonce, aad });
+  }).seal(plaintext, { nonce, aad });
 }
 
 function openXChaCha20Poly1305({ key, nonce, ciphertext, aad, tag }) {
-  return createChaChaRegistry().createCipher({
-    cipher: 'XChaCha20-Poly1305',
+  return createChaChaRegistry().createAead({
+    algorithm: 'XChaCha20-Poly1305',
     key,
-  }).decrypt(ciphertext, { nonce, aad, tag });
+  }).open(ciphertext, { nonce, aad, tag });
 }
 
 test('RFC 8439 ChaCha20 encryption vector', () => {
@@ -286,20 +286,30 @@ test('detached and appended tag decrypt flows', () => {
   );
 
   const registry = createChaChaRegistry();
-  const cipher = registry.createCipher({
-    cipher: 'ChaCha20-Poly1305',
+  const aead = registry.createAead({
+    algorithm: 'ChaCha20-Poly1305',
     key: rfcAead.key,
   });
   assert.equal(
-    toHex(cipher.decrypt(ciphertext, {
+    toHex(aead.open(ciphertext, {
       nonce: rfcAead.nonce,
       aad: rfcAead.aad,
       tag,
     })),
     toHex(rfcAead.plaintext),
   );
+  // When tag is present, mismatched tagLength is ignored.
   assert.equal(
-    toHex(cipher.decrypt(rfcAead.sealed, {
+    toHex(aead.open(ciphertext, {
+      nonce: rfcAead.nonce,
+      aad: rfcAead.aad,
+      tag,
+      tagLength: 12,
+    })),
+    toHex(rfcAead.plaintext),
+  );
+  assert.equal(
+    toHex(aead.open(rfcAead.sealed, {
       nonce: rfcAead.nonce,
       aad: rfcAead.aad,
     })),
@@ -441,21 +451,23 @@ test('preset registration with core and classic registries', () => {
   const coreRegistry = createChaChaRegistry();
   assert.equal(coreRegistry.has('cipher', 'ChaCha20'), true);
   assert.equal(coreRegistry.has('cipher', 'XChaCha20'), true);
-  assert.equal(coreRegistry.has('cipher', 'ChaCha20-Poly1305'), true);
-  assert.equal(coreRegistry.has('cipher', 'XChaCha20-Poly1305'), true);
+  assert.equal(coreRegistry.has('aead', 'ChaCha20-Poly1305'), true);
+  assert.equal(coreRegistry.has('aead', 'XChaCha20-Poly1305'), true);
+  assert.equal(coreRegistry.has('cipher', 'ChaCha20-Poly1305'), false);
+  assert.equal(coreRegistry.has('cipher', 'XChaCha20-Poly1305'), false);
 
   const classicRegistry = createClassicRegistry().use(chacha20Preset);
-  const sealed = classicRegistry.createCipher({
-    cipher: 'ChaCha20-Poly1305',
+  const sealed = classicRegistry.createAead({
+    algorithm: 'ChaCha20-Poly1305',
     key: rfcAead.key,
-  }).encrypt(rfcAead.plaintext, {
+  }).seal(rfcAead.plaintext, {
     nonce: rfcAead.nonce,
     aad: rfcAead.aad,
   });
   assert.equal(toHex(sealed), toHex(rfcAead.sealed));
 });
 
-test('registry stream and AEAD createCipher flows', () => {
+test('registry stream createCipher and AEAD createAead flows', () => {
   const registry = createChaChaRegistry();
 
   const stream = registry.createCipher({
@@ -478,17 +490,17 @@ test('registry stream and AEAD createCipher flows', () => {
     toHex(draftXChaCha20.ciphertext),
   );
 
-  const aead = registry.createCipher({
-    cipher: 'XChaCha20-Poly1305',
+  const aead = registry.createAead({
+    algorithm: 'XChaCha20-Poly1305',
     key: draftXAead.key,
   });
-  const sealed = aead.encrypt(draftXAead.plaintext, {
+  const sealed = aead.seal(draftXAead.plaintext, {
     nonce: draftXAead.nonce,
     aad: draftXAead.aad,
   });
   assert.equal(toHex(sealed), toHex(draftXAead.sealed));
   assert.equal(
-    toHex(aead.decrypt(sealed, {
+    toHex(aead.open(sealed, {
       nonce: draftXAead.nonce,
       aad: draftXAead.aad,
     })),
@@ -496,7 +508,7 @@ test('registry stream and AEAD createCipher flows', () => {
   );
 });
 
-test('mode and padding are rejected', () => {
+test('mode is rejected for raw ChaCha20 stream but ignored for Poly1305 AEAD', () => {
   const registry = createChaChaRegistry();
   assert.throws(
     () => registry.createCipher({
@@ -507,13 +519,22 @@ test('mode and padding are rejected', () => {
     }).encrypt(utf8('x')),
     /does not support mode/,
   );
-  assert.throws(
-    () => registry.createCipher({
-      cipher: 'ChaCha20-Poly1305',
+
+  // The handoff documents that createAead has no padding and unrelated extra
+  // fields such as `mode`/`padding` in the creation options have no effect
+  // and must not throw by themselves.
+  const sealed = registry.createAead({
+    algorithm: 'ChaCha20-Poly1305',
+    key: rfcAead.key,
+    mode: 'CTR',
+    padding: 'Pkcs7',
+  }).seal(utf8('x'), { nonce: rfcAead.nonce });
+  assert.equal(
+    toHex(registry.createAead({
+      algorithm: 'ChaCha20-Poly1305',
       key: rfcAead.key,
-      padding: 'Pkcs7',
-    }).encrypt(utf8('x'), { nonce: rfcAead.nonce }),
-    /does not support padding/,
+    }).open(sealed, { nonce: rfcAead.nonce })),
+    toHex(utf8('x')),
   );
 });
 
@@ -576,37 +597,6 @@ test('raw stream transforms emit chunks and match one-shot', () => {
   xPlain.set(xPart2, xPart1.length);
   assert.equal(xPart1.length, 50);
   assert.equal(toHex(xPlain), toHex(draftXChaCha20.plaintext));
-});
-
-test('AEAD decrypt buffers until finalize and rejects double finalize', () => {
-  const decryptor = chacha20Poly1305.createDecryptor({
-    key: rfcAead.key,
-    options: {
-      cipher: 'ChaCha20-Poly1305',
-      key: rfcAead.key,
-      nonce: rfcAead.nonce,
-      aad: rfcAead.aad,
-    },
-  });
-  assert.equal(decryptor.process(rfcAead.sealed.subarray(0, 20)).length, 0);
-  assert.equal(
-    toHex(decryptor.finalize(rfcAead.sealed.subarray(20))),
-    toHex(rfcAead.plaintext),
-  );
-  assert.throws(() => decryptor.process(new Uint8Array(1)), /already finalized/);
-
-  const failingDecryptor = chacha20Poly1305.createDecryptor({
-    key: rfcAead.key,
-    options: {
-      cipher: 'ChaCha20-Poly1305',
-      key: rfcAead.key,
-      nonce: rfcAead.nonce,
-      aad: rfcAead.aad,
-    },
-  });
-  const wrong = new Uint8Array(rfcAead.sealed);
-  wrong[0] ^= 0xff;
-  assert.throws(() => failingDecryptor.finalize(wrong), /authentication failed/);
 
   assert.throws(
     () => chacha20.createEncryptor({
@@ -615,36 +605,6 @@ test('AEAD decrypt buffers until finalize and rejects double finalize', () => {
     }),
     /requires a nonce/,
   );
-});
-
-test('AEAD encryptor and missing nonce are handled', () => {
-  const encryptor = xchacha20Poly1305.createEncryptor({
-    key: draftXAead.key,
-    options: {
-      cipher: 'XChaCha20-Poly1305',
-      key: draftXAead.key,
-      nonce: draftXAead.nonce,
-      aad: draftXAead.aad,
-    },
-  });
-  assert.equal(encryptor.process(draftXAead.plaintext.subarray(0, 8)).length, 0);
-  assert.equal(
-    toHex(encryptor.finalize(draftXAead.plaintext.subarray(8))),
-    toHex(draftXAead.sealed),
-  );
-
-  const emptyFinalize = chacha20Poly1305.createEncryptor({
-    key: rfcAead.key,
-    options: {
-      cipher: 'ChaCha20-Poly1305',
-      key: rfcAead.key,
-      nonce: rfcAead.nonce,
-      aad: rfcAead.aad,
-    },
-  });
-  assert.equal(emptyFinalize.process(rfcAead.plaintext).length, 0);
-  assert.equal(toHex(emptyFinalize.finalize()), toHex(rfcAead.sealed));
-
   assert.throws(
     () => xchacha20.createEncryptor({
       key: draftXChaCha20.key,
@@ -657,17 +617,103 @@ test('AEAD encryptor and missing nonce are handled', () => {
   );
 });
 
+test('createAead seal/open roundtrip validates tagLength, nonce, and tag', () => {
+  const registry = createChaChaRegistry();
+
+  const sealed = registry.createAead({
+    algorithm: 'XChaCha20-Poly1305',
+    key: draftXAead.key,
+  }).seal(draftXAead.plaintext, { nonce: draftXAead.nonce, aad: draftXAead.aad });
+  assert.equal(toHex(sealed), toHex(draftXAead.sealed));
+  assert.equal(
+    toHex(registry.createAead({
+      algorithm: 'XChaCha20-Poly1305',
+      key: draftXAead.key,
+    }).open(sealed, { nonce: draftXAead.nonce, aad: draftXAead.aad })),
+    toHex(draftXAead.plaintext),
+  );
+
+  assert.throws(
+    () => registry.createAead({
+      algorithm: 'ChaCha20-Poly1305',
+      key: rfcAead.key,
+    }).seal(utf8('x'), { nonce: rfcAead.nonce, tagLength: 12 }),
+    /tagLength must be 16/,
+  );
+  assert.throws(
+    () => registry.createAead({
+      algorithm: 'ChaCha20-Poly1305',
+      key: rfcAead.key,
+    }).open(rfcAead.sealed, { nonce: rfcAead.nonce, aad: rfcAead.aad, tagLength: 12 }),
+    /tagLength must be 16/,
+  );
+
+  assert.throws(
+    () => registry.createAead({
+      algorithm: 'ChaCha20-Poly1305',
+      key: rfcAead.key,
+    }).seal(utf8('x'), {}),
+    /ChaCha20-Poly1305 requires a nonce/,
+  );
+  assert.throws(
+    () => registry.createAead({
+      algorithm: 'XChaCha20-Poly1305',
+      key: draftXAead.key,
+    }).open(draftXAead.sealed, {}),
+    /XChaCha20-Poly1305 requires a nonce/,
+  );
+
+  const wrongTag = new Uint8Array(rfcAead.sealed);
+  wrongTag[wrongTag.length - 1] ^= 0xff;
+  assert.throws(
+    () => registry.createAead({
+      algorithm: 'ChaCha20-Poly1305',
+      key: rfcAead.key,
+    }).open(wrongTag, { nonce: rfcAead.nonce, aad: rfcAead.aad }),
+    /ChaCha20-Poly1305 authentication failed/,
+  );
+});
+
 test('component metadata matches the public surface', () => {
   assert.equal(chacha20.name, 'ChaCha20');
+  assert.equal(chacha20.kind, 'cipher');
   assert.equal(chacha20.type, 'stream');
   assert.deepEqual(chacha20.keySizes, [32]);
   assert.equal(xchacha20.name, 'XChaCha20');
+  assert.equal(xchacha20.kind, 'cipher');
+
   assert.equal(chacha20Poly1305.name, 'ChaCha20-Poly1305');
+  assert.equal(chacha20Poly1305.kind, 'aead');
+  assert.deepEqual(chacha20Poly1305.nonceSizes, [12]);
+  assert.deepEqual(chacha20Poly1305.tagSizes, [16]);
+  assert.equal(typeof chacha20Poly1305.create, 'function');
+  assert.equal(chacha20Poly1305.createEncryptor, undefined);
+  assert.equal(chacha20Poly1305.createDecryptor, undefined);
+
   assert.equal(xchacha20Poly1305.name, 'XChaCha20-Poly1305');
+  assert.equal(xchacha20Poly1305.kind, 'aead');
+  assert.deepEqual(xchacha20Poly1305.nonceSizes, [24]);
+  assert.deepEqual(xchacha20Poly1305.tagSizes, [16]);
+  assert.equal(typeof xchacha20Poly1305.create, 'function');
+  assert.equal(xchacha20Poly1305.createEncryptor, undefined);
+  assert.equal(xchacha20Poly1305.createDecryptor, undefined);
+
   assert.equal(chacha20Preset.name, 'chacha20');
   assert.deepEqual(
     [...chacha20Preset.components()].map((component) => component.name),
     ['ChaCha20', 'XChaCha20', 'ChaCha20-Poly1305', 'XChaCha20-Poly1305'],
+  );
+});
+
+test('after migration, createCipher no longer resolves ChaCha AEAD names', () => {
+  const registry = createChaChaRegistry();
+  assert.throws(
+    () => registry.createCipher({ cipher: 'ChaCha20-Poly1305', key: rfcAead.key }).encrypt(utf8('x')),
+    /Component not found: cipher:ChaCha20-Poly1305/,
+  );
+  assert.throws(
+    () => registry.createCipher({ cipher: 'XChaCha20-Poly1305', key: draftXAead.key }).encrypt(utf8('x')),
+    /Component not found: cipher:XChaCha20-Poly1305/,
   );
 });
 
@@ -677,15 +723,19 @@ test('CommonJS build can be required', () => {
   assert.equal(packageExports.chacha20.name, 'ChaCha20');
   assert.equal(packageExports.xchacha20.name, 'XChaCha20');
   assert.equal(packageExports.chacha20Poly1305.name, 'ChaCha20-Poly1305');
+  assert.equal(packageExports.chacha20Poly1305.kind, 'aead');
+  assert.equal(typeof packageExports.chacha20Poly1305.create, 'function');
   assert.equal(packageExports.xchacha20Poly1305.name, 'XChaCha20-Poly1305');
+  assert.equal(packageExports.xchacha20Poly1305.kind, 'aead');
+  assert.equal(typeof packageExports.xchacha20Poly1305.create, 'function');
 });
 
 test('generated declarations export the public API', async () => {
   const dts = await readFile(new URL('../packages/ciphers/dist/chacha20.d.ts', import.meta.url), 'utf8');
   assert.match(dts, /export declare const chacha20:/);
   assert.match(dts, /export declare const xchacha20:/);
-  assert.match(dts, /export declare const chacha20Poly1305:/);
-  assert.match(dts, /export declare const xchacha20Poly1305:/);
+  assert.match(dts, /export declare const chacha20Poly1305:\s*AeadComponent/);
+  assert.match(dts, /export declare const xchacha20Poly1305:\s*AeadComponent/);
   assert.match(dts, /export declare const chacha20Preset:/);
   assert.doesNotMatch(dts, /export declare function encryptChaCha20/);
   assert.doesNotMatch(dts, /export declare function sealXChaCha20Poly1305/);

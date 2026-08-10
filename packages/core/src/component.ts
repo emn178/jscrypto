@@ -1,4 +1,12 @@
-export type ComponentKind = 'cipher' | 'mode' | 'padding' | 'kdf' | 'format' | 'preset' | 'hash';
+export type ComponentKind =
+  | 'cipher'
+  | 'mode'
+  | 'padding'
+  | 'kdf'
+  | 'format'
+  | 'preset'
+  | 'hash'
+  | 'aead';
 
 export interface Component<
   Kind extends ComponentKind = ComponentKind,
@@ -114,6 +122,53 @@ export interface PresetComponent<Name extends string = string> extends Component
   components(): Iterable<AnyComponent>;
 }
 
+export interface AeadComponent<Name extends string = string> extends Component<'aead', Name> {
+  readonly keySizes?: readonly number[];
+  readonly nonceSizes?: readonly number[];
+  readonly recommendedNonceSize?: number;
+  readonly tagSizes?: readonly number[];
+  create(params: AeadCreateParams): AeadTransform;
+}
+
+export interface AeadCreateParams {
+  key: Uint8Array;
+  options?: unknown;
+}
+
+/**
+ * One-shot AEAD primitive returned by `AeadComponent.create(...)`.
+ *
+ * Implementations must be reusable and stateless across calls: each `seal` /
+ * `open` receives its full per-operation parameters and must not rely on
+ * prior call state or a finalize lifecycle. Core may call `seal`/`open`
+ * repeatedly on the same instance.
+ */
+export interface AeadTransform {
+  seal(params: AeadSealParams): Uint8Array;
+  open(params: AeadOpenParams): Uint8Array;
+}
+
+export interface AeadSealParams {
+  plaintext: Uint8Array;
+  nonce?: Uint8Array;
+  aad?: Uint8Array;
+  tagLength?: number;
+  options?: unknown;
+}
+
+export interface AeadOpenParams {
+  ciphertext: Uint8Array;
+  nonce?: Uint8Array;
+  aad?: Uint8Array;
+  /**
+   * Detached authentication tag. When present, `tagLength` is ignored and
+   * `tag.length` determines the tag size used for verification.
+   */
+  tag?: Uint8Array;
+  tagLength?: number;
+  options?: unknown;
+}
+
 export type AnyComponent =
   | CipherComponent
   | ModeComponent
@@ -121,4 +176,5 @@ export type AnyComponent =
   | KdfComponent
   | HashComponent
   | FormatComponent
-  | PresetComponent;
+  | PresetComponent
+  | AeadComponent;

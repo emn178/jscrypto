@@ -1,6 +1,8 @@
 import {
   assertBytes,
   concatBytes,
+  type AeadComponent,
+  type AeadTransform,
   type CipherComponent,
   type PresetComponent,
   type StreamCipherComponent,
@@ -47,33 +49,31 @@ export const xchacha20: StreamCipherComponent<'XChaCha20'> = {
   },
 };
 
-export const chacha20Poly1305: StreamCipherComponent<'ChaCha20-Poly1305'> = {
-  kind: 'cipher',
+export const chacha20Poly1305: AeadComponent<'ChaCha20-Poly1305'> = {
+  kind: 'aead',
   name: 'ChaCha20-Poly1305',
-  type: 'stream',
   keySizes: [KEY_BYTES],
-  createEncryptor(params) {
-    return createAeadEncryptor(params, 'ChaCha20-Poly1305');
-  },
-  createDecryptor(params) {
-    return createAeadDecryptor(params, 'ChaCha20-Poly1305');
+  nonceSizes: [CHACHA20_NONCE_BYTES],
+  recommendedNonceSize: CHACHA20_NONCE_BYTES,
+  tagSizes: [TAG_BYTES],
+  create({ key }) {
+    return createAeadTransform(key, 'ChaCha20-Poly1305');
   },
 };
 
-export const xchacha20Poly1305: StreamCipherComponent<'XChaCha20-Poly1305'> = {
-  kind: 'cipher',
+export const xchacha20Poly1305: AeadComponent<'XChaCha20-Poly1305'> = {
+  kind: 'aead',
   name: 'XChaCha20-Poly1305',
-  type: 'stream',
   keySizes: [KEY_BYTES],
-  createEncryptor(params) {
-    return createAeadEncryptor(params, 'XChaCha20-Poly1305');
-  },
-  createDecryptor(params) {
-    return createAeadDecryptor(params, 'XChaCha20-Poly1305');
+  nonceSizes: [XCHACHA20_NONCE_BYTES],
+  recommendedNonceSize: XCHACHA20_NONCE_BYTES,
+  tagSizes: [TAG_BYTES],
+  create({ key }) {
+    return createAeadTransform(key, 'XChaCha20-Poly1305');
   },
 };
 
-export const allChaCha20Components: readonly CipherComponent[] = [
+export const allChaCha20Components: readonly (CipherComponent | AeadComponent)[] = [
   chacha20,
   xchacha20,
   chacha20Poly1305,
@@ -157,70 +157,30 @@ function createStreamTransform(
   };
 }
 
-function createAeadEncryptor(
-  params: StreamCipherTransformParams,
-  algorithm: AeadAlgorithm,
-): Transform {
-  assertUnsupportedBlockOptions(params.options, algorithm);
-  assertBytes(params.key, `${algorithm} key`);
-  assertKey(params.key, algorithm);
-  const options = asRecord(params.options);
-  const nonce = requireNonce(options, algorithm);
-  const aad = resolveAad(options.aad, algorithm);
-  const cipher = createNobleAead(algorithm, params.key, nonce, aad);
-
-  let pending: Uint8Array<ArrayBufferLike> = new Uint8Array(0);
-  let finalized = false;
+function createAeadTransform(key: Uint8Array, algorithm: AeadAlgorithm): AeadTransform {
+  assertBytes(key, `${algorithm} key`);
+  assertKey(key, algorithm);
 
   return {
-    process(input) {
-      assertNotFinalized(finalized);
-      assertBytes(input, `${algorithm} input`);
-      pending = concatBytes(pending, input);
-      return new Uint8Array(0);
-    },
-    finalize(input = new Uint8Array(0)) {
-      assertNotFinalized(finalized);
-      assertBytes(input, `${algorithm} input`);
-      finalized = true;
-      const plaintext = input.length === 0 ? pending : concatBytes(pending, input);
-      pending = new Uint8Array(0);
+    seal({ plaintext, nonce, aad, tagLength }) {
+      assertBytes(plaintext, `${algorithm} input`);
+      const resolvedNonce = requireAeadNonce(nonce, algorithm);
+      const resolvedAad = resolveAad(aad, algorithm);
+      assertTagLength(tagLength, algorithm);
+      const cipher = createNobleAead(algorithm, key, resolvedNonce, resolvedAad);
       return cipher.encrypt(plaintext);
     },
-  };
-}
-
-function createAeadDecryptor(
-  params: StreamCipherTransformParams,
-  algorithm: AeadAlgorithm,
-): Transform {
-  assertUnsupportedBlockOptions(params.options, algorithm);
-  assertBytes(params.key, `${algorithm} key`);
-  assertKey(params.key, algorithm);
-  const options = asRecord(params.options);
-  const nonce = requireNonce(options, algorithm);
-  const aad = resolveAad(options.aad, algorithm);
-  const detachedTag = resolveOptionalTag(options.tag, algorithm);
-  const cipher = createNobleAead(algorithm, params.key, nonce, aad);
-
-  let pending: Uint8Array<ArrayBufferLike> = new Uint8Array(0);
-  let finalized = false;
-
-  return {
-    process(input) {
-      assertNotFinalized(finalized);
-      assertBytes(input, `${algorithm} input`);
-      // Buffer ciphertext until finalize so plaintext is never released before authentication.
-      pending = concatBytes(pending, input);
-      return new Uint8Array(0);
-    },
-    finalize(input = new Uint8Array(0)) {
-      assertNotFinalized(finalized);
-      assertBytes(input, `${algorithm} input`);
-      finalized = true;
-      const data = input.length === 0 ? pending : concatBytes(pending, input);
-      pending = new Uint8Array(0);
-      const sealed = resolveSealedInput(data, detachedTag, algorithm);
+    open({ ciphertext, nonce, aad, tag, tagLength }) {
+      assertBytes(ciphertext, `${algorithm} input`);
+      const resolvedNonce = requireAeadNonce(nonce, algorithm);
+      const resolvedAad = resolveAad(aad, algorithm);
+      const detachedTag = resolveOptionalTag(tag, algorithm);
+      // When a detached tag is present, tag.length wins and tagLength is ignored.
+      if (detachedTag === undefined) {
+        assertTagLength(tagLength, algorithm);
+      }
+      const sealed = resolveSealedInput(ciphertext, detachedTag, algorithm);
+      const cipher = createNobleAead(algorithm, key, resolvedNonce, resolvedAad);
       try {
         return cipher.decrypt(sealed);
       } catch {
@@ -270,8 +230,17 @@ function resolveSealedInput(
   return concatBytes(ciphertext, tag);
 }
 
-function requireNonce(options: Record<string, unknown>, algorithm: StreamAlgorithm | AeadAlgorithm): Uint8Array {
+function requireNonce(options: Record<string, unknown>, algorithm: StreamAlgorithm): Uint8Array {
   const nonce = options.nonce;
+  if (nonce === undefined) {
+    throw new Error(`${algorithm} requires a nonce.`);
+  }
+  assertBytes(nonce, `${algorithm} nonce`);
+  assertNonce(nonce, algorithm);
+  return nonce;
+}
+
+function requireAeadNonce(nonce: Uint8Array | undefined, algorithm: AeadAlgorithm): Uint8Array {
   if (nonce === undefined) {
     throw new Error(`${algorithm} requires a nonce.`);
   }
@@ -295,6 +264,12 @@ function resolveAad(aad: unknown, algorithm: AeadAlgorithm): Uint8Array {
   }
   assertBytes(aad, `${algorithm} aad`);
   return aad;
+}
+
+function assertTagLength(tagLength: number | undefined, algorithm: AeadAlgorithm): void {
+  if (tagLength !== undefined && tagLength !== TAG_BYTES) {
+    throw new Error(`${algorithm} tagLength must be 16 bytes.`);
+  }
 }
 
 function resolveCounter(counter: unknown, algorithm: StreamAlgorithm): number {

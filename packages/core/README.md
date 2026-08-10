@@ -41,14 +41,36 @@ const cipher = registry.createCipher({
 const ciphertext = cipher.encrypt(plaintext, { iv });
 ```
 
+Use `createCipher` for traditional cipher pipelines (`cipher` + optional `mode` +
+`padding`). Use `createAead` for authenticated encryption algorithms selected by
+full algorithm name:
+
+```ts
+import { aesGcm } from '@jscrypto/ciphers/aes';
+
+const registry = createRegistry().use(aesGcm);
+const aead = registry.createAead({
+  algorithm: 'AES-GCM',
+  key,
+});
+
+const sealed = aead.seal(plaintext, { nonce, aad });
+const opened = aead.open(sealed, { nonce, aad });
+```
+
+AEAD has no padding. `nonce` must be unique for a given key. `aad` is
+authenticated but not encrypted. `seal()` appends the authentication tag;
+`open()` accepts that sealed byte string or a detached `tag`.
+
 Per-operation options are passed to facade methods rather than being fixed only at facade creation time. Core forwards mode-specific options without naming them; modes such as GCM may define options like `nonce`, `aad`, `tag`, or `tagLength`.
 
 ## What It Provides
 
-- `createRegistry`: component registry with cipher facade and derived-key facade creation.
+- `createRegistry`: component registry with cipher facade, AEAD facade, and derived-key facade creation.
 - `randomBytes(length)`: caller-owned random byte helper.
-- Component contracts: cipher, mode, padding, KDF, format, and preset types.
-- Transform contract: `process(input)` plus `finalize(input?)` for streaming.
+- Component contracts: cipher, mode, padding, KDF, format, hash, AEAD, and preset types.
+- Transform contract: `process(input)` plus `finalize(input?)` for streaming ciphers and modes.
+- AEAD contract: one-shot `seal` / `open`.
 - Byte helpers: `concatBytes`, `equalBytes`, `xorBytes`, and byte assertions.
 - Block helpers: block-size, IV, and padding assertions.
 - Errors: `CryptoError`, `DuplicateComponentError`, and `MissingComponentError`.

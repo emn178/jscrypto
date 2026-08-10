@@ -13,8 +13,8 @@ This project is not affiliated with Node.js `crypto`, the Web Crypto API, or npm
 | Package | Description |
 | --- | --- |
 | [`@jscrypto/core`](https://github.com/emn178/jscrypto/tree/main/packages/core) | Registry, component contracts, transform helpers, byte helpers, and shared errors. |
-| [`@jscrypto/ciphers`](https://github.com/emn178/jscrypto/tree/main/packages/ciphers) | AES, DES, Triple DES, RC4, RC4Drop, SPECK, ChaCha20, XChaCha20, ChaCha20-Poly1305, and XChaCha20-Poly1305 cipher components. |
-| [`@jscrypto/modes`](https://github.com/emn178/jscrypto/tree/main/packages/modes) | CBC, CFB, CTR, OFB, ECB, and GCM mode components. |
+| [`@jscrypto/ciphers`](https://github.com/emn178/jscrypto/tree/main/packages/ciphers) | AES, DES, Triple DES, RC4, RC4Drop, SPECK, ChaCha20, XChaCha20, plus AEAD components AES-GCM, ChaCha20-Poly1305, and XChaCha20-Poly1305. |
+| [`@jscrypto/modes`](https://github.com/emn178/jscrypto/tree/main/packages/modes) | CBC, CFB, CTR, OFB, ECB, and compatibility GCM mode components. |
 | [`@jscrypto/paddings`](https://github.com/emn178/jscrypto/tree/main/packages/paddings) | Pkcs7, Pkcs5 compatibility alias, Iso97971, AnsiX923, Iso10126, ZeroPadding, and NoPadding components. |
 | [`@jscrypto/kdfs`](https://github.com/emn178/jscrypto/tree/main/packages/kdfs) | PBKDF2, EvpKDF, HKDF, HKDF-Extract, HKDF-Expand, Scrypt, and Argon2 KDF components. |
 | [`@jscrypto/formats`](https://github.com/emn178/jscrypto/tree/main/packages/formats) | OpenSSL `Salted__` format components. |
@@ -52,6 +52,26 @@ const decrypted = cipher.decrypt(ciphertext, { iv });
 ```
 
 `createCipher(...)` returns a reusable facade. The key and selected algorithm stay on the facade; per-message material such as IV, nonce, AAD, and authentication tag is passed to `encrypt`, `decrypt`, `createEncryptor`, or `createDecryptor`.
+
+Authenticated encryption uses `createAead(...)` instead of the traditional cipher + mode pipeline:
+
+```ts
+import { randomBytes } from '@jscrypto/core';
+import { registry } from '@jscrypto/suite';
+
+const key = randomBytes(32);
+const nonce = randomBytes(12);
+
+const aead = registry.createAead({
+  algorithm: 'AES-GCM',
+  key,
+});
+
+const sealed = aead.seal(plaintext, { nonce, aad });
+const opened = aead.open(sealed, { nonce, aad });
+```
+
+`seal()` appends the authentication tag. `open()` accepts that sealed byte string or a detached `tag`. AEAD has no padding, and `nonce` must be unique for a given key.
 
 ## Streaming
 
@@ -298,10 +318,11 @@ bundles instead of loading a whole component package:
 
 ## Supported Components
 
-- Basic suite: AES; CBC, CFB, CTR, OFB, ECB, GCM; Pkcs7 and NoPadding; PBKDF2 and HKDF; OpenSSL `Salted__`; bundled hashes.
+- Basic suite: AES and AES-GCM AEAD; CBC, CFB, CTR, OFB, ECB, compatibility GCM; Pkcs7 and NoPadding; PBKDF2 and HKDF; OpenSSL `Salted__`; bundled hashes.
 - All suite: all component-package presets below.
-- Ciphers: AES, DES, Triple DES, RC4, RC4Drop, SPECK, ChaCha20, XChaCha20, ChaCha20-Poly1305, XChaCha20-Poly1305.
-- Modes: CBC, CFB, CTR, OFB, ECB, GCM.
+- Ciphers: AES, DES, Triple DES, RC4, RC4Drop, SPECK, ChaCha20, XChaCha20.
+- AEAD: AES-GCM, ChaCha20-Poly1305, XChaCha20-Poly1305.
+- Modes: CBC, CFB, CTR, OFB, ECB, compatibility GCM.
 - Paddings: Pkcs7, Iso97971, AnsiX923, Iso10126, ZeroPadding, NoPadding.
 - KDFs: PBKDF2, EvpKDF, HKDF, HKDF-Extract, HKDF-Expand.
 - Formats: OpenSSL `Salted__`.

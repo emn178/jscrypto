@@ -6,6 +6,11 @@ import type {
   DerivedKeyCipherFacade,
 } from './derived-key.js';
 import { createDerivedKeyCipher, derive } from './derived-key.js';
+import type {
+  AeadFacade,
+  CreateAeadOptions,
+} from './aead.js';
+import { createAead } from './aead.js';
 import type { CipherOperationOptions } from './operation-options.js';
 import { assertNoReservedOperationOptions } from './operation-options.js';
 import type { CreateTransformOptions } from './transform.js';
@@ -31,6 +36,7 @@ export interface Registry {
   get<Kind extends ComponentKind, T extends Component<Kind>>(kind: Kind, name: string): T;
   list(kind?: ComponentKind): AnyComponent[];
   createCipher(options: CreateTransformOptions): CipherFacade;
+  createAead(options: CreateAeadOptions): AeadFacade;
   derive(options: DeriveOptions): Uint8Array;
   createDerivedKeyCipher(options: CreateDerivedKeyCipherOptions): DerivedKeyCipherFacade;
   encrypt(options: CreateTransformOptions & { plaintext: Uint8Array }): Uint8Array;
@@ -118,6 +124,10 @@ export function createRegistry(components: Iterable<AnyComponent> = []): Registr
           return createDecryptor(registry, mergeTransformOptions(options, operationOptions));
         },
       };
+    },
+
+    createAead(options) {
+      return createAead(registry, options);
     },
 
     derive(options) {

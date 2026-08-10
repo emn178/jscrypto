@@ -32,6 +32,11 @@ test('CommonJS builds can be required', () => {
   assert.equal(ciphers.classicCiphersPreset().kind, 'preset');
   assert.equal(typeof aes.createAesCipher, 'function');
   assert.equal(aes.aesPreset.components()[0].name, 'AES');
+  assert.deepEqual(
+    aes.aesPreset.components().map((component) => component.name),
+    ['AES', 'AES-GCM'],
+  );
+  assert.equal(aes.aesGcm.kind, 'aead');
   assert.equal(chacha20.chacha20Preset.name, 'chacha20');
   assert.equal(speck.speckPreset.name, 'speck');
   assert.equal(modes.modesPreset().kind, 'preset');
@@ -115,6 +120,10 @@ test('package exports route Node imports to package builds', async () => {
   assert.equal(ciphers.ciphersPreset().kind, 'preset');
   assert.equal(typeof aes.createAesCipher, 'function');
   assert.equal(aes.aesPreset.components()[0].name, 'AES');
+  assert.deepEqual(
+    aes.aesPreset.components().map((component) => component.name),
+    ['AES', 'AES-GCM'],
+  );
   assert.equal(chacha20.chacha20Preset.name, 'chacha20');
   assert.equal(speck.speckPreset.name, 'speck');
   assert.equal(pkcs5.pkcs5Preset.name, 'pkcs5');
@@ -179,6 +188,12 @@ test('browser IIFE builds expose globals', async () => {
   assert.equal(context.jscryptoSuiteAll.allRegistry.get('cipher', 'ChaCha20').name, 'ChaCha20');
   assert.equal(context.jscryptoCiphersAes.aesPreset.name, 'aes');
   assert.equal(context.jscryptoCiphersAes.aesPreset.components()[0].name, 'AES');
+  // Spread in the host realm first: `.map` on a vm-context array would
+  // otherwise produce a cross-realm array that fails deepStrictEqual.
+  assert.deepEqual(
+    [...context.jscryptoCiphersAes.aesPreset.components()].map((component) => component.name),
+    ['AES', 'AES-GCM'],
+  );
   assert.equal(context.jscryptoCiphersChacha20.chacha20Preset.name, 'chacha20');
   assert.equal(context.jscryptoCiphersSpeck.speckPreset.name, 'speck');
   assert.equal(context.jscryptoModesCbc.cbcPreset.name, 'cbc');

@@ -1,5 +1,22 @@
 # Change Log
 
+## Unreleased
+
+### Added
+
+- added first-class `aead` component kind and `registry.createAead(...).seal/open` API to `@jscrypto/core`.
+- added `AES-GCM` AEAD component to `@jscrypto/ciphers` via the AES preset.
+- added a Node-native `AES-GCM` implementation for the ciphers Node entry using `node:crypto` `aes-*-gcm`.
+
+### Changed
+
+- changed ChaCha20-Poly1305 and XChaCha20-Poly1305 from stream cipher components to AEAD components selected with `createAead({ algorithm, key })`.
+- changed recommended authenticated encryption examples to use `createAead` instead of cipher + mode pipelines.
+
+### Removed
+
+- removed `createCipher({ cipher: 'ChaCha20-Poly1305' })` and `createCipher({ cipher: 'XChaCha20-Poly1305' })` registration. Use `createAead` instead. Compatibility `createCipher({ cipher: 'AES', mode: 'GCM' })` remains available.
+
 ## v0.10.0 / 2026-08-10
 
 ### Added

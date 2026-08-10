@@ -7,8 +7,8 @@ Convenience registries for official `@jscrypto` component packages.
 The default `registry` uses `basicPreset`, the recommended starting point for
 new applications. It contains:
 
-- AES
-- CBC, CFB, CTR, OFB, ECB, and GCM
+- AES and AES-GCM AEAD
+- CBC, CFB, CTR, OFB, ECB, and compatibility GCM
 - Pkcs7, Pkcs5, and NoPadding
 - PBKDF2 and HKDF
 - OpenSSL `Salted__` format support
@@ -34,6 +34,16 @@ const cipher = registry.createCipher({
 });
 ```
 
+Authenticated encryption:
+
+```ts
+const aead = registry.createAead({
+  algorithm: 'AES-GCM',
+  key,
+});
+
+const sealed = aead.seal(plaintext, { nonce, aad });
+```
 ```ts
 import { createAllRegistry } from '@jscrypto/suite/all';
 

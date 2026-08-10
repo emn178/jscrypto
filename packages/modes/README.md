@@ -12,3 +12,8 @@ const registry = createRegistry().use(cbc);
 ```
 
 Use `modesPreset()` to register CBC, CFB, CTR, ECB, GCM, and OFB together.
+
+GCM in this package is the compatibility mode path for
+`createCipher({ cipher: 'AES', mode: 'GCM' })`. Prefer
+`createAead({ algorithm: 'AES-GCM', key })` from `@jscrypto/ciphers` for new
+authenticated encryption code.

@@ -51,7 +51,12 @@ Use `classicCiphersPreset()` to register the classic compatibility set: AES, DES
 Triple DES, RC4, and RC4Drop.
 
 Use `ciphersPreset()` to register the full cipher package set, including SPECK,
-ChaCha20, XChaCha20, ChaCha20-Poly1305, and XChaCha20-Poly1305.
+ChaCha20, XChaCha20, and the ChaCha AEAD components ChaCha20-Poly1305 and
+XChaCha20-Poly1305. The AES preset also registers the AES-GCM AEAD component.
+
+Authenticated encryption uses `registry.createAead({ algorithm, key })` with
+`seal` / `open`. Traditional `createCipher` pipelines remain for block/stream
+ciphers and compatibility GCM mode.
 
 ## Browser
 
