@@ -18,6 +18,7 @@ test('CommonJS builds can be required', () => {
   const speck = require('../packages/ciphers/dist/speck.cjs');
   const modes = require('../packages/modes/dist/index.cjs');
   const paddings = require('../packages/paddings/dist/index.cjs');
+  const pkcs5 = require('../packages/paddings/dist/pkcs5.cjs');
   const kdfs = require('../packages/kdfs/dist/index.cjs');
   const hkdf = require('../packages/kdfs/dist/hkdf.cjs');
   const formats = require('../packages/formats/dist/index.cjs');
@@ -35,6 +36,7 @@ test('CommonJS builds can be required', () => {
   assert.equal(speck.speckPreset.name, 'speck');
   assert.equal(modes.modesPreset().kind, 'preset');
   assert.equal(paddings.paddingsPreset().kind, 'preset');
+  assert.equal(pkcs5.pkcs5Preset.name, 'pkcs5');
   assert.equal(kdfs.kdfsPreset().kind, 'preset');
   assert.equal(kdfs.classicKdfsPreset().kind, 'preset');
   assert.equal(hkdf.hkdfPreset.name, 'hkdf');
@@ -64,6 +66,7 @@ test('package exports route Node imports to package builds', async () => {
     assert.match(import.meta.resolve('@jscrypto/ciphers/speck/browser'), /packages[\\/]ciphers[\\/]dist[\\/]jscrypto-ciphers-speck\.iife\.min\.js$/);
     assert.match(import.meta.resolve('@jscrypto/modes/cbc/browser'), /packages[\\/]modes[\\/]dist[\\/]jscrypto-modes-cbc\.iife\.min\.js$/);
     assert.match(import.meta.resolve('@jscrypto/paddings/pkcs7/browser'), /packages[\\/]paddings[\\/]dist[\\/]jscrypto-paddings-pkcs7\.iife\.min\.js$/);
+    assert.match(import.meta.resolve('@jscrypto/paddings/pkcs5/browser'), /packages[\\/]paddings[\\/]dist[\\/]jscrypto-paddings-pkcs5\.iife\.min\.js$/);
     assert.match(import.meta.resolve('@jscrypto/kdfs/hkdf'), /packages[\\/]kdfs[\\/]dist[\\/]hkdf\.mjs$/);
     assert.match(import.meta.resolve('@jscrypto/kdfs/hkdf/browser'), /packages[\\/]kdfs[\\/]dist[\\/]jscrypto-kdfs-hkdf\.iife\.min\.js$/);
     assert.match(import.meta.resolve('@jscrypto/kdfs/scrypt'), /packages[\\/]kdfs[\\/]dist[\\/]scrypt\.mjs$/);
@@ -84,6 +87,7 @@ test('package exports route Node imports to package builds', async () => {
     assert.match(require.resolve('@jscrypto/ciphers/speck/browser'), /packages[\\/]ciphers[\\/]dist[\\/]jscrypto-ciphers-speck\.iife\.min\.js$/);
     assert.match(require.resolve('@jscrypto/modes/cbc/browser'), /packages[\\/]modes[\\/]dist[\\/]jscrypto-modes-cbc\.iife\.min\.js$/);
     assert.match(require.resolve('@jscrypto/paddings/pkcs7/browser'), /packages[\\/]paddings[\\/]dist[\\/]jscrypto-paddings-pkcs7\.iife\.min\.js$/);
+    assert.match(require.resolve('@jscrypto/paddings/pkcs5/browser'), /packages[\\/]paddings[\\/]dist[\\/]jscrypto-paddings-pkcs5\.iife\.min\.js$/);
     assert.match(require.resolve('@jscrypto/kdfs/hkdf'), /packages[\\/]kdfs[\\/]dist[\\/]hkdf\.cjs$/);
     assert.match(require.resolve('@jscrypto/kdfs/hkdf/browser'), /packages[\\/]kdfs[\\/]dist[\\/]jscrypto-kdfs-hkdf\.iife\.min\.js$/);
     assert.match(require.resolve('@jscrypto/kdfs/scrypt'), /packages[\\/]kdfs[\\/]dist[\\/]scrypt\.cjs$/);
@@ -100,6 +104,7 @@ test('package exports route Node imports to package builds', async () => {
   const aes = await import('@jscrypto/ciphers/aes');
   const chacha20 = await import('@jscrypto/ciphers/chacha20');
   const speck = await import('@jscrypto/ciphers/speck');
+  const pkcs5 = await import('@jscrypto/paddings/pkcs5');
   const hkdf = await import('@jscrypto/kdfs/hkdf');
   const scrypt = await import('@jscrypto/kdfs/scrypt');
   const argon2 = await import('@jscrypto/kdfs/argon2');
@@ -112,6 +117,7 @@ test('package exports route Node imports to package builds', async () => {
   assert.equal(aes.aesPreset.components()[0].name, 'AES');
   assert.equal(chacha20.chacha20Preset.name, 'chacha20');
   assert.equal(speck.speckPreset.name, 'speck');
+  assert.equal(pkcs5.pkcs5Preset.name, 'pkcs5');
   assert.equal(hkdf.hkdfPreset.name, 'hkdf');
   assert.equal(scrypt.scryptPreset.name, 'scrypt');
   assert.equal(argon2.argon2Preset.name, 'argon2');
@@ -142,6 +148,7 @@ test('browser IIFE builds expose globals', async () => {
     '../packages/ciphers/dist/jscrypto-ciphers-chacha20.iife.min.js',
     '../packages/ciphers/dist/jscrypto-ciphers-speck.iife.min.js',
     '../packages/modes/dist/jscrypto-modes-cbc.iife.min.js',
+    '../packages/paddings/dist/jscrypto-paddings-pkcs5.iife.min.js',
     '../packages/paddings/dist/jscrypto-paddings-pkcs7.iife.min.js',
     '../packages/kdfs/dist/jscrypto-kdfs-hkdf.iife.min.js',
     '../packages/kdfs/dist/jscrypto-kdfs-scrypt.iife.min.js',
@@ -175,6 +182,7 @@ test('browser IIFE builds expose globals', async () => {
   assert.equal(context.jscryptoCiphersChacha20.chacha20Preset.name, 'chacha20');
   assert.equal(context.jscryptoCiphersSpeck.speckPreset.name, 'speck');
   assert.equal(context.jscryptoModesCbc.cbcPreset.name, 'cbc');
+  assert.equal(context.jscryptoPaddingsPkcs5.pkcs5Preset.name, 'pkcs5');
   assert.equal(context.jscryptoPaddingsPkcs7.pkcs7Preset.name, 'pkcs7');
   assert.equal(context.jscryptoKdfsHkdf.hkdfPreset.name, 'hkdf');
   assert.equal(context.jscryptoHashesSha256.sha256Preset.name, 'sha256');

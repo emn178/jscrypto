@@ -15,7 +15,7 @@ This project is not affiliated with Node.js `crypto`, the Web Crypto API, or npm
 | [`@jscrypto/core`](https://github.com/emn178/jscrypto/tree/main/packages/core) | Registry, component contracts, transform helpers, byte helpers, and shared errors. |
 | [`@jscrypto/ciphers`](https://github.com/emn178/jscrypto/tree/main/packages/ciphers) | AES, DES, Triple DES, RC4, RC4Drop, SPECK, ChaCha20, XChaCha20, ChaCha20-Poly1305, and XChaCha20-Poly1305 cipher components. |
 | [`@jscrypto/modes`](https://github.com/emn178/jscrypto/tree/main/packages/modes) | CBC, CFB, CTR, OFB, ECB, and GCM mode components. |
-| [`@jscrypto/paddings`](https://github.com/emn178/jscrypto/tree/main/packages/paddings) | Pkcs7, Iso97971, AnsiX923, Iso10126, ZeroPadding, and NoPadding components. |
+| [`@jscrypto/paddings`](https://github.com/emn178/jscrypto/tree/main/packages/paddings) | Pkcs7, Pkcs5 compatibility alias, Iso97971, AnsiX923, Iso10126, ZeroPadding, and NoPadding components. |
 | [`@jscrypto/kdfs`](https://github.com/emn178/jscrypto/tree/main/packages/kdfs) | PBKDF2, EvpKDF, HKDF, HKDF-Extract, HKDF-Expand, Scrypt, and Argon2 KDF components. |
 | [`@jscrypto/formats`](https://github.com/emn178/jscrypto/tree/main/packages/formats) | OpenSSL `Salted__` format components. |
 | [`@jscrypto/hashes`](https://github.com/emn178/jscrypto/tree/main/packages/hashes) | MD5, SHA1, SHA224, SHA256, SHA384, SHA512, KECCAK512, and RIPEMD160 hash components. |

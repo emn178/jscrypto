@@ -35,7 +35,7 @@ The public npm surface is split by component type:
 - `@jscrypto/core`: framework contracts and shared helpers.
 - `@jscrypto/ciphers`: AES, DES, Triple DES, RC4, RC4Drop, SPECK, ChaCha20, XChaCha20, ChaCha20-Poly1305, and XChaCha20-Poly1305.
 - `@jscrypto/modes`: CBC, CFB, CTR, ECB, OFB, and GCM.
-- `@jscrypto/paddings`: classic block padding components.
+- `@jscrypto/paddings`: classic block padding components plus compatibility aliases such as Pkcs5.
 - `@jscrypto/kdfs`: PBKDF2, EvpKDF, HKDF, HKDF-Extract, HKDF-Expand, Scrypt, and Argon2.
 - `@jscrypto/formats`: OpenSSL `Salted__` formatting.
 - `@jscrypto/hashes`: opt-in hash components for KDF/derived-key use.
@@ -65,7 +65,7 @@ Initial parity and extension modules now live in component packages:
 - SPECK
 - ChaCha20, XChaCha20, ChaCha20-Poly1305, XChaCha20-Poly1305
 - CBC, CFB, CTR, OFB, ECB, GCM
-- Pkcs7, Iso97971, AnsiX923, Iso10126, ZeroPadding, NoPadding
+- Pkcs7, Pkcs5, Iso97971, AnsiX923, Iso10126, ZeroPadding, NoPadding
 - PBKDF2, EvpKDF (with hashes registered explicitly)
 - HKDF, HKDF-Extract, HKDF-Expand
 - Scrypt, Argon2

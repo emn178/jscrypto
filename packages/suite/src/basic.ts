@@ -4,7 +4,7 @@ import { opensslFormat } from '@jscrypto/formats';
 import { hashesPreset } from '@jscrypto/hashes';
 import { hkdfPreset, pbkdf2 } from '@jscrypto/kdfs';
 import { cbc, cfb, ctr, ecb, gcm, ofb } from '@jscrypto/modes';
-import { noPadding, pkcs7 } from '@jscrypto/paddings';
+import { noPadding, pkcs5, pkcs7 } from '@jscrypto/paddings';
 
 export function basicPreset(): PresetComponent<'basic'> {
   return {
@@ -19,6 +19,7 @@ export function basicPreset(): PresetComponent<'basic'> {
         ecb,
         gcm,
         ofb,
+        pkcs5,
         noPadding,
         pkcs7,
         pbkdf2,

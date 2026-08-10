@@ -5,6 +5,7 @@
 ### Added
 
 - added Scrypt and Argon2 components to `@jscrypto/kdfs`.
+- added `Pkcs5` as a PKCS#7-compatible padding alias.
 
 ### Removed
 

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { concatBytes, createRegistry } from '@jscrypto/core';
-import { aes, cbc, pkcs7 } from '@jscrypto/suite';
+import { aes, cbc, pkcs5, pkcs7 } from '@jscrypto/suite';
 import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.mjs';
 
 test('AES-256-CBC streams encryption and decryption with Pkcs7', () => {
@@ -63,4 +63,42 @@ test('AES-256-CBC Pkcs7 decrypt rejects invalid padding', () => {
 
   assert.deepEqual(decryptor.process(ciphertext), new Uint8Array());
   assert.throws(() => decryptor.finalize(), /Invalid PKCS#7/);
+});
+
+test('Pkcs5 is a PKCS7 compatibility alias', () => {
+  const key = hexToBytes('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
+  const iv = hexToBytes('000102030405060708090a0b0c0d0e0f');
+  const registry = createRegistry()
+    .use(aes)
+    .use(cbc)
+    .use(pkcs5)
+    .use(pkcs7);
+  const plaintext = textToBytes('hello pkcs5');
+
+  const pkcs5Ciphertext = registry.encrypt({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs5',
+    key,
+    iv,
+    plaintext,
+  });
+  const pkcs7Ciphertext = registry.encrypt({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs7',
+    key,
+    iv,
+    plaintext,
+  });
+
+  assert.deepEqual(pkcs5Ciphertext, pkcs7Ciphertext);
+  assert.deepEqual(registry.decrypt({
+    cipher: 'AES',
+    mode: 'CBC',
+    padding: 'Pkcs5',
+    key,
+    iv,
+    ciphertext: pkcs5Ciphertext,
+  }), plaintext);
 });

@@ -104,7 +104,7 @@ const packages = [
     packageJson: 'packages/paddings/package.json',
     distDir: 'packages/paddings/dist',
     externals: ['@jscrypto/core'],
-    subEntries: ['ansi-x923', 'iso10126', 'iso97971', 'none', 'pkcs7', 'zero'].map((name) => ({
+    subEntries: ['ansi-x923', 'iso10126', 'iso97971', 'none', 'pkcs5', 'pkcs7', 'zero'].map((name) => ({
       name,
       displayName: `jscrypto-paddings-${name}`,
       globalName: `jscryptoPaddings${toPascalCase(name)}`,

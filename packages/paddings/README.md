@@ -4,6 +4,16 @@
 
 Padding components for `@jscrypto/core` block cipher modes.
 
+Available components:
+
+- `pkcs7` / `Pkcs7`
+- `pkcs5` / `Pkcs5`, a compatibility alias that uses PKCS#7 padding semantics
+- `ansiX923` / `AnsiX923`
+- `iso10126` / `Iso10126`
+- `iso97971` / `Iso97971`
+- `zeroPadding` / `ZeroPadding`
+- `noPadding` / `NoPadding`
+
 ```ts
 import { createRegistry } from '@jscrypto/core';
 import { pkcs7 } from '@jscrypto/paddings/pkcs7';

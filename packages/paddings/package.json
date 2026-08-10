@@ -40,6 +40,13 @@
     },
     "./none/browser": "./dist/jscrypto-paddings-none.iife.min.js",
     "./none/umd": "./dist/jscrypto-paddings-none.umd.min.js",
+    "./pkcs5": {
+      "types": "./dist/pkcs5.d.ts",
+      "import": "./dist/pkcs5.mjs",
+      "require": "./dist/pkcs5.cjs"
+    },
+    "./pkcs5/browser": "./dist/jscrypto-paddings-pkcs5.iife.min.js",
+    "./pkcs5/umd": "./dist/jscrypto-paddings-pkcs5.umd.min.js",
     "./pkcs7": {
       "types": "./dist/pkcs7.d.ts",
       "import": "./dist/pkcs7.mjs",

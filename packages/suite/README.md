@@ -4,10 +4,24 @@
 
 Convenience registries for official `@jscrypto` component packages.
 
-The default `registry` uses `basicPreset`, which contains AES, common modes,
-Pkcs7/NoPadding, PBKDF2, HKDF, OpenSSL format support, and bundled hash adapters.
-Use `allPreset` when compatibility algorithms such as DES, Triple DES, RC4,
-SPECK, ChaCha20, EvpKDF, and all classic paddings should be registered too.
+The default `registry` uses `basicPreset`, the recommended starting point for
+new applications. It contains:
+
+- AES
+- CBC, CFB, CTR, OFB, ECB, and GCM
+- Pkcs7, Pkcs5, and NoPadding
+- PBKDF2 and HKDF
+- OpenSSL `Salted__` format support
+- bundled hash adapters
+
+Use `allPreset` or `@jscrypto/suite/all` when compatibility algorithms should
+also be registered:
+
+- DES, Triple DES, RC4, RC4Drop
+- SPECK
+- ChaCha20, XChaCha20, ChaCha20-Poly1305, XChaCha20-Poly1305
+- EvpKDF, Scrypt, and Argon2
+- all padding components
 
 ```ts
 import { registry } from '@jscrypto/suite';
