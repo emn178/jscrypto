@@ -7,6 +7,8 @@
 - added first-class `aead` component kind and `registry.createAead(...).seal/open` API to `@jscrypto/core`.
 - added `registry.createAead(...).createSealer/createOpener` primitive streaming transforms.
 - added `AES-GCM` AEAD component to `@jscrypto/ciphers` via the AES preset.
+- added `AES-CCM` AEAD component to `@jscrypto/ciphers` via the AES preset.
+- added `AeadCreateContext.createBlockCipher(...)` so AEAD components can compose registered block ciphers.
 
 ### Changed
 

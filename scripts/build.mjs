@@ -50,6 +50,10 @@ const packages = [
         nodeEntryPoint: 'packages/ciphers/src/aes-node.ts',
       },
       {
+        name: 'aes-ccm-aad',
+        entryPoint: 'packages/ciphers/src/aes-ccm-aad.ts',
+      },
+      {
         name: 'des',
         displayName: 'jscrypto-ciphers-des',
         globalName: 'jscryptoCiphersDes',

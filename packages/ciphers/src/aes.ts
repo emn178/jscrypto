@@ -1,5 +1,6 @@
 import type { BlockCipher, CipherComponent, PresetComponent } from '@jscrypto/core';
 import { unsafe as nobleAesUnsafe } from '@noble/ciphers/aes.js';
+import { createAesCcmComponent } from './aes-ccm.js';
 import { createAesGcmComponent } from './aes-gcm.js';
 
 const BLOCK_SIZE = 16;
@@ -16,12 +17,15 @@ export const aes: CipherComponent<'AES'> = {
 };
 
 export const aesGcm = createAesGcmComponent();
+export const aesCcm = createAesCcmComponent();
+
+export { createAesCcmComponent } from './aes-ccm.js';
 
 export const aesPreset: PresetComponent<'aes'> = {
   kind: 'preset',
   name: 'aes',
   components() {
-    return [aes, aesGcm];
+    return [aes, aesGcm, aesCcm];
   },
 };
 

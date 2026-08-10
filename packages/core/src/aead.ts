@@ -1,4 +1,11 @@
-import type { AeadComponent, AeadTransform, Transform } from './component.js';
+import type {
+  AeadComponent,
+  AeadTransform,
+  BlockCipher,
+  BlockCipherComponent,
+  CipherComponent,
+  Transform,
+} from './component.js';
 import type { Registry } from './registry.js';
 
 export interface CreateAeadOptions {
@@ -79,6 +86,13 @@ export function createAead(registry: Registry, options: CreateAeadOptions): Aead
     },
     createDecryptor(transformOptions) {
       return registry.createDecryptor(transformOptions);
+    },
+    createBlockCipher({ cipher, key: blockKey }): BlockCipher {
+      const cipherComponent = registry.get<'cipher', CipherComponent>('cipher', cipher);
+      if (cipherComponent.type !== 'block') {
+        throw new Error(`Expected a block cipher component: ${cipher}`);
+      }
+      return (cipherComponent as BlockCipherComponent).create(blockKey);
     },
   });
 

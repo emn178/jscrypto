@@ -146,6 +146,10 @@ export interface AeadCipherTransformOptions {
 export interface AeadCreateContext {
   createEncryptor(options: AeadCipherTransformOptions): Transform;
   createDecryptor(options: AeadCipherTransformOptions): Transform;
+  createBlockCipher(options: {
+    cipher: string;
+    key: Uint8Array;
+  }): BlockCipher;
 }
 
 export interface AeadTransform {

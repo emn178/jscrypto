@@ -52,10 +52,11 @@ Triple DES, RC4, and RC4Drop.
 
 Use `ciphersPreset()` to register the full cipher package set, including SPECK,
 ChaCha20, XChaCha20, and the ChaCha AEAD components ChaCha20-Poly1305 and
-XChaCha20-Poly1305. The AES preset also registers the AES-GCM AEAD component.
-AES-GCM composes the registered `AES` cipher with the registered `GCM` mode at
-runtime, so standalone registries must also register `gcm` or `gcmPreset` from
-`@jscrypto/modes`.
+XChaCha20-Poly1305. The AES preset also registers the AES-GCM and AES-CCM AEAD
+components. AES-GCM composes the registered `AES` cipher with the registered
+`GCM` mode at runtime, so standalone registries must also register `gcm` or
+`gcmPreset` from `@jscrypto/modes`. AES-CCM only needs the AES block cipher from
+the same preset.
 
 Authenticated encryption uses `registry.createAead({ algorithm, key })` with
 `seal` / `open` for one-shot calls and `createSealer` / `createOpener` for

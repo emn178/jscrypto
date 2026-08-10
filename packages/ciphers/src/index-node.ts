@@ -1,4 +1,11 @@
-export { aes, aesGcm, aesPreset, createAesCipher } from './aes-node.js';
+export {
+  aes,
+  aesCcm,
+  aesGcm,
+  aesPreset,
+  createAesCcmComponent,
+  createAesCipher,
+} from './aes-node.js';
 export * from './chacha20.js';
 export * from './des.js';
 export * from './rc4.js';

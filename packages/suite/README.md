@@ -7,7 +7,7 @@ Convenience registries for official `@jscrypto` component packages.
 The default `registry` uses `basicPreset`, the recommended starting point for
 new applications. It contains:
 
-- AES and AES-GCM AEAD
+- AES, AES-GCM AEAD, and AES-CCM AEAD
 - CBC, CFB, CTR, OFB, ECB, and compatibility GCM
 - Pkcs7, Pkcs5, and NoPadding
 - PBKDF2 and HKDF

@@ -86,4 +86,4 @@ Deferred modules:
 
 - Higher-level passphrase plus nonce flows for AEAD
 - Streaming or chunked AEAD framing helpers
-- Additional AEAD algorithms such as AES-CCM or AES-SIV
+- Additional AEAD algorithms such as AES-SIV
