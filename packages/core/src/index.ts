@@ -29,7 +29,11 @@ export type {
 export { CryptoError, DuplicateComponentError, MissingComponentError } from './errors.js';
 export type {
   CreateDerivedKeyCipherOptions,
+  CreateDerivedKeyAeadOptions,
   DeriveOptions,
+  DerivedKeyAeadFacade,
+  DerivedKeyAeadOpenOperationOptions,
+  DerivedKeyAeadSealOperationOptions,
   DerivedKeyCipherFacade,
   FormatOptions,
   KdfOptions,

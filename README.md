@@ -183,6 +183,30 @@ KDF salt can be supplied per operation through `{ salt }` or fixed on the facade
 
 If `keySize` is omitted, `createDerivedKeyCipher(...)` uses the selected cipher's largest declared key size. For AES this is 32 bytes. The selected mode contributes any derived IV length. For AES-CBC this means the default derived material is 48 bytes: 32 bytes of key plus 16 bytes of IV. AES-GCM derives key material only; pass a fresh nonce per operation.
 
+`createDerivedKeyAead(...)` is the AEAD equivalent. It derives the AEAD key only; nonce, AAD, detached tag, and tag length remain per-operation AEAD options.
+
+```ts
+import { randomBytes } from '@jscrypto/core';
+import { registry } from '@jscrypto/suite';
+
+const salt = randomBytes(8);
+const nonce = randomBytes(12);
+const aead = registry.createDerivedKeyAead({
+  algorithm: 'AES-GCM',
+  kdf: {
+    name: 'PBKDF2',
+    input: 'secret',
+    salt,
+    iterations: 100000,
+    hash: 'SHA256',
+  },
+  keySize: 16,
+});
+
+const sealed = aead.seal(plaintext, { nonce });
+const opened = aead.open(sealed, { nonce });
+```
+
 The derived-key API also supports streaming:
 
 ```ts

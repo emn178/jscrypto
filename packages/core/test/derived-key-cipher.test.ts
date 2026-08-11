@@ -186,6 +186,281 @@ test('createDerivedKeyCipher GCM derives key only and requires operation nonce',
   assert.equal(bytesToText(cipher.decrypt(sealed, { salt, nonce })), 'abc');
 });
 
+test('createDerivedKeyAead derives keys and requires operation nonce', () => {
+  const salt = hexToBytes('0102030405060708');
+  const nonce = hexToBytes('000000000000000000000000');
+  const aead = registry.createDerivedKeyAead({
+    algorithm: 'AES-GCM',
+    kdf: {
+      name: 'PBKDF2',
+      input: 'secret',
+      hash: 'SHA256',
+      iterations: 1000,
+    },
+    keySize: 16,
+  });
+
+  assert.throws(() => aead.seal(textToBytes('abc'), { salt }), /requires a nonce/);
+  const { seal, open } = aead;
+  const sealed = seal(textToBytes('abc'), { salt, nonce, tagLength: 16 });
+  assert.ok(sealed.length > 16);
+  assert.equal(bytesToText(open(sealed, { salt, nonce })), 'abc');
+
+  const tag = sealed.slice(sealed.length - 16);
+  const ciphertext = sealed.slice(0, sealed.length - 16);
+  assert.equal(bytesToText(aead.open(ciphertext, { salt, nonce, tag })), 'abc');
+});
+
+test('createDerivedKeyAead derives default key size from AEAD metadata', () => {
+  const salt = hexToBytes('0102030405060708');
+  const nonce = hexToBytes('000000000000000000000000');
+  const aead = registry.createDerivedKeyAead({
+    algorithm: 'AES-GCM',
+    kdf: {
+      name: 'PBKDF2',
+      input: 'secret',
+      salt,
+      hash: 'SHA256',
+      iterations: 1000,
+    },
+    nonce,
+  });
+
+  const sealed = aead.seal(textToBytes('abc'));
+  assert.equal(bytesToText(aead.open(sealed)), 'abc');
+});
+
+test('createDerivedKeyAead supports OpenSSL format and parsed salt', () => {
+  const salt = hexToBytes('0001020304050607');
+  const nonce = hexToBytes('000000000000000000000000');
+  const aead = registry.createDerivedKeyAead({
+    algorithm: 'AES-GCM',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      hash: 'MD5',
+      iterations: 1,
+    },
+    format: 'OpenSSL',
+    keySize: 16,
+  });
+
+  const sealed = aead.seal(textToBytes('abc'), { salt, nonce });
+  assert.equal(bytesToHex(sealed.subarray(0, 16)), '53616c7465645f5f0001020304050607');
+  assert.equal(bytesToText(aead.open(sealed, { salt: hexToBytes('ffffffffffffffff'), nonce })), 'abc');
+
+  const sealer = aead.createSealer({ salt, nonce });
+  const part1 = sealer.process(textToBytes('a'));
+  const part2 = sealer.process(textToBytes('b'));
+  const part3 = sealer.finalize(textToBytes('c'));
+  assert.equal(bytesToHex(part1.subarray(0, 16)), '53616c7465645f5f0001020304050607');
+  const streamingSealed = concatBytes(part1, part2, part3);
+  assert.equal(bytesToText(aead.open(streamingSealed, { nonce })), 'abc');
+});
+
+test('createDerivedKeyAead streams OpenSSL decryption input', () => {
+  const salt = hexToBytes('0001020304050607');
+  const nonce = hexToBytes('000000000000000000000000');
+  const raw = registry.createDerivedKeyAead({
+    algorithm: 'AES-GCM',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      hash: 'MD5',
+      iterations: 1,
+      salt,
+    },
+    keySize: 16,
+  });
+  const rawSealed = raw.seal(textToBytes('abc'), { nonce });
+
+  const formatted = registry.createDerivedKeyAead({
+    algorithm: 'AES-GCM',
+    kdf: {
+      name: 'EvpKDF',
+      input: 'secret',
+      hash: 'MD5',
+      iterations: 1,
+    },
+    format: 'OpenSSL',
+    keySize: 16,
+  });
+  const opener = formatted.createOpener({ nonce, salt });
+  const plaintext = concatBytes(
+    opener.process(rawSealed.subarray(0, 4)),
+    opener.process(rawSealed.subarray(4)),
+    opener.finalize(),
+  );
+  assert.equal(bytesToText(plaintext), 'abc');
+
+  assert.throws(() => formatted.createOpener({ nonce, salt }).finalize(rawSealed.subarray(0, 4)));
+});
+
+test('createDerivedKeyAead buffers non-streaming format output and input', () => {
+  const salt = hexToBytes('0001020304050607');
+  const nonce = hexToBytes('000000000000000000000000');
+  const plaintext = textToBytes('abcdefghijklmnopq');
+  const bufferedFormat = {
+    kind: 'format' as const,
+    name: 'AeadBuffered',
+    stringify({ ciphertext, salt }: { ciphertext: Uint8Array; salt?: Uint8Array }) {
+      return concatBytes(new Uint8Array([salt?.length ?? 0]), salt ?? new Uint8Array(), ciphertext);
+    },
+    parse(input: Uint8Array) {
+      const saltLength = input[0];
+      return {
+        salt: input.slice(1, 1 + saltLength),
+        ciphertext: input.slice(1 + saltLength),
+      };
+    },
+  };
+  const noSaltFormat = {
+    kind: 'format' as const,
+    name: 'AeadNoSalt',
+    stringify({ ciphertext }: { ciphertext: Uint8Array }) {
+      return ciphertext;
+    },
+    parse(input: Uint8Array) {
+      return {
+        ciphertext: input,
+      };
+    },
+  };
+  const localRegistry = createClassicRegistry()
+    .use(classicHashesPreset)
+    .use(bufferedFormat)
+    .use(noSaltFormat);
+  const aead = localRegistry.createDerivedKeyAead({
+    algorithm: 'AES-GCM',
+    kdf: {
+      name: 'PBKDF2',
+      input: 'secret',
+      hash: 'SHA256',
+      iterations: 1000,
+    },
+    format: 'AeadBuffered',
+    keySize: 16,
+  });
+
+  const sealer = aead.createSealer({ salt, nonce });
+  assert.equal(sealer.process(plaintext.subarray(0, 16)).length, 0);
+  const sealed = sealer.finalize(plaintext.subarray(16));
+  assert.equal(sealed[0], 8);
+  assert.equal(bytesToHex(sealed.subarray(1, 9)), bytesToHex(salt));
+
+  const opener = aead.createOpener({ nonce });
+  assert.equal(opener.process(sealed.subarray(0, 5)).length, 0);
+  assert.equal(opener.process(sealed.subarray(5)).length, 0);
+  assert.equal(bytesToText(opener.finalize()), bytesToText(plaintext));
+  assert.equal(bytesToText(aead.createOpener({ nonce }).finalize(sealed)), bytesToText(plaintext));
+
+  const noSaltAead = localRegistry.createDerivedKeyAead({
+    algorithm: 'AES-GCM',
+    kdf: {
+      name: 'PBKDF2',
+      input: 'secret',
+      hash: 'SHA256',
+      iterations: 1000,
+    },
+    format: 'AeadNoSalt',
+    keySize: 16,
+  });
+  const noSaltSealed = noSaltAead.seal(plaintext, { salt, nonce });
+  assert.equal(bytesToText(noSaltAead.open(noSaltSealed, { salt, nonce })), bytesToText(plaintext));
+});
+
+test('createDerivedKeyAead rejects invalid options and length conflicts', () => {
+  assert.throws(() => registry.createDerivedKeyAead({
+    algorithm: 'AES-GCM',
+    kdf: 'PBKDF2' as never,
+  }), /createDerivedKeyAead requires kdf to be an object/);
+
+  assert.throws(() => registry.createDerivedKeyAead({
+    algorithm: 'AES-GCM',
+    kdf: {
+      name: 'PBKDF2',
+      input: 'secret',
+      hash: 'SHA256',
+      iterations: 1000,
+      length: 32,
+    },
+    keySize: 16,
+  }).seal(textToBytes('abc'), {
+    salt: hexToBytes('0102030405060708'),
+    nonce: hexToBytes('000000000000000000000000'),
+  }), /kdf.length \(32\) does not match derived material length \(16\)/);
+
+  assert.throws(() => registry.createDerivedKeyAead({
+    algorithm: 'Missing-AEAD',
+    kdf: {
+      name: 'PBKDF2',
+      input: 'secret',
+      hash: 'SHA256',
+      iterations: 1000,
+    },
+  }).seal(textToBytes('abc'), {
+    salt: hexToBytes('0102030405060708'),
+    nonce: hexToBytes('000000000000000000000000'),
+  }), /Component not found: aead:Missing-AEAD/);
+
+  const noKeySizesRegistry = createClassicRegistry()
+    .use(classicHashesPreset)
+    .use({
+      kind: 'aead' as const,
+      name: 'NoKeySizes',
+      create() {
+        return {
+          createSealer() {
+            return identityTransform();
+          },
+          createOpener() {
+            return identityTransform();
+          },
+        };
+      },
+    });
+  assert.throws(() => noKeySizesRegistry.createDerivedKeyAead({
+    algorithm: 'NoKeySizes',
+    kdf: {
+      name: 'PBKDF2',
+      input: 'secret',
+      hash: 'SHA256',
+      iterations: 1000,
+    },
+  }).seal(textToBytes('abc'), {
+    salt: hexToBytes('0102030405060708'),
+  }), /NoKeySizes derived-key AEAD requires keySize/);
+});
+
+test('createDerivedKeyAead rejects reserved operation option keys', () => {
+  const salt = hexToBytes('0102030405060708');
+  const nonce = hexToBytes('000000000000000000000000');
+  const aead = registry.createDerivedKeyAead({
+    algorithm: 'AES-GCM',
+    kdf: {
+      name: 'PBKDF2',
+      input: 'secret',
+      salt,
+      hash: 'SHA256',
+      iterations: 1000,
+    },
+    keySize: 16,
+  });
+
+  assert.throws(() => aead.seal(textToBytes('abc'), {
+    nonce,
+    kdf: 'PBKDF2',
+  }), /reserved key: kdf/);
+  assert.throws(() => aead.createSealer({
+    nonce,
+    format: 'OpenSSL',
+  }).finalize(textToBytes('abc')), /reserved key: format/);
+  assert.throws(() => aead.open(new Uint8Array(0), {
+    nonce,
+    keySize: 32,
+  }), /reserved key: keySize/);
+});
+
 test('createDerivedKeyCipher derives IV length from classic modes', () => {
   const salt = hexToBytes('0102030405060708');
   const modes = [

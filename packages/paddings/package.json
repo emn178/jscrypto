@@ -1,6 +1,6 @@
 {
   "name": "@jscrypto/paddings",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Padding components for @jscrypto block ciphers.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -71,7 +71,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@jscrypto/core": "0.11.0"
+    "@jscrypto/core": "0.12.0"
   },
   "repository": {
     "type": "git",

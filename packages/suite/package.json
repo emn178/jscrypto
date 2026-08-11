@@ -1,6 +1,6 @@
 {
   "name": "@jscrypto/suite",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Convenience suite registry for @jscrypto components.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -39,13 +39,13 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@jscrypto/core": "0.11.0",
-    "@jscrypto/ciphers": "0.11.0",
-    "@jscrypto/formats": "0.11.0",
-    "@jscrypto/hashes": "0.11.0",
-    "@jscrypto/kdfs": "0.11.0",
-    "@jscrypto/modes": "0.11.0",
-    "@jscrypto/paddings": "0.11.0"
+    "@jscrypto/core": "0.12.0",
+    "@jscrypto/ciphers": "0.12.0",
+    "@jscrypto/formats": "0.12.0",
+    "@jscrypto/hashes": "0.12.0",
+    "@jscrypto/kdfs": "0.12.0",
+    "@jscrypto/modes": "0.12.0",
+    "@jscrypto/paddings": "0.12.0"
   },
   "repository": {
     "type": "git",

@@ -1,5 +1,11 @@
 # Change Log
 
+## v0.12.0 / 2026-08-11
+
+### Added
+
+- added `registry.createDerivedKeyAead(...)` to derive AEAD keys through registered KDF and format components.
+
 ## v0.11.0 / 2026-08-11
 
 ### Added

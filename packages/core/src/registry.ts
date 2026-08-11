@@ -1,11 +1,13 @@
 import type { AnyComponent, Component, ComponentKind, HashComponent, PresetComponent } from './component.js';
 import { DuplicateComponentError, MissingComponentError } from './errors.js';
 import type {
+  CreateDerivedKeyAeadOptions,
   CreateDerivedKeyCipherOptions,
   DeriveOptions,
+  DerivedKeyAeadFacade,
   DerivedKeyCipherFacade,
 } from './derived-key.js';
-import { createDerivedKeyCipher, derive } from './derived-key.js';
+import { createDerivedKeyAead, createDerivedKeyCipher, derive } from './derived-key.js';
 import type {
   AeadFacade,
   CreateAeadOptions,
@@ -39,6 +41,7 @@ export interface Registry {
   createAead(options: CreateAeadOptions): AeadFacade;
   derive(options: DeriveOptions): Uint8Array;
   createDerivedKeyCipher(options: CreateDerivedKeyCipherOptions): DerivedKeyCipherFacade;
+  createDerivedKeyAead(options: CreateDerivedKeyAeadOptions): DerivedKeyAeadFacade;
   encrypt(options: CreateTransformOptions & { plaintext: Uint8Array }): Uint8Array;
   decrypt(options: CreateTransformOptions & { ciphertext: Uint8Array }): Uint8Array;
   createEncryptor(options: CreateTransformOptions): Transform;
@@ -136,6 +139,10 @@ export function createRegistry(components: Iterable<AnyComponent> = []): Registr
 
     createDerivedKeyCipher(options) {
       return createDerivedKeyCipher(registry, options);
+    },
+
+    createDerivedKeyAead(options) {
+      return createDerivedKeyAead(registry, options);
     },
 
     encrypt(options) {
