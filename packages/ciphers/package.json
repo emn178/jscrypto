@@ -1,6 +1,6 @@
 {
   "name": "@jscrypto/ciphers",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Cipher components for @jscrypto.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -72,7 +72,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@jscrypto/core": "0.10.0",
+    "@jscrypto/core": "0.11.0",
     "@noble/ciphers": "^2.2.0",
     "js-speck": "^0.1.0"
   },
