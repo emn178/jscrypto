@@ -17,6 +17,7 @@
 - changed `AES-GCM` AEAD to compose the registered `AES` cipher with the registered `GCM` mode at runtime instead of duplicating GCM internals.
 - changed ChaCha20-Poly1305 and XChaCha20-Poly1305 from stream cipher components to AEAD components selected with `createAead({ algorithm, key })`.
 - changed recommended authenticated encryption examples to use `createAead` instead of cipher + mode pipelines.
+- changed tests to run package-local TypeScript source tests as the main coverage gate, while root dist tests now focus on build/export/package artifact smoke coverage.
 
 ### Removed
 

@@ -1,0 +1,59 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { concatBytes } from '@jscrypto/core';
+import { createAesCipher } from '@jscrypto/ciphers';
+import { ecb } from '@jscrypto/modes';
+import { createClassicRegistry } from './helpers/classic-registry.js';
+import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.js';
+
+test('AES-256-ECB streams encryption and decryption with Pkcs7', () => {
+  const key = hexToBytes('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
+  const plaintext = textToBytes('abc');
+  const registry = createClassicRegistry();
+
+  const encryptor = registry.createEncryptor({
+    cipher: 'AES',
+    mode: 'ECB',
+    padding: 'Pkcs7',
+    key,
+  });
+  const ciphertext = concatBytes(
+    encryptor.process(plaintext.subarray(0, 1)),
+    encryptor.process(plaintext.subarray(1)),
+    encryptor.finalize(),
+  );
+
+  assert.equal(bytesToHex(ciphertext), 'd1d00088422280392f0e2568ada86436');
+
+  const decryptor = registry.createDecryptor({
+    cipher: 'AES',
+    mode: 'ECB',
+    padding: 'Pkcs7',
+    key,
+  });
+  const decrypted = concatBytes(
+    decryptor.process(ciphertext.subarray(0, 4)),
+    decryptor.process(ciphertext.subarray(4)),
+    decryptor.finalize(),
+  );
+
+  assert.equal(bytesToText(decrypted), 'abc');
+});
+
+test('AES-256-ECB mode can mutate input buffers', () => {
+  const key = hexToBytes('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
+  const input = textToBytes('1234567890123456');
+  const original = input.slice();
+  const cipher = createAesCipher(key);
+  const encryptor = ecb.createEncryptor({ cipher, options: { mutableInput: true } });
+  const ciphertext = encryptor.process(input);
+
+  assert.equal(ciphertext, input);
+  assert.notDeepEqual(ciphertext, original);
+
+  const decryptor = ecb.createDecryptor({ cipher, options: { mutableInput: true } });
+  const decrypted = decryptor.process(ciphertext);
+
+  assert.equal(decrypted, ciphertext);
+  assert.deepEqual(decrypted, original);
+});

@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2020"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@jscrypto/core": ["./packages/core/src/index.ts"],
+      "@jscrypto/core/*": ["./packages/core/src/*"],
+      "@jscrypto/ciphers": ["./packages/ciphers/src/index.ts"],
+      "@jscrypto/ciphers/*": ["./packages/ciphers/src/*"],
+      "@jscrypto/modes": ["./packages/modes/src/index.ts"],
+      "@jscrypto/modes/*": ["./packages/modes/src/*"],
+      "@jscrypto/paddings": ["./packages/paddings/src/index.ts"],
+      "@jscrypto/paddings/*": ["./packages/paddings/src/*"],
+      "@jscrypto/kdfs": ["./packages/kdfs/src/index.ts"],
+      "@jscrypto/kdfs/*": ["./packages/kdfs/src/*"],
+      "@jscrypto/formats": ["./packages/formats/src/index.ts"],
+      "@jscrypto/formats/*": ["./packages/formats/src/*"],
+      "@jscrypto/hashes": ["./packages/hashes/src/index.ts"],
+      "@jscrypto/hashes/*": ["./packages/hashes/src/*"],
+      "@jscrypto/suite": ["./packages/suite/src/index.ts"],
+      "@jscrypto/suite/*": ["./packages/suite/src/*"]
+    }
+  },
+  "include": [
+    "packages/*/test/**/*.ts"
+  ]
+}

@@ -44,11 +44,8 @@ export interface AeadFacade {
 const AEAD_RESERVED_OPERATION_OPTION_KEYS = ['algorithm', 'key'] as const;
 
 function assertNoAeadReservedOperationOptions(
-  options: Record<string, unknown> | undefined,
+  options: Record<string, unknown>,
 ): void {
-  if (!options) {
-    return;
-  }
   for (const key of AEAD_RESERVED_OPERATION_OPTION_KEYS) {
     if (Object.prototype.hasOwnProperty.call(options, key)) {
       throw new Error(`operation options must not override reserved key: ${key}`);

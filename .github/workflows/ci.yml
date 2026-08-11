@@ -26,6 +26,14 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Source coverage
+        run: npm run coverage
+
+      - name: Upload to coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          file: ./coverage/lcov.info
+
       - name: Build
         run: npm run build
 
@@ -83,16 +91,8 @@ jobs:
           tar -xzf package-artifact/jscrypto-hashes-*.tgz --strip-components=1 -C packages/hashes package/package.json package/dist
           tar -xzf package-artifact/jscrypto-suite-*.tgz --strip-components=1 -C packages/suite package/package.json package/dist
 
+      - name: Run source tests
+        run: npm run test:src
+
       - name: Run tests against package dist
-        if: matrix.node-version != '24.x'
         run: npm run test:dist
-
-      - name: Generate coverage report
-        if: matrix.node-version == '24.x'
-        run: npm run coverage:dist
-
-      - name: Upload to coveralls
-        if: matrix.node-version == '24.x'
-        uses: coverallsapp/github-action@v2
-        with:
-          file: ./coverage/lcov.info

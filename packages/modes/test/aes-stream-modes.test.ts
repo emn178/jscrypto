@@ -1,0 +1,139 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { concatBytes } from '@jscrypto/core';
+import { createAesCipher } from '@jscrypto/ciphers';
+import { cfb, ctr, ofb } from '@jscrypto/modes';
+import { createClassicRegistry } from './helpers/classic-registry.js';
+import { bytesToHex, bytesToText, hexToBytes, textToBytes } from './helpers/bytes.js';
+
+const key = hexToBytes('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
+const iv = hexToBytes('000102030405060708090a0b0c0d0e0f');
+const plaintext = textToBytes('abc');
+
+const cases = [
+  ['CFB', cfb],
+  ['CTR', ctr],
+  ['OFB', ofb],
+] as const;
+
+for (const [modeName, mode] of cases) {
+  test(`AES-256-${modeName} streams encryption and decryption`, () => {
+    const registry = createClassicRegistry();
+
+    const encryptor = registry.createEncryptor({
+      cipher: 'AES',
+      mode: modeName,
+      padding: 'NoPadding',
+      key,
+      iv,
+    });
+    const ciphertext = concatBytes(
+      encryptor.process(plaintext.subarray(0, 1)),
+      encryptor.process(plaintext.subarray(1, 2)),
+      encryptor.finalize(plaintext.subarray(2)),
+    );
+
+    assert.equal(bytesToHex(ciphertext), '3b0c67');
+
+    const decryptor = registry.createDecryptor({
+      cipher: 'AES',
+      mode: modeName,
+      padding: 'NoPadding',
+      key,
+      iv,
+    });
+    const decrypted = concatBytes(
+      decryptor.process(ciphertext.subarray(0, 1)),
+      decryptor.finalize(ciphertext.subarray(1)),
+    );
+
+    assert.equal(bytesToText(decrypted), 'abc');
+  });
+}
+
+for (const [modeName, mode] of [
+  ['CFB', cfb],
+  ['OFB', ofb],
+] as const) {
+  test(`AES-256-${modeName} can mutate input buffers`, () => {
+    const input = textToBytes('abc');
+    const original = input.slice();
+    const cipher = createAesCipher(key);
+    const encryptor = mode.createEncryptor({ cipher, iv, options: { mutableInput: true } });
+    const ciphertext = encryptor.process(input);
+
+    assert.equal(ciphertext, input);
+    assert.notDeepEqual(ciphertext, original);
+
+    const decryptor = mode.createDecryptor({ cipher, iv, options: { mutableInput: true } });
+    const decrypted = decryptor.process(ciphertext);
+
+    assert.equal(decrypted, ciphertext);
+    assert.deepEqual(decrypted, original);
+  });
+}
+
+test('AES-256-CTR handles data longer than one block', () => {
+  const registry = createClassicRegistry();
+  const input = textToBytes('12345678901234561234567890123456');
+  const encryptor = registry.createEncryptor({
+    cipher: 'AES',
+    mode: 'CTR',
+    padding: 'NoPadding',
+    key,
+    iv,
+  });
+  const ciphertext = concatBytes(
+    encryptor.process(input.subarray(0, 7)),
+    encryptor.process(input.subarray(7, 19)),
+    encryptor.finalize(input.subarray(19)),
+  );
+
+  const decryptor = registry.createDecryptor({
+    cipher: 'AES',
+    mode: 'CTR',
+    padding: 'NoPadding',
+    key,
+    iv,
+  });
+  const decrypted = concatBytes(
+    decryptor.process(ciphertext.subarray(0, 5)),
+    decryptor.process(ciphertext.subarray(5, 23)),
+    decryptor.finalize(ciphertext.subarray(23)),
+  );
+
+  assert.equal(bytesToText(decrypted), bytesToText(input));
+});
+
+test('AES-256-CTR can mutate input buffers through the registry facade', () => {
+  const registry = createClassicRegistry();
+  const input = textToBytes('1234567890123456');
+  const original = input.slice();
+  const encryptor = registry.createEncryptor({
+    cipher: 'AES',
+    mode: 'CTR',
+    padding: 'NoPadding',
+    key,
+    iv,
+    mutableInput: true,
+  });
+  const ciphertext = encryptor.process(input);
+  assert.deepEqual(encryptor.finalize(), new Uint8Array());
+
+  assert.equal(ciphertext, input);
+  assert.notDeepEqual(input, original);
+
+  const decryptor = registry.createDecryptor({
+    cipher: 'AES',
+    mode: 'CTR',
+    padding: 'NoPadding',
+    key,
+    iv,
+    mutableInput: true,
+  });
+  const decrypted = decryptor.process(ciphertext);
+  assert.deepEqual(decryptor.finalize(), new Uint8Array());
+
+  assert.equal(decrypted, ciphertext);
+  assert.deepEqual(decrypted, original);
+});

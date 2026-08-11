@@ -1,4 +1,5 @@
 import type { BlockCipher, CipherComponent, PresetComponent } from '@jscrypto/core';
+import { decryptWithBlockOffset, encryptWithBlockOffset } from './block-offset.js';
 import { createDesCipher } from './des.js';
 
 export const tripleDes: CipherComponent<'TripleDES'> = {
@@ -71,9 +72,9 @@ function encryptTripleBlockAt(
   firstOutput: Uint8Array,
   secondOutput: Uint8Array,
 ): void {
-  encryptBlock(first, input, inputOffset, firstOutput, 0);
-  decryptBlock(second, firstOutput, 0, secondOutput, 0);
-  encryptBlock(third, secondOutput, 0, output, outputOffset);
+  encryptWithBlockOffset(first, input, inputOffset, firstOutput, 0);
+  decryptWithBlockOffset(second, firstOutput, 0, secondOutput, 0);
+  encryptWithBlockOffset(third, secondOutput, 0, output, outputOffset);
 }
 
 function decryptTripleBlockAt(
@@ -87,37 +88,9 @@ function decryptTripleBlockAt(
   thirdOutput: Uint8Array,
   secondOutput: Uint8Array,
 ): void {
-  decryptBlock(third, input, inputOffset, thirdOutput, 0);
-  encryptBlock(second, thirdOutput, 0, secondOutput, 0);
-  decryptBlock(first, secondOutput, 0, output, outputOffset);
-}
-
-function encryptBlock(
-  cipher: BlockCipher,
-  input: Uint8Array,
-  inputOffset: number,
-  output: Uint8Array,
-  outputOffset: number,
-): void {
-  if (cipher.encryptBlock) {
-    cipher.encryptBlock(input, inputOffset, output, outputOffset);
-  } else {
-    cipher.encrypt(input.subarray(inputOffset, inputOffset + 8), output.subarray(outputOffset, outputOffset + 8));
-  }
-}
-
-function decryptBlock(
-  cipher: BlockCipher,
-  input: Uint8Array,
-  inputOffset: number,
-  output: Uint8Array,
-  outputOffset: number,
-): void {
-  if (cipher.decryptBlock) {
-    cipher.decryptBlock(input, inputOffset, output, outputOffset);
-  } else {
-    cipher.decrypt(input.subarray(inputOffset, inputOffset + 8), output.subarray(outputOffset, outputOffset + 8));
-  }
+  decryptWithBlockOffset(third, input, inputOffset, thirdOutput, 0);
+  encryptWithBlockOffset(second, thirdOutput, 0, secondOutput, 0);
+  decryptWithBlockOffset(first, secondOutput, 0, output, outputOffset);
 }
 
 function assertBlocks(input: Uint8Array, output: Uint8Array): void {

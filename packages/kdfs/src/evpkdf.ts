@@ -61,7 +61,7 @@ export function deriveEvpKdf(params: DeriveEvpKdfParams): Uint8Array {
       block = params.hash.hash(block);
     }
     blocks.push(block);
-    previous = block;
+    previous = new Uint8Array(block);
     length += block.length;
   }
 

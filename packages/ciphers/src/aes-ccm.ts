@@ -11,7 +11,6 @@ import {
   type BlockCipher,
   type Transform,
 } from '@jscrypto/core';
-import { encodeCcmAad } from './aes-ccm-aad.js';
 
 const BLOCK_SIZE = 16;
 const KEY_SIZES = [16, 24, 32] as const;
@@ -20,6 +19,7 @@ const TAG_SIZES = [4, 6, 8, 10, 12, 14, 16] as const;
 const DEFAULT_TAG_LENGTH = 16;
 const MIN_NONCE_LENGTH = 7;
 const MAX_NONCE_LENGTH = 13;
+const AAD_SHORT_LIMIT = 0xff00;
 
 export function createAesCcmComponent(): AeadComponent<'AES-CCM'> {
   return {
@@ -33,6 +33,70 @@ export function createAesCcmComponent(): AeadComponent<'AES-CCM'> {
       return createAesCcmTransform(params, context);
     },
   };
+}
+
+/** Exported for focused unit tests; not part of the public package surface. */
+export function encodeCcmAad(aad: Uint8Array): Uint8Array {
+  return concatBytes(encodeCcmAadLength(aad.length), aad);
+}
+
+/**
+ * Encode only the CCM AAD length prefix for a given length.
+ * Accepts synthetic lengths so the `0xffff` form (>= 2^32) can be unit-tested
+ * without allocating multi-gigabyte AAD buffers.
+ */
+export function encodeCcmAadLength(aadLength: number): Uint8Array {
+  if (aadLength === 0) {
+    return new Uint8Array(0);
+  }
+
+  if (aadLength < AAD_SHORT_LIMIT) {
+    const encoded = new Uint8Array(2);
+    encoded[0] = (aadLength >>> 8) & 0xff;
+    encoded[1] = aadLength & 0xff;
+    return encoded;
+  }
+
+  if (aadLength < 0x100000000) {
+    const encoded = new Uint8Array(6);
+    encoded[0] = 0xff;
+    encoded[1] = 0xfe;
+    encoded[2] = (aadLength >>> 24) & 0xff;
+    encoded[3] = (aadLength >>> 16) & 0xff;
+    encoded[4] = (aadLength >>> 8) & 0xff;
+    encoded[5] = aadLength & 0xff;
+    return encoded;
+  }
+
+  const encoded = new Uint8Array(10);
+  encoded[0] = 0xff;
+  encoded[1] = 0xff;
+  let remaining = aadLength;
+  for (let i = 9; i >= 2; i--) {
+    encoded[i] = remaining % 256;
+    remaining = Math.floor(remaining / 256);
+  }
+  return encoded;
+}
+
+/**
+ * Encode an unsigned integer into `byteLength` bytes at `out[offset]`.
+ * Used for CCM length and counter fields.
+ */
+export function encodeCcmBinaryLength(
+  value: number,
+  byteLength: number,
+  out: Uint8Array,
+  offset: number,
+): void {
+  let remaining = value;
+  for (let i = byteLength - 1; i >= 0; i--) {
+    out[offset + i] = remaining % 256;
+    remaining = Math.floor(remaining / 256);
+  }
+  if (remaining !== 0) {
+    throw new RangeError('AES-CCM plaintext is too large for the nonce length.');
+  }
 }
 
 function createAesCcmTransform(
@@ -255,7 +319,7 @@ function buildB0(
 ): void {
   out[0] = ((hasAad ? 1 : 0) << 6) | (((tagLength - 2) / 2) << 3) | (L - 1);
   out.set(nonce, 1);
-  encodeLength(messageLength, L, out, 1 + nonce.length);
+  encodeCcmBinaryLength(messageLength, L, out, 1 + nonce.length);
 }
 
 function buildCounterBlock(
@@ -267,18 +331,7 @@ function buildCounterBlock(
   out.fill(0);
   out[0] = L - 1;
   out.set(nonce, 1);
-  encodeLength(counter, L, out, 1 + nonce.length);
-}
-
-function encodeLength(value: number, byteLength: number, out: Uint8Array, offset: number): void {
-  let remaining = value;
-  for (let i = byteLength - 1; i >= 0; i--) {
-    out[offset + i] = remaining % 256;
-    remaining = Math.floor(remaining / 256);
-  }
-  if (remaining !== 0) {
-    throw new RangeError('AES-CCM plaintext is too large for the nonce length.');
-  }
+  encodeCcmBinaryLength(counter, L, out, 1 + nonce.length);
 }
 
 function encryptBlock(

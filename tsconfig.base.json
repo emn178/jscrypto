@@ -6,6 +6,7 @@
     "lib": [
       "ES2015"
     ],
+    "types": [],
     "strict": true,
     "declaration": true,
     "declarationMap": true,

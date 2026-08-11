@@ -331,12 +331,16 @@ bundles instead of loading a whole component package:
 
 ```sh
 npm install
+npm run test:src
 npm run build
-npm test
+npm run test:dist
 npm run coverage
 ```
 
-`npm run build` creates ESM, CommonJS, IIFE, and UMD bundles for each published package. `npm run coverage` writes text output and an HTML report under `coverage/`.
+- `npm run test:src` runs package-local TypeScript tests against source via `tsx` (no build required; needs Node.js >= 18.19).
+- `npm run test:dist` runs root build/export/browser smoke tests under `tests/builds` and packaging integration under `tests/integration` against built artifacts.
+- `npm run coverage` runs full source coverage (`coverage:src`).
+- `npm run build` creates ESM, CommonJS, IIFE, and UMD bundles for each published package.
 
 ## Security
 

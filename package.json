@@ -17,11 +17,12 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "clean": "tsc -b --clean && node scripts/clean.mjs",
-    "typecheck": "tsc -b --pretty false",
-    "test": "npm run build && npm run test:dist",
-    "test:dist": "node --test tests/*.test.mjs",
-    "coverage": "npm run build && npm run coverage:dist",
-    "coverage:dist": "c8 --check-coverage --statements 100 --branches 100 --functions 100 --lines 100 --reporter=text --reporter=html --reporter=lcov --exclude-after-remap --exclude=**/node_modules/** --include=packages/core/src/** --include=packages/ciphers/src/** --include=packages/modes/src/** --include=packages/paddings/src/** --include=packages/kdfs/src/** --include=packages/formats/src/** --include=packages/hashes/src/** --include=packages/suite/src/** node --test tests/*.test.mjs",
+    "typecheck": "tsc -b --pretty false && npm run typecheck:test",
+    "typecheck:test": "tsc -p tsconfig.test.json --pretty false",
+    "test": "npm run test:src && npm run build && npm run test:dist",
+    "test:src": "node scripts/run-src-tests.mjs",
+    "test:dist": "node --test tests/builds/*.test.mjs tests/integration/*.test.mjs",
+    "coverage": "c8 --check-coverage --statements 100 --branches 100 --functions 100 --lines 100 --reporter=text --reporter=html --reporter=lcov --exclude-after-remap --exclude=**/node_modules/** --exclude=**/*.d.ts --include=packages/core/src/** --include=packages/ciphers/src/** --include=packages/modes/src/** --include=packages/paddings/src/** --include=packages/kdfs/src/** --include=packages/formats/src/** --include=packages/hashes/src/** --include=packages/suite/src/** node scripts/run-src-tests.mjs",
     "prepack": "npm run build"
   },
   "devDependencies": {
@@ -29,8 +30,10 @@
     "@rollup/plugin-commonjs": "^29.0.3",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^1.0.0",
+    "@types/node": "^18.19.130",
     "c8": "^11.0.0",
     "rollup": "^4.62.2",
+    "tsx": "^4.0.0",
     "typescript": "^5.5.0"
   },
   "license": "MIT"
